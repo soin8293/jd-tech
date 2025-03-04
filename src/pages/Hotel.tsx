@@ -1,14 +1,15 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { BookingPeriod, Room } from "@/types/hotel.types";
+import { BookingPeriod, Room, BookingDetails } from "@/types/hotel.types";
 import { hotelRooms } from "@/data/hotel.data";
 import HotelHeader from "@/components/hotel/HotelHeader";
 import BookingForm from "@/components/hotel/BookingForm";
 import RoomCard from "@/components/hotel/RoomCard";
 import BookingSummary from "@/components/hotel/BookingSummary";
+import PaymentModal from "@/components/payment/PaymentModal";
 import { Separator } from "@/components/ui/separator";
-import { format, addDays } from "date-fns";
+import { format, addDays, differenceInDays } from "date-fns";
 
 const Hotel = () => {
   const { toast } = useToast();
@@ -20,6 +21,8 @@ const Hotel = () => {
   const [guests, setGuests] = useState<number>(2);
   const [availableRooms, setAvailableRooms] = useState<Room[]>(hotelRooms);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
 
   const handleSearchRooms = (period: BookingPeriod, guestCount: number) => {
     // In a real app, this would fetch from an API
@@ -48,12 +51,42 @@ const Hotel = () => {
   };
 
   const handleBookNow = () => {
+    if (selectedRooms.length === 0) {
+      toast({
+        title: "No rooms selected",
+        description: "Please select at least one room to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Calculate total price based on selected rooms and stay duration
+    const nights = differenceInDays(bookingPeriod.checkOut, bookingPeriod.checkIn);
+    const totalPrice = selectedRooms.reduce((sum, room) => sum + (room.price * nights), 0);
+    
+    // Prepare booking details for payment
+    const details: BookingDetails = {
+      period: bookingPeriod,
+      guests,
+      rooms: selectedRooms,
+      totalPrice
+    };
+    
+    setBookingDetails(details);
+    setPaymentModalOpen(true);
+  };
+  
+  const handlePaymentComplete = () => {
+    // Close the payment modal
+    setPaymentModalOpen(false);
+    
+    // Show success toast
     toast({
       title: "Booking Confirmed!",
       description: `You have successfully booked ${selectedRooms.length} room(s) from ${format(bookingPeriod.checkIn, "MMM d, yyyy")} to ${format(bookingPeriod.checkOut, "MMM d, yyyy")}.`,
     });
     
-    // Reset the form
+    // Reset selections
     setSelectedRooms([]);
   };
 
@@ -68,6 +101,7 @@ const Hotel = () => {
         />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
+          {/* Left side - Room listings */}
           <div className="lg:col-span-2">
             {hasSearched ? (
               <>
@@ -110,6 +144,7 @@ const Hotel = () => {
             )}
           </div>
           
+          {/* Right side - Booking summary */}
           <div className="lg:col-span-1">
             <div className="sticky top-6">
               <BookingSummary
@@ -134,6 +169,14 @@ const Hotel = () => {
           </div>
         </div>
       </div>
+      
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        bookingDetails={bookingDetails}
+        onPaymentComplete={handlePaymentComplete}
+      />
     </div>
   );
 };

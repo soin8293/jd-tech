@@ -14,6 +14,7 @@ interface PaymentModalProps {
   onPaymentComplete: () => void;
 }
 
+// Define this as a proper union type to fix the TypeScript errors
 type PaymentStatus = 'idle' | 'loading' | 'error' | 'success';
 
 const PaymentModal: React.FC<PaymentModalProps> = ({

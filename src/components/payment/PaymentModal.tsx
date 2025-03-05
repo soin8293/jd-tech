@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { X, CreditCard, AlertTriangle, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -82,11 +83,42 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     
     // Simulate payment processing
     setTimeout(() => {
-      // For testing purposes - will be replaced with actual Stripe integration
-      setPaymentStatus('success');
-      setTimeout(() => {
-        onPaymentComplete();
-      }, 1500);
+      // Simulate calling Firebase Cloud Function to process the booking
+      const processBookingData = {
+        paymentMethodId: 'dummy_card_payment_id',
+        bookingDetails: bookingDetails,
+        paymentType: 'card',
+        timestamp: new Date().toISOString()
+      };
+
+      fetch('/api/process-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(processBookingData),
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Booking processing failed');
+          }
+          return response.json();
+        })
+        .then(responseJson => {
+          console.log('Simulated API call to Firebase Cloud Function processBooking successful');
+          console.log('Response data:', responseJson);
+          
+          // For testing purposes - will be replaced with actual Stripe integration
+          setPaymentStatus('success');
+          setTimeout(() => {
+            onPaymentComplete();
+          }, 1500);
+        })
+        .catch(error => {
+          console.error('Simulated API call to Firebase Cloud Function processBooking failed', error);
+          setPaymentStatus('error');
+          setErrorMessage('Payment was successful, but booking could not be processed. Please contact support.');
+        });
     }, 2000);
   };
 
@@ -96,11 +128,42 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     
     // Simulate payment processing
     setTimeout(() => {
-      // For testing purposes - will be replaced with actual Google Pay integration
-      setPaymentStatus('success');
-      setTimeout(() => {
-        onPaymentComplete();
-      }, 1500);
+      // Simulate calling Firebase Cloud Function to process the booking
+      const processBookingData = {
+        paymentMethodId: 'dummy_googlepay_payment_id',
+        bookingDetails: bookingDetails,
+        paymentType: 'google_pay',
+        timestamp: new Date().toISOString()
+      };
+
+      fetch('/api/process-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(processBookingData),
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Booking processing failed');
+          }
+          return response.json();
+        })
+        .then(responseJson => {
+          console.log('Simulated API call to Firebase Cloud Function processBooking successful');
+          console.log('Response data:', responseJson);
+          
+          // For testing purposes - will be replaced with actual Google Pay integration
+          setPaymentStatus('success');
+          setTimeout(() => {
+            onPaymentComplete();
+          }, 1500);
+        })
+        .catch(error => {
+          console.error('Simulated API call to Firebase Cloud Function processBooking failed', error);
+          setPaymentStatus('error');
+          setErrorMessage('Payment was successful, but booking could not be processed. Please contact support.');
+        });
     }, 2000);
   };
 

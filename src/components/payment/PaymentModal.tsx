@@ -34,7 +34,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       setPaymentStatus('idle');
       setErrorMessage('');
       
-      // Simulated API call to Firebase Cloud Function
+      // PLACEHOLDER: API call to Firebase Cloud Function createPaymentIntent
+      // REPLACE WITH REAL FIREBASE CLOUD FUNCTION URL when deployed
       fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: {
@@ -83,7 +84,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     
     // Simulate payment processing
     setTimeout(() => {
-      // Simulate calling Firebase Cloud Function to process the booking
+      // PLACEHOLDER: API call to Firebase Cloud Function processBooking
+      // REPLACE WITH REAL FIREBASE CLOUD FUNCTION URL when deployed
       const processBookingData = {
         paymentMethodId: 'dummy_card_payment_id',
         bookingDetails: bookingDetails,
@@ -128,7 +130,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     
     // Simulate payment processing
     setTimeout(() => {
-      // Simulate calling Firebase Cloud Function to process the booking
+      // PLACEHOLDER: API call to Firebase Cloud Function processBooking
+      // REPLACE WITH REAL FIREBASE CLOUD FUNCTION URL when deployed
       const processBookingData = {
         paymentMethodId: 'dummy_googlepay_payment_id',
         bookingDetails: bookingDetails,

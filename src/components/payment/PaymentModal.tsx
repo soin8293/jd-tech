@@ -33,7 +33,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       setPaymentStatus('idle');
       setErrorMessage('');
       
-      // Simulated API call to create payment intent
+      // Simulated API call to Firebase Cloud Function
       fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: {
@@ -42,7 +42,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         body: JSON.stringify({ 
           amount: bookingDetails.totalPrice,
           currency: 'usd',
-          booking_id: bookingDetails.id || 'temp-booking-id'
+          // Use a unique identifier or timestamp if id is not available
+          booking_reference: `booking-${Date.now()}`
         }),
       })
         .then(response => {
@@ -52,13 +53,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           return response.json();
         })
         .then(responseJson => {
-          console.log('Simulated API call to createPaymentIntent successful');
+          console.log('Simulated API call to Firebase Cloud Function createPaymentIntent successful');
           console.log('Response data:', responseJson);
-          // Simulate setting client secret from backend
-          setClientSecret('YOUR_CLIENT_SECRET_FROM_BACKEND');
+          // Simulate setting client secret from Firebase function response
+          setClientSecret('CLIENT_SECRET_FROM_FIREBASE_FUNCTION');
         })
         .catch(error => {
-          console.error('Simulated API call to createPaymentIntent failed', error);
+          console.error('Simulated API call to Firebase Cloud Function createPaymentIntent failed', error);
           setPaymentStatus('error');
           setErrorMessage('Failed to initialize payment. Please try again.');
         });
@@ -181,7 +182,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   variant="outline" 
                   className="w-full h-12 mb-3 flex items-center justify-center"
                   onClick={handleGooglePay}
-                  disabled={paymentStatus === 'loading' || !clientSecret}
+                  disabled={paymentStatus === 'loading' || clientSecret === ''}
                 >
                   <svg viewBox="0 0 41 17" className="h-6 w-auto">
                     <path d="M19.526 2.635v4.083h2.518c.6 0 1.096-.202 1.488-.605.403-.402.605-.882.605-1.437 0-.544-.202-1.018-.605-1.422-.392-.413-.888-.62-1.488-.62h-2.518zm0 5.52v4.736h-1.504V1.198h3.99c1.013 0 1.873.337 2.582 1.012.72.675 1.08 1.497 1.08 2.466 0 .991-.36 1.819-1.08 2.482-.697.665-1.559.996-2.583.996h-2.485v.001zM27.194 10.442c0 .392.166.718.499.98.332.26.722.391 1.168.391.633 0 1.196-.234 1.692-.701.497-.469.744-1.019.744-1.65-.469-.37-1.123-.555-1.962-.555-.61 0-1.12.148-1.528.442-.409.294-.613.657-.613 1.093m1.946-5.815c1.112 0 1.989.297 2.633.89.642.594.964 1.408.964 2.442v4.932h-1.439v-1.11h-.065c-.622.914-1.45 1.372-2.486 1.372-.882 0-1.621-.262-2.215-.784-.594-.523-.891-1.176-.891-1.96 0-.828.313-1.486.94-1.976s1.463-.735 2.51-.735c.892 0 1.629.163 2.206.49v-.344c0-.522-.207-.966-.621-1.33a2.132 2.132 0 0 0-1.455-.547c-.84 0-1.504.353-1.995 1.059l-1.324-.828c.73-1.045 1.81-1.568 3.238-1.568M40.993 4.889l-5.02 11.53H34.42l1.864-4.034-3.302-7.496h1.635l2.387 5.749h.032l2.322-5.75z" fill="#4285F4"></path>
@@ -198,7 +199,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   variant="default" 
                   className="w-full h-12 mb-3"
                   onClick={handlePayWithCard}
-                  disabled={paymentStatus === 'loading' || !clientSecret}
+                  disabled={paymentStatus === 'loading' || clientSecret === ''}
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
                   Pay with Card

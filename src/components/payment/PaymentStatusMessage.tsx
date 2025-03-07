@@ -1,26 +1,20 @@
 
 import React from "react";
 import { AlertTriangle, Check, Loader } from "lucide-react";
-
-type PaymentStatus = 'idle' | 'loading' | 'processing' | 'error' | 'success';
-
-type APIErrorType = 'payment_failed' | 'booking_failed' | 'network_error' | 'unknown';
-
-interface APIError {
-  type: APIErrorType;
-  message: string;
-}
+import { PaymentStatus, APIError } from "./payment.types";
 
 interface PaymentStatusMessageProps {
   status: PaymentStatus;
   errorDetails: APIError | null;
   transactionId: string;
+  bookingId?: string;
 }
 
 const PaymentStatusMessage: React.FC<PaymentStatusMessageProps> = ({
   status,
   errorDetails,
-  transactionId
+  transactionId,
+  bookingId
 }) => {
   if (status === 'loading' || status === 'processing') {
     return (
@@ -46,6 +40,9 @@ const PaymentStatusMessage: React.FC<PaymentStatusMessageProps> = ({
           <p className="text-xs text-muted-foreground mt-1">
             {errorDetails.message || "There was an error processing your payment. Please try again."}
           </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Transaction ID: {transactionId}
+          </p>
         </div>
       </div>
     );
@@ -58,7 +55,13 @@ const PaymentStatusMessage: React.FC<PaymentStatusMessageProps> = ({
         <div>
           <p className="text-sm font-medium text-green-600">Payment Successful!</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Your booking has been confirmed. Booking reference: {transactionId}
+            Your booking has been confirmed.
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Booking ID: {bookingId || 'Processing...'}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Transaction ID: {transactionId}
           </p>
         </div>
       </div>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { BookingDetails } from "@/types/hotel.types";
-import { PaymentStatus, APIError } from "./payment.types";
+import { PaymentStatus, APIError, PaymentResponse, ProcessBookingData } from "./payment.types";
 import PaymentStatusMessage from "./PaymentStatusMessage";
 import BookingSummary from "./BookingSummary";
 import PaymentMethods from "./PaymentMethods";
@@ -24,6 +24,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const [errorDetails, setErrorDetails] = useState<APIError | null>(null);
   const [clientSecret, setClientSecret] = useState<string>('');
   const [transactionId, setTransactionId] = useState<string>('');
+  const [bookingId, setBookingId] = useState<string>('');
 
   // Reset state when modal is opened
   useEffect(() => {
@@ -32,6 +33,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       setErrorDetails(null);
       setClientSecret('');
       setTransactionId('');
+      setBookingId('');
     }
   }, [isOpen]);
 
@@ -99,158 +101,90 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
-  const handlePayWithCard = async () => {
-    // This is where Stripe Elements integration will go
+  const processPayment = async (paymentType: 'card' | 'google_pay', paymentMethodId: string) => {
     setPaymentStatus('processing');
     
-    // Simulate payment processing
-    setTimeout(() => {
-      // REPLACE THIS WITH YOUR DEPLOYED FIREBASE CLOUD FUNCTION URL
-      // Example: https://us-central1-your-project-id.cloudfunctions.net/processBooking
-      const processBookingUrl = '/api/process-booking'; // Replace with your deployed function URL
-      
-      const processBookingData = {
-        data: {  // Important: Firebase Cloud Functions expect data in a "data" field
-          paymentMethodId: 'dummy_card_payment_id', // Will be replaced with real Stripe payment method ID
-          clientSecret: clientSecret,
-          bookingDetails: bookingDetails,
-          paymentType: 'card',
-          timestamp: new Date().toISOString(),
-          transaction_id: transactionId
-        }
-      };
+    // REPLACE THIS WITH YOUR DEPLOYED FIREBASE CLOUD FUNCTION URL
+    // Example: https://us-central1-your-project-id.cloudfunctions.net/processBooking
+    const processBookingUrl = '/api/process-booking'; // Replace with your deployed function URL
+    
+    const processBookingData: ProcessBookingData = {
+      paymentMethodId,
+      clientSecret,
+      bookingDetails,
+      paymentType,
+      timestamp: new Date().toISOString(),
+      transaction_id: transactionId
+    };
 
-      fetch(processBookingUrl, {
+    try {
+      const response = await fetch(processBookingUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(processBookingData),
-      })
-        .then(response => {
-          if (!response.ok) {
-            const status = response.status;
-            // Handle different status codes differently
-            if (status === 400) {
-              throw new Error('Invalid booking data');
-            } else if (status === 402) {
-              throw new Error('Payment failed');
-            } else if (status === 500) {
-              throw new Error('Server error');
-            }
-            throw new Error('Booking processing failed');
-          }
-          return response.json();
-        })
-        .then(responseJson => {
-          console.log('Firebase Cloud Function processBooking response:', responseJson);
-          
-          // For testing purposes - will be replaced with actual Stripe integration
-          setPaymentStatus('success');
-          setTimeout(() => {
-            onPaymentComplete();
-          }, 1500);
-        })
-        .catch(error => {
-          console.error('Error calling Firebase Cloud Function processBooking:', error);
-          setPaymentStatus('error');
-          
-          // Determine error type based on error message
-          if (error.message.includes('Payment failed')) {
-            setErrorDetails({
-              type: 'payment_failed',
-              message: 'Your payment could not be processed. Please try again or use a different payment method.'
-            });
-          } else if (error.message.includes('booking')) {
-            setErrorDetails({
-              type: 'booking_failed',
-              message: 'Payment was successful, but booking could not be processed. Please contact support.'
-            });
-          } else {
-            setErrorDetails({
-              type: 'unknown',
-              message: 'An unexpected error occurred. Please try again later.'
-            });
-          }
+        body: JSON.stringify({ data: processBookingData }),
+      });
+      
+      if (!response.ok) {
+        const status = response.status;
+        // Handle different status codes differently
+        if (status === 400) {
+          throw new Error('Invalid booking data');
+        } else if (status === 402) {
+          throw new Error('Payment failed');
+        } else if (status === 500) {
+          throw new Error('Server error');
+        }
+        throw new Error('Booking processing failed');
+      }
+      
+      const responseJson = await response.json();
+      console.log('Firebase Cloud Function processBooking response:', responseJson);
+      
+      const result = responseJson.result as PaymentResponse;
+      
+      if (result.success) {
+        setBookingId(result.bookingId || '');
+        setPaymentStatus('success');
+        setTimeout(() => {
+          onPaymentComplete();
+        }, 1500);
+      } else {
+        throw new Error(result.message || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('Error calling Firebase Cloud Function processBooking:', error);
+      setPaymentStatus('error');
+      
+      // Determine error type based on error message
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (errorMessage.includes('Payment failed')) {
+        setErrorDetails({
+          type: 'payment_failed',
+          message: 'Your payment could not be processed. Please try again or use a different payment method.'
         });
-    }, 2000);
+      } else if (errorMessage.includes('booking')) {
+        setErrorDetails({
+          type: 'booking_failed',
+          message: 'Payment was successful, but booking could not be processed. Please contact support.'
+        });
+      } else {
+        setErrorDetails({
+          type: 'unknown',
+          message: 'An unexpected error occurred. Please try again later.'
+        });
+      }
+    }
+  };
+
+  const handlePayWithCard = async () => {
+    await processPayment('card', 'dummy_card_payment_id');
   };
 
   const handleGooglePay = async () => {
-    // This is where Google Pay integration will go
-    setPaymentStatus('processing');
-    
-    // Simulate payment processing
-    setTimeout(() => {
-      // REPLACE THIS WITH YOUR DEPLOYED FIREBASE CLOUD FUNCTION URL
-      // Example: https://us-central1-your-project-id.cloudfunctions.net/processBooking
-      const processBookingUrl = '/api/process-booking'; // Replace with your deployed function URL
-      
-      const processBookingData = {
-        data: {  // Important: Firebase Cloud Functions expect data in a "data" field
-          paymentMethodId: 'dummy_googlepay_payment_id',
-          clientSecret: clientSecret,
-          bookingDetails: bookingDetails,
-          paymentType: 'google_pay',
-          timestamp: new Date().toISOString(),
-          transaction_id: transactionId
-        }
-      };
-
-      fetch(processBookingUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(processBookingData),
-      })
-        .then(response => {
-          if (!response.ok) {
-            const status = response.status;
-            // Handle different status codes differently
-            if (status === 400) {
-              throw new Error('Invalid booking data');
-            } else if (status === 402) {
-              throw new Error('Payment failed');
-            } else if (status === 500) {
-              throw new Error('Server error');
-            }
-            throw new Error('Booking processing failed');
-          }
-          return response.json();
-        })
-        .then(responseJson => {
-          console.log('Firebase Cloud Function processBooking response:', responseJson);
-          
-          // For testing purposes - will be replaced with actual Google Pay integration
-          setPaymentStatus('success');
-          setTimeout(() => {
-            onPaymentComplete();
-          }, 1500);
-        })
-        .catch(error => {
-          console.error('Error calling Firebase Cloud Function processBooking:', error);
-          setPaymentStatus('error');
-          
-          // Determine error type based on error message
-          if (error.message.includes('Payment failed')) {
-            setErrorDetails({
-              type: 'payment_failed',
-              message: 'Your payment could not be processed. Please try again or use a different payment method.'
-            });
-          } else if (error.message.includes('booking')) {
-            setErrorDetails({
-              type: 'booking_failed',
-              message: 'Payment was successful, but booking could not be processed. Please contact support.'
-            });
-          } else {
-            setErrorDetails({
-              type: 'unknown',
-              message: 'An unexpected error occurred. Please try again later.'
-            });
-          }
-        });
-    }, 2000);
+    await processPayment('google_pay', 'dummy_googlepay_payment_id');
   };
 
   const renderContent = () => {
@@ -260,7 +194,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         <PaymentStatusMessage 
           status={paymentStatus} 
           errorDetails={errorDetails} 
-          transactionId={transactionId} 
+          transactionId={transactionId}
+          bookingId={bookingId}
         />
       );
     }

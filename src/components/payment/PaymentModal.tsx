@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { X, CreditCard, AlertTriangle, Check, Loader } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -53,18 +52,22 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       
       setPaymentStatus('loading');
       
-      // PLACEHOLDER API CALL to Firebase Cloud Function createPaymentIntent
-      // REPLACE WITH REAL FIREBASE CLOUD FUNCTION URL when deployed
-      fetch('/api/create-payment-intent', {
+      // REPLACE THIS WITH YOUR DEPLOYED FIREBASE CLOUD FUNCTION URL
+      // Example: https://us-central1-your-project-id.cloudfunctions.net/createPaymentIntent
+      const createPaymentIntentUrl = '/api/create-payment-intent'; // Replace with your deployed function URL
+      
+      fetch(createPaymentIntentUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          amount: bookingDetails.totalPrice,
-          currency: 'usd',
-          booking_reference: `booking-${Date.now()}`,
-          transaction_id: generatedTransactionId
+          data: {  // Important: Firebase Cloud Functions expect data in a "data" field
+            amount: bookingDetails.totalPrice,
+            currency: 'usd',
+            booking_reference: `booking-${Date.now()}`,
+            transaction_id: generatedTransactionId
+          }
         }),
       })
         .then(response => {
@@ -74,14 +77,17 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           return response.json();
         })
         .then(responseJson => {
-          console.log('Simulated API call to Firebase Cloud Function createPaymentIntent successful');
-          console.log('Response data:', responseJson);
-          // Simulate setting client secret from Firebase function response
-          setClientSecret('CLIENT_SECRET_FROM_FIREBASE_FUNCTION');
+          console.log('Firebase Cloud Function createPaymentIntent response:', responseJson);
+          // Firebase Functions return data inside a "result" object
+          const clientSecret = responseJson.result?.clientSecret;
+          if (!clientSecret) {
+            throw new Error('Invalid response: Client secret not found');
+          }
+          setClientSecret(clientSecret);
           setPaymentStatus('idle');
         })
         .catch(error => {
-          console.error('Simulated API call to Firebase Cloud Function createPaymentIntent failed', error);
+          console.error('Error calling Firebase Cloud Function createPaymentIntent:', error);
           setPaymentStatus('error');
           setErrorDetails({
             type: 'payment_failed',
@@ -107,17 +113,22 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     
     // Simulate payment processing
     setTimeout(() => {
-      // PLACEHOLDER API CALL to Firebase Cloud Function processBooking
-      // REPLACE WITH REAL FIREBASE CLOUD FUNCTION URL when deployed
+      // REPLACE THIS WITH YOUR DEPLOYED FIREBASE CLOUD FUNCTION URL
+      // Example: https://us-central1-your-project-id.cloudfunctions.net/processBooking
+      const processBookingUrl = '/api/process-booking'; // Replace with your deployed function URL
+      
       const processBookingData = {
-        paymentMethodId: 'dummy_card_payment_id',
-        bookingDetails: bookingDetails,
-        paymentType: 'card',
-        timestamp: new Date().toISOString(),
-        transaction_id: transactionId
+        data: {  // Important: Firebase Cloud Functions expect data in a "data" field
+          paymentMethodId: 'dummy_card_payment_id', // Will be replaced with real Stripe payment method ID
+          clientSecret: clientSecret,
+          bookingDetails: bookingDetails,
+          paymentType: 'card',
+          timestamp: new Date().toISOString(),
+          transaction_id: transactionId
+        }
       };
 
-      fetch('/api/process-booking', {
+      fetch(processBookingUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -140,8 +151,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           return response.json();
         })
         .then(responseJson => {
-          console.log('Simulated API call to Firebase Cloud Function processBooking successful');
-          console.log('Response data:', responseJson);
+          console.log('Firebase Cloud Function processBooking response:', responseJson);
           
           // For testing purposes - will be replaced with actual Stripe integration
           setPaymentStatus('success');
@@ -150,7 +160,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           }, 1500);
         })
         .catch(error => {
-          console.error('Simulated API call to Firebase Cloud Function processBooking failed', error);
+          console.error('Error calling Firebase Cloud Function processBooking:', error);
           setPaymentStatus('error');
           
           // Determine error type based on error message
@@ -180,17 +190,22 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     
     // Simulate payment processing
     setTimeout(() => {
-      // PLACEHOLDER API CALL to Firebase Cloud Function processBooking
-      // REPLACE WITH REAL FIREBASE CLOUD FUNCTION URL when deployed
+      // REPLACE THIS WITH YOUR DEPLOYED FIREBASE CLOUD FUNCTION URL
+      // Example: https://us-central1-your-project-id.cloudfunctions.net/processBooking
+      const processBookingUrl = '/api/process-booking'; // Replace with your deployed function URL
+      
       const processBookingData = {
-        paymentMethodId: 'dummy_googlepay_payment_id',
-        bookingDetails: bookingDetails,
-        paymentType: 'google_pay',
-        timestamp: new Date().toISOString(),
-        transaction_id: transactionId
+        data: {  // Important: Firebase Cloud Functions expect data in a "data" field
+          paymentMethodId: 'dummy_googlepay_payment_id',
+          clientSecret: clientSecret,
+          bookingDetails: bookingDetails,
+          paymentType: 'google_pay',
+          timestamp: new Date().toISOString(),
+          transaction_id: transactionId
+        }
       };
 
-      fetch('/api/process-booking', {
+      fetch(processBookingUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -213,8 +228,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           return response.json();
         })
         .then(responseJson => {
-          console.log('Simulated API call to Firebase Cloud Function processBooking successful');
-          console.log('Response data:', responseJson);
+          console.log('Firebase Cloud Function processBooking response:', responseJson);
           
           // For testing purposes - will be replaced with actual Google Pay integration
           setPaymentStatus('success');
@@ -223,7 +237,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           }, 1500);
         })
         .catch(error => {
-          console.error('Simulated API call to Firebase Cloud Function processBooking failed', error);
+          console.error('Error calling Firebase Cloud Function processBooking:', error);
           setPaymentStatus('error');
           
           // Determine error type based on error message

@@ -53,7 +53,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       
       setPaymentStatus('loading');
       
-      // PLACEHOLDER: API call to Firebase Cloud Function createPaymentIntent
+      // PLACEHOLDER API CALL to Firebase Cloud Function createPaymentIntent
       // REPLACE WITH REAL FIREBASE CLOUD FUNCTION URL when deployed
       fetch('/api/create-payment-intent', {
         method: 'POST',
@@ -107,7 +107,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     
     // Simulate payment processing
     setTimeout(() => {
-      // PLACEHOLDER: API call to Firebase Cloud Function processBooking
+      // PLACEHOLDER API CALL to Firebase Cloud Function processBooking
       // REPLACE WITH REAL FIREBASE CLOUD FUNCTION URL when deployed
       const processBookingData = {
         paymentMethodId: 'dummy_card_payment_id',
@@ -180,7 +180,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     
     // Simulate payment processing
     setTimeout(() => {
-      // PLACEHOLDER: API call to Firebase Cloud Function processBooking
+      // PLACEHOLDER API CALL to Firebase Cloud Function processBooking
       // REPLACE WITH REAL FIREBASE CLOUD FUNCTION URL when deployed
       const processBookingData = {
         paymentMethodId: 'dummy_googlepay_payment_id',
@@ -296,7 +296,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         )}
         
         {/* Booking Summary */}
-        {(paymentStatus === 'idle' || paymentStatus === 'error') && (
+        {paymentStatus !== 'loading' && paymentStatus !== 'processing' && paymentStatus !== 'success' && (
           <>
             <div className="space-y-4">
               <div className="bg-secondary/30 p-4 rounded-md">

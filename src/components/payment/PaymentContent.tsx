@@ -46,7 +46,7 @@ const PaymentContent: React.FC<PaymentContentProps> = ({
         <PaymentMethods 
           onCardPayment={onCardPayment}
           onGooglePayment={onGooglePayment}
-          disabled={paymentStatus === 'loading' || paymentStatus === 'processing'}
+          disabled={paymentStatus !== 'idle'}
         />
       </div>
       

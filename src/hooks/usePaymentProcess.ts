@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { BookingDetails } from "@/types/hotel.types";
 import { PaymentStatus, APIError, PaymentResponse, ProcessBookingData, PaymentMethodType } from "@/components/payment/payment.types";
+import { API_ENDPOINTS } from "@/config/api";
 
 export const usePaymentProcess = (
   isOpen: boolean,
@@ -34,10 +35,7 @@ export const usePaymentProcess = (
       
       setPaymentStatus('loading');
       
-      // REPLACE THIS WITH YOUR DEPLOYED FIREBASE CLOUD FUNCTION URL
-      const createPaymentIntentUrl = '/api/create-payment-intent';
-      
-      fetch(createPaymentIntentUrl, {
+      fetch(API_ENDPOINTS.CREATE_PAYMENT_INTENT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,9 +79,6 @@ export const usePaymentProcess = (
   const processPayment = async (paymentType: PaymentMethodType, paymentMethodId: string) => {
     setPaymentStatus('processing');
     
-    // REPLACE THIS WITH YOUR DEPLOYED FIREBASE CLOUD FUNCTION URL
-    const processBookingUrl = '/api/process-booking';
-    
     if (!bookingDetails) {
       setPaymentStatus('error');
       setErrorDetails({
@@ -103,7 +98,7 @@ export const usePaymentProcess = (
     };
 
     try {
-      const response = await fetch(processBookingUrl, {
+      const response = await fetch(API_ENDPOINTS.PROCESS_BOOKING, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

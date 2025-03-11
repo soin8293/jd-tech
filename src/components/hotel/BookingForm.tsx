@@ -70,12 +70,14 @@ const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch }) => {
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {dateRange.from && dateRange.to ? (
-                    <>
-                      {format(dateRange.from, "MMM d, yyyy")} - {format(dateRange.to, "MMM d, yyyy")}
-                      <span className="ml-auto text-muted-foreground text-sm bg-muted px-2 py-1 rounded-full">
+                    <div className="flex items-center w-full justify-between">
+                      <span className="truncate">
+                        {format(dateRange.from, "MMM d, yyyy")} - {format(dateRange.to, "MMM d, yyyy")}
+                      </span>
+                      <span className="ml-1 text-muted-foreground text-sm bg-muted px-2 py-1 rounded-full flex-shrink-0">
                         {nights} night{nights !== 1 ? 's' : ''}
                       </span>
-                    </>
+                    </div>
                   ) : (
                     <span>Select dates</span>
                   )}

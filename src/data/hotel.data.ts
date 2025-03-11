@@ -1,4 +1,3 @@
-
 import { Room } from "../types/hotel.types";
 
 export const hotelRooms: Room[] = [
@@ -111,20 +110,18 @@ export const hotelRooms: Room[] = [
 ];
 
 export const hotelDetails = {
-  name: "Serenity Grand Hotel",
-  description: "Experience unparalleled luxury in the heart of the city, where timeless elegance meets modern comfort.",
-  address: "123 Luxury Avenue, Metropolis",
+  name: "JD Suites",
+  description: "Experience authentic Nigerian hospitality in the heart of luxury, where traditional warmth meets modern comfort.",
+  address: "Victoria Island, Lagos, Nigeria",
   rating: 4.9,
   amenities: [
     "Free WiFi",
-    "Pool",
-    "Spa",
-    "Fitness Center",
     "Restaurant",
     "Room Service",
     "Concierge",
     "Parking",
-    "Business Center"
+    "Business Center",
+    "24/7 Security"
   ],
   checkInTime: "15:00",
   checkOutTime: "11:00",

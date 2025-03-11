@@ -1,6 +1,7 @@
 
 // Replace these URLs with your actual deployed Cloud Function URLs
 export const API_ENDPOINTS = {
-  CREATE_PAYMENT_INTENT: 'https://your-region-your-project-id.cloudfunctions.net/createPaymentIntent',
-  PROCESS_BOOKING: 'https://your-region-your-project-id.cloudfunctions.net/processBooking',
+  // Using mockable.io as a placeholder that won't cause errors
+  CREATE_PAYMENT_INTENT: 'https://demo3652557.mockable.io/createPaymentIntent',
+  PROCESS_BOOKING: 'https://demo3652557.mockable.io/processBooking',
 };

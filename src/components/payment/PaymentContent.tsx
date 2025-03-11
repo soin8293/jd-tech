@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BookingDetails } from "@/types/hotel.types";
 import { PaymentStatus, APIError, PaymentMethodType } from "./payment.types";
@@ -25,8 +24,9 @@ const PaymentContent: React.FC<PaymentContentProps> = ({
   onCardPayment,
   onGooglePayment,
 }) => {
-  // Show status messages for all states
-  if (paymentStatus === 'loading' || paymentStatus === 'processing' || paymentStatus === 'success' || paymentStatus === 'error') {
+  // Only show status messages for processing, success, or error states
+  // Keep idle and loading states showing the payment options
+  if (paymentStatus === 'processing' || paymentStatus === 'success' || paymentStatus === 'error') {
     return (
       <PaymentStatusMessage 
         status={paymentStatus} 
@@ -37,7 +37,7 @@ const PaymentContent: React.FC<PaymentContentProps> = ({
     );
   }
 
-  // Show booking summary and payment methods for idle state
+  // Show booking summary and payment methods for idle and loading states
   return (
     <>
       <div className="space-y-4">
@@ -46,7 +46,7 @@ const PaymentContent: React.FC<PaymentContentProps> = ({
         <PaymentMethods 
           onCardPayment={onCardPayment}
           onGooglePayment={onGooglePayment}
-          disabled={paymentStatus !== 'idle'}
+          disabled={paymentStatus === 'loading'}
         />
       </div>
       

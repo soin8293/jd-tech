@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { BookingDetails } from "@/types/hotel.types";
@@ -34,12 +35,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
-  const handlePayWithCard = async () => {
-    await processPayment('card', 'dummy_card_payment_id');
+  const handlePayWithCard = async (paymentMethodId: string) => {
+    await processPayment('card', paymentMethodId);
   };
 
-  const handleGooglePay = async () => {
-    await processPayment('google_pay', 'dummy_googlepay_payment_id');
+  const handleGooglePay = async (paymentMethodId: string) => {
+    await processPayment('google_pay', paymentMethodId);
   };
 
   return (

@@ -12,8 +12,8 @@ interface PaymentContentProps {
   errorDetails: APIError | null;
   transactionId: string;
   bookingId: string;
-  onCardPayment: () => void;
-  onGooglePayment: () => void;
+  onCardPayment: (paymentMethodId: string) => void;
+  onGooglePayment: (paymentMethodId: string) => void;
 }
 
 const PaymentContent: React.FC<PaymentContentProps> = ({
@@ -47,6 +47,7 @@ const PaymentContent: React.FC<PaymentContentProps> = ({
           onCardPayment={onCardPayment}
           onGooglePayment={onGooglePayment}
           disabled={paymentStatus === 'loading'}
+          amount={bookingDetails.totalPrice}
         />
       </div>
       

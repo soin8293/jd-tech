@@ -1,7 +1,8 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CreditCard } from "lucide-react";
+import { CardElement } from "@stripe/react-stripe-js";
 
 interface PaymentMethodsProps {
   onCardPayment: () => void;
@@ -14,6 +15,12 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   onGooglePayment,
   disabled
 }) => {
+  const [showCardElement, setShowCardElement] = useState(false);
+
+  const handleCardClick = () => {
+    setShowCardElement(true);
+  };
+
   return (
     <div>
       <h3 className="text-sm font-medium mb-3">Select Payment Method</h3>
@@ -36,22 +43,45 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
       </Button>
       
       {/* Card Payment Button */}
-      <Button 
-        variant="default" 
-        className="w-full h-12 mb-3"
-        onClick={onCardPayment}
-        disabled={disabled}
-      >
-        <CreditCard className="mr-2 h-4 w-4" />
-        Pay with Card
-      </Button>
+      {!showCardElement && (
+        <Button 
+          variant="default" 
+          className="w-full h-12 mb-3"
+          onClick={handleCardClick}
+          disabled={disabled}
+        >
+          <CreditCard className="mr-2 h-4 w-4" />
+          Pay with Card
+        </Button>
+      )}
       
-      {/* This is where the Stripe Card Element will be rendered */}
-      <div className="p-4 border border-border rounded-md mb-4 hidden">
-        <p className="text-center text-sm text-muted-foreground">
-          Card payment form will appear here when Stripe is integrated
-        </p>
-      </div>
+      {/* Stripe Card Element */}
+      {showCardElement && (
+        <div className="space-y-4">
+          <div className="p-4 border border-border rounded-md">
+            <CardElement 
+              options={{
+                style: {
+                  base: {
+                    fontSize: '16px',
+                    color: '#1f2937',
+                    '::placeholder': {
+                      color: '#6b7280',
+                    },
+                  },
+                },
+              }}
+            />
+          </div>
+          <Button 
+            onClick={onCardPayment}
+            className="w-full"
+            disabled={disabled}
+          >
+            Pay Now
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

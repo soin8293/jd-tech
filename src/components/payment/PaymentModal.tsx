@@ -1,9 +1,9 @@
-
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { BookingDetails } from "@/types/hotel.types";
 import { usePaymentProcess } from "@/hooks/usePaymentProcess";
 import PaymentContent from "./PaymentContent";
+import StripeWrapper from "./StripeWrapper";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -52,15 +52,17 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <PaymentContent
-          bookingDetails={bookingDetails}
-          paymentStatus={paymentStatus}
-          errorDetails={errorDetails}
-          transactionId={transactionId}
-          bookingId={bookingId}
-          onCardPayment={handlePayWithCard}
-          onGooglePayment={handleGooglePay}
-        />
+        <StripeWrapper>
+          <PaymentContent
+            bookingDetails={bookingDetails}
+            paymentStatus={paymentStatus}
+            errorDetails={errorDetails}
+            transactionId={transactionId}
+            bookingId={bookingId}
+            onCardPayment={handlePayWithCard}
+            onGooglePayment={handleGooglePay}
+          />
+        </StripeWrapper>
       </DialogContent>
     </Dialog>
   );

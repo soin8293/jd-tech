@@ -26,15 +26,17 @@ export const usePaymentProcess = (
     }
   }, [isOpen]);
 
-  // Fetch payment intent
+  // Generate transaction ID when modal opens but don't set error state
   useEffect(() => {
     if (isOpen && bookingDetails) {
       // Generate a unique transaction ID for this booking attempt
       const generatedTransactionId = `txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       setTransactionId(generatedTransactionId);
       
-      setPaymentStatus('loading');
+      // Don't set loading state until a payment method is chosen
+      // This prevents auto-failing when the modal opens
       
+      // Prepare client secret in background but don't show errors
       fetch(API_ENDPOINTS.CREATE_PAYMENT_INTENT, {
         method: 'POST',
         headers: {
@@ -51,32 +53,30 @@ export const usePaymentProcess = (
       })
         .then(response => {
           if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.status}`);
+            console.log('Payment intent initialization failed, but not showing error yet');
+            return null;
           }
           return response.json();
         })
         .then(responseJson => {
-          console.log('Firebase Cloud Function createPaymentIntent response:', responseJson);
-          // Firebase Functions return data inside a "result" object
-          const clientSecret = responseJson.result?.clientSecret;
-          if (!clientSecret) {
-            throw new Error('Invalid response: Client secret not found');
+          if (responseJson) {
+            console.log('Firebase Cloud Function createPaymentIntent response:', responseJson);
+            // Firebase Functions return data inside a "result" object
+            const clientSecret = responseJson.result?.clientSecret;
+            if (clientSecret) {
+              setClientSecret(clientSecret);
+            }
           }
-          setClientSecret(clientSecret);
-          setPaymentStatus('idle');
         })
         .catch(error => {
           console.error('Error calling Firebase Cloud Function createPaymentIntent:', error);
-          setPaymentStatus('error');
-          setErrorDetails({
-            type: 'payment_failed',
-            message: 'Failed to initialize payment. Please try again later.'
-          });
+          // Don't set error state here, wait until user attempts payment
         });
     }
   }, [isOpen, bookingDetails]);
 
   const processPayment = async (paymentType: PaymentMethodType, paymentMethodId: string) => {
+    // Only set processing state when user actually selects a payment method
     setPaymentStatus('processing');
     
     if (!bookingDetails) {

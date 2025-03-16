@@ -99,7 +99,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
               paymentRequest,
               style: {
                 paymentRequestButton: {
-                  type: 'pay',
+                  type: 'buy', // Valid values are 'default', 'book', 'buy', etc.
                   theme: 'light',
                   height: '48px',
                 },

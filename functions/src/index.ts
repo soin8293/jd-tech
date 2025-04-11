@@ -21,13 +21,22 @@ exports.createPaymentIntent = functions.https.onCall(async (data: any, context: 
     // 2. Extract booking details from request
     const { rooms, period, guests, transaction_id, booking_reference } = data;
     const currency = data.currency || "usd"; // Default to USD if currency is not provided
+    
+    console.log(`Payment Intent requested for transaction_id: ${transaction_id}`, { 
+      rooms: rooms?.length, 
+      period, 
+      guests, 
+      currency 
+    });
 
     // 3. Input Validation
     if (!rooms || !Array.isArray(rooms) || rooms.length === 0) {
+      console.error(`Validation error: No rooms provided for booking. Data received:`, data);
       throw new functions.https.HttpsError("invalid-argument", "No rooms provided for booking.");
     }
     
     if (!period || !period.checkIn || !period.checkOut) {
+      console.error(`Validation error: Invalid booking period. Period received:`, period);
       throw new functions.https.HttpsError("invalid-argument", "Invalid booking period.");
     }
 
@@ -36,10 +45,13 @@ exports.createPaymentIntent = functions.https.onCall(async (data: any, context: 
     const checkOut = new Date(period.checkOut);
     const numberOfNights = Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 3600 * 24)));
     
+    console.log(`Booking duration: ${numberOfNights} nights from ${checkIn.toISOString()} to ${checkOut.toISOString()}`);
+    
     // 5. Calculate total price from room details and nights
     let totalAmount = 0;
     for (const room of rooms) {
       if (!room.price || typeof room.price !== 'number') {
+        console.error(`Invalid price for room: ${room.id || 'unknown'}`, room);
         throw new functions.https.HttpsError("invalid-argument", `Invalid price for room: ${room.id || 'unknown'}`);
       }
       totalAmount += room.price * numberOfNights;
@@ -52,7 +64,10 @@ exports.createPaymentIntent = functions.https.onCall(async (data: any, context: 
     // 7. Convert to cents for Stripe
     const amountInCents = Math.round(totalAmount * 100);
     
+    console.log(`Calculated amount: $${totalAmount} (${amountInCents} cents)`);
+    
     if (amountInCents <= 0) {
+      console.error(`Invalid amount calculated: ${amountInCents} cents`);
       throw new functions.https.HttpsError("invalid-argument", "Total amount must be greater than zero.");
     }
 
@@ -69,6 +84,8 @@ exports.createPaymentIntent = functions.https.onCall(async (data: any, context: 
       },
       automatic_payment_methods: { enabled: true }, // Enable automatic payment methods for convenience
     });
+
+    console.log(`Payment Intent created successfully: ${paymentIntent.id}`);
 
     // 9. Return Client Secret to the Frontend
     return { 
@@ -96,5 +113,42 @@ exports.createPaymentIntent = functions.https.onCall(async (data: any, context: 
       // Handle generic API errors or other unexpected errors
       throw new functions.https.HttpsError('internal', 'Failed to create Payment Intent. Contact support.');
     }
+  }
+});
+
+/**
+ * Firebase Cloud Function to process a booking after payment.
+ * This is a placeholder for your actual booking processing logic.
+ */
+exports.processBooking = functions.https.onCall(async (data: any, context: functions.https.CallableContext) => {
+  try {
+    console.log("Processing booking with data:", data);
+    
+    // Here you would typically:
+    // 1. Verify the payment with Stripe
+    // 2. Create a booking record in Firestore
+    // 3. Send confirmation emails
+    // 4. Update room availability
+    
+    // For demonstration, we'll just return a success response with a generated booking ID
+    const bookingId = `booking-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    
+    console.log(`Booking processed successfully. Booking ID: ${bookingId}`);
+    
+    return {
+      success: true,
+      bookingId: bookingId,
+      message: "Booking confirmed successfully!"
+    };
+    
+  } catch (error: any) {
+    console.error("Error processing booking:", error);
+    return {
+      success: false,
+      error: {
+        type: 'booking_failed',
+        message: error.message || 'Failed to process booking. Please try again.'
+      }
+    };
   }
 });

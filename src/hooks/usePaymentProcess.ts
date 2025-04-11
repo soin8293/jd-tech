@@ -35,24 +35,24 @@ export const usePaymentProcess = (
       const generatedTransactionId = `txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       setTransactionId(generatedTransactionId);
       
-      // Don't set loading state until a payment method is chosen
-      // This prevents auto-failing when the modal opens
+      // Prepare the booking data to send to the Cloud Function
+      const bookingData = {
+        rooms: bookingDetails.rooms,
+        period: bookingDetails.period,
+        guests: bookingDetails.guests,
+        currency: 'usd',
+        booking_reference: `booking-${Date.now()}`,
+        transaction_id: generatedTransactionId
+      };
       
-      // Prepare client secret in background but don't show errors
+      // Call the Firebase Cloud Function to create a payment intent
       fetch(API_ENDPOINTS.CREATE_PAYMENT_INTENT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          data: {
-            rooms: bookingDetails.rooms,
-            period: bookingDetails.period,
-            guests: bookingDetails.guests,
-            currency: 'usd',
-            booking_reference: `booking-${Date.now()}`,
-            transaction_id: generatedTransactionId
-          }
+          data: bookingData
         }),
       })
         .then(response => {
@@ -72,13 +72,9 @@ export const usePaymentProcess = (
             if (clientSecret) {
               setClientSecret(clientSecret);
               
-              // Compare server-calculated amount with frontend amount (optional security check)
-              if (serverCalculatedAmount && Math.abs(serverCalculatedAmount - bookingDetails.totalPrice) > 0.01) {
-                console.warn('Price discrepancy detected between frontend and backend calculations');
-                // You can choose to show a warning or just use the server price
+              // Use the server-calculated amount as the source of truth
+              if (serverCalculatedAmount) {
                 setCalculatedAmount(serverCalculatedAmount);
-              } else {
-                setCalculatedAmount(bookingDetails.totalPrice);
               }
             }
           }
@@ -112,9 +108,8 @@ export const usePaymentProcess = (
       transaction_id: transactionId
     };
 
-    // If we have a server-calculated amount that differs, use it instead
-    if (calculatedAmount !== null && Math.abs(calculatedAmount - bookingDetails.totalPrice) > 0.01) {
-      console.log(`Using server-calculated amount: $${calculatedAmount} (frontend had: $${bookingDetails.totalPrice})`);
+    // Always use the server-calculated amount as the source of truth
+    if (calculatedAmount !== null) {
       processBookingData.serverCalculatedAmount = calculatedAmount;
     }
 

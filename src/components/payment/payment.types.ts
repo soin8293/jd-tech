@@ -1,4 +1,3 @@
-
 export type PaymentStatus = 'idle' | 'loading' | 'processing' | 'error' | 'success';
 export type APIErrorType = 'payment_failed' | 'booking_failed' | 'network_error' | 'unknown';
 export type PaymentMethodType = 'card' | 'google_pay';
@@ -19,8 +18,9 @@ export interface PaymentResponse {
 export interface ProcessBookingData {
   paymentMethodId: string;
   clientSecret: string;
-  bookingDetails: any; // Use your BookingDetails type
+  bookingDetails: BookingDetails;
   paymentType: PaymentMethodType;
   timestamp: string;
   transaction_id: string;
+  serverCalculatedAmount?: number;
 }

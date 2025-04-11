@@ -14,6 +14,7 @@ export const usePaymentProcess = (
   const [clientSecret, setClientSecret] = useState<string>('');
   const [transactionId, setTransactionId] = useState<string>('');
   const [bookingId, setBookingId] = useState<string>('');
+  const [calculatedAmount, setCalculatedAmount] = useState<number | null>(null);
 
   // Reset state when modal is opened
   useEffect(() => {
@@ -23,6 +24,7 @@ export const usePaymentProcess = (
       setClientSecret('');
       setTransactionId('');
       setBookingId('');
+      setCalculatedAmount(null);
     }
   }, [isOpen]);
 
@@ -44,7 +46,9 @@ export const usePaymentProcess = (
         },
         body: JSON.stringify({ 
           data: {
-            amount: bookingDetails.totalPrice,
+            rooms: bookingDetails.rooms,
+            period: bookingDetails.period,
+            guests: bookingDetails.guests,
             currency: 'usd',
             booking_reference: `booking-${Date.now()}`,
             transaction_id: generatedTransactionId
@@ -63,8 +67,19 @@ export const usePaymentProcess = (
             console.log('Firebase Cloud Function createPaymentIntent response:', responseJson);
             // Firebase Functions return data inside a "result" object
             const clientSecret = responseJson.result?.clientSecret;
+            const serverCalculatedAmount = responseJson.result?.calculatedAmount;
+            
             if (clientSecret) {
               setClientSecret(clientSecret);
+              
+              // Compare server-calculated amount with frontend amount (optional security check)
+              if (serverCalculatedAmount && Math.abs(serverCalculatedAmount - bookingDetails.totalPrice) > 0.01) {
+                console.warn('Price discrepancy detected between frontend and backend calculations');
+                // You can choose to show a warning or just use the server price
+                setCalculatedAmount(serverCalculatedAmount);
+              } else {
+                setCalculatedAmount(bookingDetails.totalPrice);
+              }
             }
           }
         })
@@ -96,6 +111,12 @@ export const usePaymentProcess = (
       timestamp: new Date().toISOString(),
       transaction_id: transactionId
     };
+
+    // If we have a server-calculated amount that differs, use it instead
+    if (calculatedAmount !== null && Math.abs(calculatedAmount - bookingDetails.totalPrice) > 0.01) {
+      console.log(`Using server-calculated amount: $${calculatedAmount} (frontend had: $${bookingDetails.totalPrice})`);
+      processBookingData.serverCalculatedAmount = calculatedAmount;
+    }
 
     try {
       const response = await fetch(API_ENDPOINTS.PROCESS_BOOKING, {
@@ -165,5 +186,6 @@ export const usePaymentProcess = (
     transactionId,
     bookingId,
     processPayment,
+    calculatedAmount,
   };
 };

@@ -1,3 +1,6 @@
+
+import { BookingDetails } from '@/types/hotel.types';
+
 export type PaymentStatus = 'idle' | 'loading' | 'processing' | 'error' | 'success';
 export type APIErrorType = 'payment_failed' | 'booking_failed' | 'network_error' | 'unknown';
 export type PaymentMethodType = 'card' | 'google_pay';

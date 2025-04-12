@@ -5,6 +5,9 @@ import { hotelRooms } from "@/data/hotel.data";
 import { Room } from "@/types/hotel.types";
 import RoomManager from "@/components/hotel/RoomManager";
 
+// Set this to true to enable room editing functionality
+const ENABLE_ROOM_EDITING = false;
+
 const RoomManagement = () => {
   const { toast } = useToast();
   const [rooms, setRooms] = useState<Room[]>(hotelRooms);
@@ -39,6 +42,7 @@ const RoomManagement = () => {
           <RoomManager 
             initialRooms={rooms} 
             onSaveRooms={handleSaveRooms} 
+            showEditButtons={ENABLE_ROOM_EDITING}
           />
         </div>
       </main>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Room, RoomFormData } from "@/types/hotel.types";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,7 @@ import RoomCard from "./RoomCard";
 interface RoomManagerProps {
   initialRooms: Room[];
   onSaveRooms: (rooms: Room[]) => void;
+  showEditButtons?: boolean;
 }
 
 const defaultRoom: RoomFormData = {
@@ -31,7 +31,11 @@ const defaultRoom: RoomFormData = {
   availability: true
 };
 
-const RoomManager: React.FC<RoomManagerProps> = ({ initialRooms, onSaveRooms }) => {
+const RoomManager: React.FC<RoomManagerProps> = ({ 
+  initialRooms, 
+  onSaveRooms,
+  showEditButtons = true
+}) => {
   const { toast } = useToast();
   const [rooms, setRooms] = useState<Room[]>(initialRooms);
   const [editingRoom, setEditingRoom] = useState<RoomFormData | null>(null);
@@ -131,7 +135,6 @@ const RoomManager: React.FC<RoomManagerProps> = ({ initialRooms, onSaveRooms }) 
   const handleSaveRoom = () => {
     if (!editingRoom) return;
     
-    // Validate required fields
     if (!editingRoom.name || !editingRoom.price || editingRoom.images.length === 0) {
       toast({
         title: "Missing information",
@@ -144,7 +147,7 @@ const RoomManager: React.FC<RoomManagerProps> = ({ initialRooms, onSaveRooms }) 
     let updatedRooms: Room[];
     const roomToSave: Room = {
       ...editingRoom,
-      id: editingRoom.id || `room-${Date.now()}` // Generate ID for new rooms
+      id: editingRoom.id || `room-${Date.now()}`
     };
     
     if (isAdding) {
@@ -183,7 +186,7 @@ const RoomManager: React.FC<RoomManagerProps> = ({ initialRooms, onSaveRooms }) 
             </TabsTrigger>
           </TabsList>
           
-          {activeTab === 'view' && (
+          {activeTab === 'view' && showEditButtons && (
             <Button onClick={handleAddRoom} className="gap-1">
               <PlusCircle className="h-4 w-4" />
               Add Room
@@ -199,26 +202,28 @@ const RoomManager: React.FC<RoomManagerProps> = ({ initialRooms, onSaveRooms }) 
                   <RoomCard
                     room={room}
                     onSelect={() => {}}
-                    className="pr-16"
+                    className={showEditButtons ? "pr-16" : ""}
                   />
-                  <div className="absolute top-4 right-4 flex flex-col gap-1">
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      onClick={() => handleEditRoom(room)}
-                      className="h-8 w-8"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      onClick={() => handleDeleteRoom(room.id)}
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {showEditButtons && (
+                    <div className="absolute top-4 right-4 flex flex-col gap-1">
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => handleEditRoom(room)}
+                        className="h-8 w-8"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => handleDeleteRoom(room.id)}
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -228,10 +233,12 @@ const RoomManager: React.FC<RoomManagerProps> = ({ initialRooms, onSaveRooms }) 
               <p className="text-muted-foreground mb-4">
                 Add your first room to start attracting guests
               </p>
-              <Button onClick={handleAddRoom}>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Add Your First Room
-              </Button>
+              {showEditButtons && (
+                <Button onClick={handleAddRoom}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add Your First Room
+                </Button>
+              )}
             </div>
           )}
         </TabsContent>

@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { BookingPeriod, Room, BookingDetails } from "@/types/hotel.types";
 import { hotelRooms } from "@/data/hotel.data";
@@ -9,6 +10,8 @@ import RoomCard from "@/components/hotel/RoomCard";
 import BookingSummary from "@/components/hotel/BookingSummary";
 import PaymentModal from "@/components/payment/PaymentModal";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Settings } from "lucide-react";
 import { format, addDays, differenceInDays } from "date-fns";
 
 const Hotel = () => {
@@ -95,10 +98,19 @@ const Hotel = () => {
       <HotelHeader />
       
       <div className="container mx-auto px-4 md:px-6 -mt-20 relative z-10 mb-12">
-        <BookingForm 
-          onSearch={handleSearchRooms} 
-          className="mb-10"
-        />
+        <div className="flex justify-between items-center mb-6">
+          <BookingForm 
+            onSearch={handleSearchRooms} 
+            className="mb-10"
+          />
+          
+          <Link to="/room-management">
+            <Button variant="outline" className="gap-1.5">
+              <Settings className="h-4 w-4" />
+              Manage Rooms
+            </Button>
+          </Link>
+        </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
           {/* Left side - Room listings */}

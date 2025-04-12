@@ -23,3 +23,16 @@ export interface BookingDetails {
   rooms: Room[];
   totalPrice: number;
 }
+
+export interface RoomFormData {
+  id?: string;
+  name: string;
+  description: string;
+  price: number;
+  capacity: number;
+  size: number;
+  bed: string;
+  amenities: string[];
+  images: string[];
+  availability: boolean;
+}

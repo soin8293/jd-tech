@@ -22,35 +22,52 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   const [showCardElement, setShowCardElement] = useState(false);
   const [paymentRequest, setPaymentRequest] = useState<any>(null);
   const [processing, setProcessing] = useState(false);
+  const [googlePayError, setGooglePayError] = useState<string | null>(null);
   
   // Set up Google Pay payment request on component mount
   React.useEffect(() => {
     if (!stripe || !amount) return;
     
-    const pr = stripe.paymentRequest({
-      country: 'US',
-      currency: 'usd',
-      total: {
-        label: 'Hotel Booking',
-        amount: amount * 100, // Convert to cents for Stripe
-      },
-      requestPayerName: true,
-      requestPayerEmail: true,
-    });
+    console.log("Setting up Google Pay payment request for amount:", amount);
     
-    // Check if the Payment Request is available
-    pr.canMakePayment().then(result => {
-      if (result && result.googlePay) {
-        setPaymentRequest(pr);
-      }
-    });
-    
-    // Handle payment method creation
-    pr.on('paymentmethod', async (e) => {
-      setProcessing(true);
-      onGooglePayment(e.paymentMethod.id);
-      e.complete('success');
-    });
+    try {
+      const pr = stripe.paymentRequest({
+        country: 'US',
+        currency: 'usd',
+        total: {
+          label: 'JD Suites Booking',
+          amount: Math.round(amount * 100), // Convert to cents for Stripe and ensure it's an integer
+        },
+        requestPayerName: true,
+        requestPayerEmail: true,
+      });
+      
+      // Check if the Payment Request is available
+      pr.canMakePayment().then(result => {
+        console.log("Google Pay availability check result:", result);
+        if (result) {
+          setPaymentRequest(pr);
+          setGooglePayError(null);
+        } else {
+          setGooglePayError("Google Pay is not available in this browser");
+          console.log("Google Pay is not available in this browser");
+        }
+      }).catch(error => {
+        console.error("Error checking Google Pay availability:", error);
+        setGooglePayError(`Error checking Google Pay: ${error.message}`);
+      });
+      
+      // Handle payment method creation
+      pr.on('paymentmethod', async (e) => {
+        console.log("Google Pay payment method created:", e.paymentMethod.id);
+        setProcessing(true);
+        onGooglePayment(e.paymentMethod.id);
+        e.complete('success');
+      });
+    } catch (error) {
+      console.error("Error setting up Google Pay:", error);
+      setGooglePayError(`Error setting up Google Pay: ${error.message}`);
+    }
     
   }, [stripe, amount, onGooglePayment]);
 
@@ -120,7 +137,9 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
             <path d="M3.212 8.267a4.034 4.034 0 0 1 0-2.572V3.964H.978A6.678 6.678 0 0 0 .261 6.98c0 1.085.26 2.11.717 3.017l2.234-1.731z" fill="#FABB05"></path>
             <path d="M6.988 2.921c.992 0 1.88.34 2.58 1.008v.001l1.92-1.918C10.324.928 8.804.262 6.989.262a6.728 6.728 0 0 0-6.01 3.702l2.234 1.731c.532-1.592 2.022-2.774 3.776-2.774" fill="#E94235"></path>
           </svg>
-          <span className="ml-2">Google Pay not available</span>
+          <span className="ml-2">
+            {googlePayError || "Google Pay not available"}
+          </span>
         </Button>
       )}
       

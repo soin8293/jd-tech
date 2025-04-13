@@ -25,6 +25,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     transactionId,
     bookingId,
     processPayment,
+    calculatedAmount,
   } = usePaymentProcess(isOpen, bookingDetails, onPaymentComplete);
 
   if (!bookingDetails) return null;
@@ -62,6 +63,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             bookingId={bookingId}
             onCardPayment={handlePayWithCard}
             onGooglePayment={handleGooglePay}
+            calculatedAmount={calculatedAmount}
           />
         </StripeWrapper>
       </DialogContent>

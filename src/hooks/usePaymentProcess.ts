@@ -12,6 +12,7 @@ export const usePaymentProcess = (
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
   const [errorDetails, setErrorDetails] = useState<APIError | null>(null);
   const [clientSecret, setClientSecret] = useState<string>('');
+  const [paymentIntentId, setPaymentIntentId] = useState<string>('');
   const [transactionId, setTransactionId] = useState<string>('');
   const [bookingId, setBookingId] = useState<string>('');
   const [calculatedAmount, setCalculatedAmount] = useState<number | null>(null);
@@ -22,6 +23,7 @@ export const usePaymentProcess = (
       setPaymentStatus('idle');
       setErrorDetails(null);
       setClientSecret('');
+      setPaymentIntentId('');
       setTransactionId('');
       setBookingId('');
       setCalculatedAmount(null);
@@ -67,10 +69,16 @@ export const usePaymentProcess = (
             console.log('Firebase Cloud Function createPaymentIntent response:', responseJson);
             // Firebase Functions return data inside a "result" object
             const clientSecret = responseJson.result?.clientSecret;
+            const paymentIntentId = responseJson.result?.paymentIntentId;
             const serverCalculatedAmount = responseJson.result?.calculatedAmount;
             
             if (clientSecret) {
               setClientSecret(clientSecret);
+              
+              // Store the Payment Intent ID for verification later
+              if (paymentIntentId) {
+                setPaymentIntentId(paymentIntentId);
+              }
               
               // Use the server-calculated amount as the source of truth
               if (serverCalculatedAmount) {
@@ -99,9 +107,20 @@ export const usePaymentProcess = (
       return;
     }
 
+    // Ensure we have a payment intent ID
+    if (!paymentIntentId) {
+      setPaymentStatus('error');
+      setErrorDetails({
+        type: 'unknown',
+        message: 'Payment initialization failed. Please try again.'
+      });
+      return;
+    }
+
     const processBookingData: ProcessBookingData = {
       paymentMethodId,
       clientSecret,
+      paymentIntentId, // Include payment intent ID for verification
       bookingDetails,
       paymentType,
       timestamp: new Date().toISOString(),
@@ -147,7 +166,7 @@ export const usePaymentProcess = (
           onPaymentComplete();
         }, 1500);
       } else {
-        throw new Error(result.message || 'Unknown error');
+        throw new Error(result.error?.message || result.message || 'Unknown error');
       }
     } catch (error) {
       console.error('Error calling Firebase Cloud Function processBooking:', error);
@@ -156,7 +175,7 @@ export const usePaymentProcess = (
       // Determine error type based on error message
       const errorMessage = error instanceof Error ? error.message : String(error);
       
-      if (errorMessage.includes('Payment failed')) {
+      if (errorMessage.includes('Payment failed') || errorMessage.includes('card')) {
         setErrorDetails({
           type: 'payment_failed',
           message: 'Your payment could not be processed. Please try again or use a different payment method.'

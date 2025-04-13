@@ -48,12 +48,25 @@ exports.createPaymentIntent = functions.https.onCall(async (data: any, context: 
     console.log(`Booking duration: ${numberOfNights} nights from ${checkIn.toISOString()} to ${checkOut.toISOString()}`);
     
     // 5. Calculate total price from room details and nights
+    // In a production environment, you should fetch room prices from your database
+    // instead of relying on client-provided prices
     let totalAmount = 0;
     for (const room of rooms) {
       if (!room.price || typeof room.price !== 'number') {
         console.error(`Invalid price for room: ${room.id || 'unknown'}`, room);
         throw new functions.https.HttpsError("invalid-argument", `Invalid price for room: ${room.id || 'unknown'}`);
       }
+      
+      // SECURITY ENHANCEMENT: In production, verify these prices against your database
+      // const roomDoc = await admin.firestore().collection('rooms').doc(room.id).get();
+      // if (!roomDoc.exists) {
+      //   throw new functions.https.HttpsError("not-found", `Room ${room.id} not found in database`);
+      // }
+      // const roomData = roomDoc.data();
+      // const verifiedPrice = roomData.price;
+      // totalAmount += verifiedPrice * numberOfNights;
+      
+      // For now, we're using client-provided prices - replace with the above code in production
       totalAmount += room.price * numberOfNights;
     }
 
@@ -90,6 +103,7 @@ exports.createPaymentIntent = functions.https.onCall(async (data: any, context: 
     // 9. Return Client Secret to the Frontend
     return { 
       clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id, // Return the ID for verification later
       calculatedAmount: amountInCents / 100, // Send back the calculated amount for validation
       details: {
         nights: numberOfNights,
@@ -118,36 +132,96 @@ exports.createPaymentIntent = functions.https.onCall(async (data: any, context: 
 
 /**
  * Firebase Cloud Function to process a booking after payment.
- * This is a placeholder for your actual booking processing logic.
+ * Verifies payment status with Stripe before confirming the booking.
  */
 exports.processBooking = functions.https.onCall(async (data: any, context: functions.https.CallableContext) => {
   try {
     console.log("Processing booking with data:", data);
     
-    // Here you would typically:
-    // 1. Verify the payment with Stripe
-    // 2. Create a booking record in Firestore
-    // 3. Send confirmation emails
-    // 4. Update room availability
+    // 1. Extract the payment details from request
+    const { paymentMethodId, clientSecret, paymentType, transaction_id, paymentIntentId } = data;
     
-    // For demonstration, we'll just return a success response with a generated booking ID
+    if (!paymentIntentId) {
+      console.error("Missing paymentIntentId in processBooking request");
+      throw new functions.https.HttpsError(
+        "invalid-argument", 
+        "Payment Intent ID is required to verify payment status"
+      );
+    }
+    
+    // 2. Verify the payment status with Stripe
+    console.log(`Verifying payment status for Payment Intent: ${paymentIntentId}`);
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    
+    // 3. Check if payment is successful
+    if (paymentIntent.status !== 'succeeded') {
+      console.error(`Payment verification failed. Status: ${paymentIntent.status}`);
+      throw new functions.https.HttpsError(
+        "failed-precondition", 
+        `Payment not completed successfully. Current status: ${paymentIntent.status}`
+      );
+    }
+    
+    console.log(`Payment verified successfully. Status: ${paymentIntent.status}`);
+    
+    // 4. Generate a booking ID
     const bookingId = `booking-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     
+    // 5. Store booking in Firestore (optional, but recommended)
+    // In a production environment, you should persist booking data
+    // const bookingData = {
+    //   id: bookingId,
+    //   paymentIntentId: paymentIntentId,
+    //   paymentMethodId: paymentMethodId,
+    //   paymentType: paymentType,
+    //   transaction_id: transaction_id,
+    //   bookingDetails: data.bookingDetails,
+    //   amount: paymentIntent.amount / 100, // Convert from cents
+    //   status: 'confirmed',
+    //   createdAt: admin.firestore.FieldValue.serverTimestamp()
+    // };
+    // 
+    // await admin.firestore().collection('bookings').doc(bookingId).set(bookingData);
+    // console.log(`Booking stored in Firestore with ID: ${bookingId}`);
+    
+    // 6. Return success response with booking ID
     console.log(`Booking processed successfully. Booking ID: ${bookingId}`);
     
     return {
       success: true,
       bookingId: bookingId,
+      paymentStatus: paymentIntent.status,
       message: "Booking confirmed successfully!"
     };
     
   } catch (error: any) {
     console.error("Error processing booking:", error);
+    
+    // Categorize errors for better client-side handling
+    let errorType = 'unknown';
+    let errorMessage = error.message || 'Failed to process booking. Please try again.';
+    
+    if (error.type === 'StripeCardError') {
+      errorType = 'payment_failed';
+      errorMessage = `Card payment failed: ${error.message}`;
+    } else if (error.type === 'StripeAPIError') {
+      errorType = 'payment_failed';
+      errorMessage = `Stripe API error: ${error.message}`;
+    } else if (error.code && error.code.startsWith('functions/')) {
+      // Use the existing error type from HttpsError
+      const codeToType: Record<string, string> = {
+        'functions/invalid-argument': 'validation_error',
+        'functions/failed-precondition': 'payment_failed',
+        'functions/internal': 'system_error'
+      };
+      errorType = codeToType[error.code] || 'booking_failed';
+    }
+    
     return {
       success: false,
       error: {
-        type: 'booking_failed',
-        message: error.message || 'Failed to process booking. Please try again.'
+        type: errorType,
+        message: errorMessage
       }
     };
   }

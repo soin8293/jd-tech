@@ -17,10 +17,8 @@ const StripeWrapper: React.FC<StripeWrapperProps> = ({ children }) => {
     appearance: {
       theme: 'stripe',
     },
-    // Enable Google Pay in the payment request
-    payment_request: {
-      enabled: true,
-    }
+    // The payment_request option is not valid in StripeElementsOptions
+    // Google Pay is enabled through PaymentMethods component instead
   };
   
   return (

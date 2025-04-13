@@ -1,8 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { CreditCard } from "lucide-react";
 import { CardElement, useStripe, useElements, PaymentRequestButtonElement } from "@stripe/react-stripe-js";
+import { toast } from "@/hooks/use-toast";
 
 interface PaymentMethodsProps {
   onCardPayment: (paymentMethodId: string) => void;
@@ -23,9 +24,10 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   const [paymentRequest, setPaymentRequest] = useState<any>(null);
   const [processing, setProcessing] = useState(false);
   const [googlePayError, setGooglePayError] = useState<string | null>(null);
+  const [googlePayAvailable, setGooglePayAvailable] = useState(false);
   
   // Set up Google Pay payment request on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     if (!stripe || !amount) return;
     
     console.log("Setting up Google Pay payment request for amount:", amount);
@@ -47,25 +49,47 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
         console.log("Google Pay availability check result:", result);
         if (result) {
           setPaymentRequest(pr);
+          setGooglePayAvailable(true);
           setGooglePayError(null);
         } else {
+          setGooglePayAvailable(false);
           setGooglePayError("Google Pay is not available in this browser");
           console.log("Google Pay is not available in this browser");
         }
       }).catch(error => {
         console.error("Error checking Google Pay availability:", error);
+        setGooglePayAvailable(false);
         setGooglePayError(`Error checking Google Pay: ${error.message}`);
       });
       
       // Handle payment method creation
       pr.on('paymentmethod', async (e) => {
         console.log("Google Pay payment method created:", e.paymentMethod.id);
-        setProcessing(true);
-        onGooglePayment(e.paymentMethod.id);
-        e.complete('success');
+        try {
+          setProcessing(true);
+          onGooglePayment(e.paymentMethod.id);
+          e.complete('success');
+          
+          // Show success toast for better user feedback
+          toast({
+            title: "Google Pay initiated",
+            description: "Processing your payment...",
+          });
+        } catch (error) {
+          console.error("Error processing Google Pay payment:", error);
+          e.complete('fail');
+          
+          // Show error toast for better user feedback
+          toast({
+            title: "Google Pay Error",
+            description: error.message || "Failed to process Google Pay payment",
+            variant: "destructive",
+          });
+        }
       });
     } catch (error) {
       console.error("Error setting up Google Pay:", error);
+      setGooglePayAvailable(false);
       setGooglePayError(`Error setting up Google Pay: ${error.message}`);
     }
     
@@ -91,16 +115,41 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
       return;
     }
     
-    const { error, paymentMethod } = await stripe.createPaymentMethod({
-      type: 'card',
-      card: cardElement,
-    });
-    
-    if (error) {
-      console.error('[error]', error);
+    try {
+      const { error, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+      });
+      
+      if (error) {
+        console.error('[error]', error);
+        setProcessing(false);
+        
+        // Show error toast for better user feedback
+        toast({
+          title: "Card Error",
+          description: error.message || "Failed to process card payment",
+          variant: "destructive",
+        });
+      } else {
+        onCardPayment(paymentMethod.id);
+        
+        // Show success toast for better user feedback
+        toast({
+          title: "Card payment initiated",
+          description: "Processing your payment...",
+        });
+      }
+    } catch (error) {
+      console.error("Error processing card payment:", error);
       setProcessing(false);
-    } else {
-      onCardPayment(paymentMethod.id);
+      
+      // Show error toast for better user feedback
+      toast({
+        title: "Card Error",
+        description: "An unexpected error occurred while processing your card",
+        variant: "destructive",
+      });
     }
   };
 
@@ -109,7 +158,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
       <h3 className="text-sm font-medium mb-3">Select Payment Method</h3>
       
       {/* Google Pay Button */}
-      {paymentRequest ? (
+      {googlePayAvailable && paymentRequest ? (
         <div className="mb-3">
           <PaymentRequestButtonElement
             options={{

@@ -1,90 +1,59 @@
 
-import React, { useState, useEffect } from "react";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { useAuth } from "@/contexts/AuthContext";
+import React from "react";
+import { format } from "date-fns";
+import { useUserBookings } from "@/hooks/useUserBookings";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-
-interface Booking {
-  id: string;
-  rooms: {
-    id: string;
-    name: string;
-    price: number;
-  }[];
-  period: {
-    startDate: { seconds: number; nanoseconds: number };
-    endDate: { seconds: number; nanoseconds: number };
-  };
-  guests: number;
-  amount: number;
-  status: string;
-  createdAt: { seconds: number; nanoseconds: number };
-}
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const MyBookings = () => {
+  const { bookings, loading, error } = useUserBookings();
   const { currentUser } = useAuth();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchBookings = async () => {
-      if (!currentUser) {
-        setLoading(false);
-        return;
-      }
+  if (!currentUser) {
+    return (
+      <div className="container mx-auto px-4 py-24 text-center">
+        <h1 className="text-3xl font-bold mb-4">Please Log In</h1>
+        <p className="text-muted-foreground mb-8">You need to be logged in to view your bookings.</p>
+        <Button onClick={() => navigate("/")}>Go to Homepage</Button>
+      </div>
+    );
+  }
 
-      try {
-        const bookingsRef = collection(db, "bookings");
-        const q = query(
-          bookingsRef,
-          where("userId", "==", currentUser.uid),
-          orderBy("createdAt", "desc")
-        );
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-24">
+        <div className="flex justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+      </div>
+    );
+  }
 
-        const querySnapshot = await getDocs(q);
-        const bookingsList: Booking[] = [];
-        
-        querySnapshot.forEach((doc) => {
-          bookingsList.push({ id: doc.id, ...doc.data() } as Booking);
-        });
-
-        setBookings(bookingsList);
-      } catch (error) {
-        console.error("Error fetching bookings:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBookings();
-  }, [currentUser]);
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <Badge className="bg-green-500">Completed</Badge>;
-      case "pending":
-        return <Badge className="bg-yellow-500">Pending</Badge>;
-      case "cancelled":
-        return <Badge className="bg-red-500">Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-24">
+        <Card>
+          <CardContent className="py-10 text-center">
+            <p className="text-destructive">{error}</p>
+            <Button onClick={() => window.location.reload()} className="mt-4">
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-24">
       <h1 className="text-3xl font-bold mb-8">My Bookings</h1>
       
-      {loading ? (
-        <div className="flex justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-        </div>
-      ) : bookings.length === 0 ? (
+      {bookings.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center">
             <p className="text-muted-foreground">You don't have any bookings yet.</p>
@@ -107,7 +76,13 @@ const MyBookings = () => {
                         Booked on {format(createdAt, "PPP")}
                       </CardDescription>
                     </div>
-                    {getStatusBadge(booking.status)}
+                    <Badge variant={
+                      booking.status === "completed" ? "default" :
+                      booking.status === "pending" ? "secondary" :
+                      "destructive"
+                    }>
+                      {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>

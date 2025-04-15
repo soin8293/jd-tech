@@ -4,14 +4,14 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
-// Replace with your actual Firebase config
+// Replace with your actual Firebase config from your Firebase project settings
 const firebaseConfig = {
-  apiKey: "AIzaSyD_L85YeBjRR9OQ_orY_c4byLXTqupfxJc",
-  authDomain: "stay-scout-navigator.firebaseapp.com",
-  projectId: "stay-scout-navigator",
-  storageBucket: "stay-scout-navigator.appspot.com",
-  messagingSenderId: "654321654321",
-  appId: "1:654321654321:web:abc123def456"
+  apiKey: process.env.FIREBASE_API_KEY || "AIzaSyDReplaceWithYourActualAPIKey",
+  authDomain: "your-project-id.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project-id.appspot.com",
+  messagingSenderId: "your-messaging-sender-id",
+  appId: "your-app-id"
 };
 
 // Initialize Firebase

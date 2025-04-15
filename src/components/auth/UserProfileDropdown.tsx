@@ -14,7 +14,7 @@ import {
 import { User, LogOut, ShoppingBag, Mail } from "lucide-react";
 
 const UserProfileDropdown = () => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, signInWithGoogle } = useAuth();
 
   const handleContactSupport = () => {
     window.location.href = "mailto:support@jdsuites.com?subject=Support%20Request";
@@ -60,7 +60,7 @@ const UserProfileDropdown = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <Button onClick={() => useAuth().signInWithGoogle()} variant="outline" className="flex items-center gap-2">
+        <Button onClick={signInWithGoogle} variant="outline" className="flex items-center gap-2">
           <User className="h-4 w-4" />
           Login with Google
         </Button>

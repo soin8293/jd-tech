@@ -3,11 +3,49 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { stripe } from "../config/stripe";
 
+// Interface definitions for type safety
+interface BookingDetails {
+  rooms: {
+    id?: string;
+    price: number;
+    name?: string;
+  }[];
+  period: {
+    checkIn: string;
+    checkOut: string;
+  };
+  guests: number;
+  totalPrice: number;
+  currency?: string;
+}
+
+interface ProcessBookingData {
+  paymentMethodId: string;
+  clientSecret: string;
+  paymentType: string;
+  transaction_id: string;
+  paymentIntentId: string;
+  bookingDetails: BookingDetails;
+  serverCalculatedAmount?: number;
+}
+
+interface PaymentResponse {
+  success: boolean;
+  partial?: boolean;
+  bookingId?: string;
+  paymentStatus?: string;
+  message?: string;
+  error?: {
+    type: string;
+    message: string;
+  };
+}
+
 /**
  * Firebase Cloud Function to process a booking after payment.
  * Verifies payment status with Stripe before confirming the booking.
  */
-export const processBooking = functions.https.onCall(async (data: any, context: functions.https.CallableContext) => {
+export const processBooking = functions.https.onCall(async (data: ProcessBookingData, context: functions.https.CallableContext): Promise<PaymentResponse> => {
   try {
     console.log("Processing booking with data:", JSON.stringify(data, null, 2));
     
@@ -28,11 +66,15 @@ export const processBooking = functions.https.onCall(async (data: any, context: 
     let paymentIntent;
     try {
       paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    } catch (stripeError) {
+    } catch (stripeError: unknown) {
       console.error("Error retrieving payment intent from Stripe:", stripeError);
+      let errorMessage = "Could not verify payment status with Stripe. Please try again later.";
+      if (stripeError instanceof Error) {
+        errorMessage = stripeError.message;
+      }
       throw new functions.https.HttpsError(
         "unavailable",
-        "Could not verify payment status with Stripe. Please try again later.",
+        errorMessage,
         { type: 'network_error' }
       );
     }
@@ -70,8 +112,13 @@ export const processBooking = functions.https.onCall(async (data: any, context: 
       
       await admin.firestore().collection('bookings').doc(bookingId).set(bookingData);
       console.log(`Booking stored in Firestore with ID: ${bookingId}`);
-    } catch (firestoreError) {
+    } catch (firestoreError: unknown) {
       console.error("Error storing booking in Firestore:", firestoreError);
+      let errorMessage = "Failed to store booking details.";
+      if (firestoreError instanceof Error) {
+        errorMessage = firestoreError.message;
+      }
+      
       // Payment was successful, but we couldn't store the booking
       // This is a partial success case - we should let the user know
       return {
@@ -93,33 +140,43 @@ export const processBooking = functions.https.onCall(async (data: any, context: 
       message: "Booking confirmed successfully!"
     };
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error processing booking:", error);
     
     // Enhanced error categorization for better client-side handling
     let errorType = 'unknown';
-    let errorMessage = error.message || 'Failed to process booking. Please try again.';
+    let errorMessage = 'Failed to process booking. Please try again.';
     
     // If the error is from our HttpsError, use its type
-    if (error.code && error.code.startsWith('functions/')) {
-      if (error.details && error.details.type) {
-        errorType = error.details.type;
-      } else {
-        // Map HttpsError codes to our error types
-        const codeToType: Record<string, string> = {
-          'functions/invalid-argument': 'validation_error',
-          'functions/failed-precondition': 'payment_failed',
-          'functions/unavailable': 'network_error',
-          'functions/internal': 'system_error'
-        };
-        errorType = codeToType[error.code] || 'booking_failed';
+    if (typeof error === 'object' && error !== null) {
+      if ('code' in error && typeof error.code === 'string' && error.code.startsWith('functions/')) {
+        if ('details' in error && error.details && typeof error.details === 'object' && 'type' in error.details) {
+          errorType = error.details.type as string;
+        } else {
+          // Map HttpsError codes to our error types
+          const codeToType: Record<string, string> = {
+            'functions/invalid-argument': 'validation_error',
+            'functions/failed-precondition': 'payment_failed',
+            'functions/unavailable': 'network_error',
+            'functions/internal': 'system_error'
+          };
+          errorType = error.code in codeToType ? codeToType[error.code] : 'booking_failed';
+        }
+        
+        if ('message' in error && typeof error.message === 'string') {
+          errorMessage = error.message;
+        }
+      } else if ('type' in error && typeof error.type === 'string') {
+        // If it's a Stripe error, map its type
+        if (error.type.toString().startsWith('Stripe')) {
+          errorType = 'payment_failed';
+          if ('message' in error && typeof error.message === 'string') {
+            errorMessage = `Payment processing error: ${error.message}`;
+          }
+        }
       }
-    } else if (error.type) {
-      // If it's a Stripe error, map its type
-      if (error.type.startsWith('Stripe')) {
-        errorType = 'payment_failed';
-        errorMessage = `Payment processing error: ${error.message}`;
-      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
     }
     
     return {

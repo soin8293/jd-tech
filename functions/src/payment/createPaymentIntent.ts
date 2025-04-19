@@ -2,13 +2,43 @@
 import * as functions from "firebase-functions";
 import { stripe } from "../config/stripe";
 
+// Interface definitions for type safety
+interface Room {
+  id?: string;
+  price: number;
+}
+
+interface BookingPeriod {
+  checkIn: string;
+  checkOut: string;
+}
+
+interface CreatePaymentIntentData {
+  rooms: Room[];
+  period: BookingPeriod;
+  guests: number;
+  transaction_id?: string;
+  booking_reference?: string;
+  currency?: string;
+}
+
+interface CreatePaymentIntentResponse {
+  clientSecret: string | null;
+  paymentIntentId: string;
+  calculatedAmount: number;
+  details: {
+    nights: number;
+    roomCount: number;
+  };
+}
+
 /**
  * Firebase Cloud Function to create a Stripe Payment Intent.
  * @param {Object} data - The request data containing booking details.
  * @param {Object} context - The Firebase Functions context.
  * @returns {Object} - Response containing the clientSecret for the Payment Intent.
  */
-export const createPaymentIntent = functions.https.onCall(async (data: any, context: functions.https.CallableContext) => {
+export const createPaymentIntent = functions.https.onCall(async (data: CreatePaymentIntentData, context: functions.https.CallableContext): Promise<CreatePaymentIntentResponse> => {
   // 1. Authentication Check (Optional but Recommended for Production)
   // if (!context.auth) {
   //   throw new functions.https.HttpsError("unauthenticated", "User must be authenticated to create a payment intent.");
@@ -121,28 +151,42 @@ export const createPaymentIntent = functions.https.onCall(async (data: any, cont
       }
     };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     // 10. Enhanced Error Handling
     console.error("Error creating Payment Intent:", error);
     
-    if (error.type === 'StripeCardError') {
-      // Handle specific Stripe card errors (e.g., card declined)
-      throw new functions.https.HttpsError('failed-precondition', error.message, { type: 'payment_failed' });
-    } else if (error.type === 'StripeAPIError') {
-      // Handle Stripe API errors
-      throw new functions.https.HttpsError('internal', `Stripe API error: ${error.message}`, { type: 'system_error' });
-    } else if (error.type === 'StripeConnectionError') {
-      // Handle Stripe connection errors (network issues)
-      throw new functions.https.HttpsError('unavailable', `Connection to Stripe failed: ${error.message}`, { type: 'network_error' });
-    } else if (error.type === 'StripeInvalidRequestError') {
-      // Handle invalid request errors (e.g., missing parameters)
-      throw new functions.https.HttpsError('invalid-argument', error.message, { type: 'validation_error' });
-    } else if (error.code && error.code.startsWith('functions/')) {
-      // Pass through existing HttpsError
-      throw error;
-    } else {
-      // Handle generic API errors or other unexpected errors
-      throw new functions.https.HttpsError('internal', 'Failed to create Payment Intent. Contact support.', { type: 'unknown' });
+    if (typeof error === 'object' && error !== null) {
+      if ('type' in error) {
+        const stripeError = error as { type: string; message: string };
+        if (stripeError.type === 'StripeCardError') {
+          // Handle specific Stripe card errors (e.g., card declined)
+          throw new functions.https.HttpsError('failed-precondition', stripeError.message, { type: 'payment_failed' });
+        } else if (stripeError.type === 'StripeAPIError') {
+          // Handle Stripe API errors
+          throw new functions.https.HttpsError('internal', `Stripe API error: ${stripeError.message}`, { type: 'system_error' });
+        } else if (stripeError.type === 'StripeConnectionError') {
+          // Handle Stripe connection errors (network issues)
+          throw new functions.https.HttpsError('unavailable', `Connection to Stripe failed: ${stripeError.message}`, { type: 'network_error' });
+        } else if (stripeError.type === 'StripeInvalidRequestError') {
+          // Handle invalid request errors (e.g., missing parameters)
+          throw new functions.https.HttpsError('invalid-argument', stripeError.message, { type: 'validation_error' });
+        }
+      }
+      
+      if ('code' in error && typeof error.code === 'string' && error.code.startsWith('functions/')) {
+        // Pass through existing HttpsError
+        throw error;
+      }
     }
+    
+    // Handle generic API errors or other unexpected errors
+    let errorMessage = 'Failed to create Payment Intent. Contact support.';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+      errorMessage = error.message;
+    }
+    
+    throw new functions.https.HttpsError('internal', errorMessage, { type: 'unknown' });
   }
 });

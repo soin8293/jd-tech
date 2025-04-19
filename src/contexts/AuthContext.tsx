@@ -13,8 +13,10 @@ import { toast } from "@/hooks/use-toast";
 interface AuthContextType {
   currentUser: User | null;
   isLoading: boolean;
+  isAdmin: boolean;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  refreshUserClaims: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,11 +24,58 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user has admin claim
+  const checkAdminStatus = async (user: User) => {
+    try {
+      const idTokenResult = await user.getIdTokenResult();
+      const hasAdminClaim = !!idTokenResult.claims.admin;
+      setIsAdmin(hasAdminClaim);
+      return hasAdminClaim;
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      setIsAdmin(false);
+      return false;
+    }
+  };
+
+  // Refresh user token to get latest claims
+  const refreshUserClaims = async () => {
+    if (!currentUser) return;
+    
+    try {
+      // Force token refresh
+      await currentUser.getIdToken(true);
+      const isUserAdmin = await checkAdminStatus(currentUser);
+      
+      toast({
+        title: "Permissions refreshed",
+        description: isUserAdmin 
+          ? "Admin permissions confirmed." 
+          : "User permissions updated.",
+      });
+    } catch (error) {
+      console.error("Error refreshing claims:", error);
+      toast({
+        title: "Failed to refresh permissions",
+        description: "Please try again or contact support.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Listen for auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      
+      if (user) {
+        await checkAdminStatus(user);
+      } else {
+        setIsAdmin(false);
+      }
+      
       setIsLoading(false);
     });
 
@@ -37,7 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      
+      // Check admin status after sign in
+      await checkAdminStatus(result.user);
+      
       toast({
         title: "Success",
         description: "You have successfully signed in with Google",
@@ -56,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await signOut(auth);
+      setIsAdmin(false);
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out",
@@ -73,8 +127,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
     currentUser,
     isLoading,
+    isAdmin,
     signInWithGoogle,
-    logout
+    logout,
+    refreshUserClaims
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

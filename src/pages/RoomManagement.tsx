@@ -4,12 +4,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { hotelRooms } from "@/data/hotel.data";
 import { Room } from "@/types/hotel.types";
 import RoomManager from "@/components/hotel/RoomManager";
-
-// Set this to true to enable room editing functionality
-const ENABLE_ROOM_EDITING = false;
+import { useAuth } from "@/contexts/AuthContext";
+import { Navigate } from "react-router-dom";
 
 const RoomManagement = () => {
   const { toast } = useToast();
+  const { isAdmin } = useAuth();
   const [rooms, setRooms] = useState<Room[]>(hotelRooms);
   
   const handleSaveRooms = (updatedRooms: Room[]) => {
@@ -25,6 +25,11 @@ const RoomManagement = () => {
     // Log the updated rooms so we can see the changes
     console.log("Updated rooms:", updatedRooms);
   };
+  
+  // Redirect non-admin users
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
   
   return (
     <div className="min-h-screen bg-background">
@@ -42,7 +47,7 @@ const RoomManagement = () => {
           <RoomManager 
             initialRooms={rooms} 
             onSaveRooms={handleSaveRooms} 
-            showEditButtons={ENABLE_ROOM_EDITING}
+            showEditButtons={true}
           />
         </div>
       </main>

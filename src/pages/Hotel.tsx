@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,9 +12,12 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 import { format, addDays, differenceInDays } from "date-fns";
+import InitializeAdmin from "@/components/admin/InitializeAdmin";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Hotel = () => {
   const { toast } = useToast();
+  const { currentUser } = useAuth();
   const [selectedRooms, setSelectedRooms] = useState<Room[]>([]);
   const [bookingPeriod, setBookingPeriod] = useState<BookingPeriod>({
     checkIn: new Date(),
@@ -28,16 +30,13 @@ const Hotel = () => {
   const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
 
   const handleSearchRooms = (period: BookingPeriod, guestCount: number) => {
-    // In a real app, this would fetch from an API
     setBookingPeriod(period);
     setGuests(guestCount);
     setHasSearched(true);
     
-    // Filter rooms by capacity (simulation)
     const filteredRooms = hotelRooms.filter(room => room.capacity >= guestCount);
     setAvailableRooms(filteredRooms);
     
-    // Reset selection when search criteria change
     setSelectedRooms([]);
   };
 
@@ -63,11 +62,9 @@ const Hotel = () => {
       return;
     }
     
-    // Calculate total price based on selected rooms and stay duration
     const nights = differenceInDays(bookingPeriod.checkOut, bookingPeriod.checkIn);
     const totalPrice = selectedRooms.reduce((sum, room) => sum + (room.price * nights), 0);
     
-    // Prepare booking details for payment
     const details: BookingDetails = {
       period: bookingPeriod,
       guests,
@@ -80,16 +77,13 @@ const Hotel = () => {
   };
   
   const handlePaymentComplete = () => {
-    // Close the payment modal
     setPaymentModalOpen(false);
     
-    // Show success toast
     toast({
       title: "Booking Confirmed!",
       description: `You have successfully booked ${selectedRooms.length} room(s) from ${format(bookingPeriod.checkIn, "MMM d, yyyy")} to ${format(bookingPeriod.checkOut, "MMM d, yyyy")}.`,
     });
     
-    // Reset selections
     setSelectedRooms([]);
   };
 
@@ -104,16 +98,14 @@ const Hotel = () => {
             className="mb-10"
           />
           
-          <Link to="/room-management">
-            <Button variant="outline" className="gap-1.5">
-              <Settings className="h-4 w-4" />
-              Manage Rooms
-            </Button>
-          </Link>
+          {currentUser?.email === "amirahcolorado@gmail.com" && (
+            <div className="flex gap-2">
+              <InitializeAdmin />
+            </div>
+          )}
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
-          {/* Left side - Room listings */}
           <div className="lg:col-span-2">
             {hasSearched ? (
               <>
@@ -156,7 +148,6 @@ const Hotel = () => {
             )}
           </div>
           
-          {/* Right side - Booking summary */}
           <div className="lg:col-span-1">
             <div className="sticky top-6">
               <BookingSummary
@@ -182,7 +173,6 @@ const Hotel = () => {
         </div>
       </div>
       
-      {/* Payment Modal */}
       <PaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setPaymentModalOpen(false)}

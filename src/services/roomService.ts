@@ -35,6 +35,7 @@ export const getRooms = async (): Promise<Room[]> => {
       rooms.push({ id: doc.id, ...doc.data() } as Room);
     });
     
+    console.log("Fetched rooms from Firestore:", rooms);
     return rooms;
   } catch (error) {
     console.error("Error fetching rooms:", error);

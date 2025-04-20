@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 
 const RoomManagement = () => {
   const { toast } = useToast();
-  const { isAdmin } = useAuth();
+  const { isAdmin, loading: authLoading } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +20,9 @@ const RoomManagement = () => {
     const fetchRooms = async () => {
       try {
         setLoading(true);
+        console.log("Fetching rooms...");
         const roomsData = await getRooms();
+        console.log("Rooms data received:", roomsData);
         setRooms(roomsData);
         setError(null);
       } catch (err) {
@@ -36,8 +38,10 @@ const RoomManagement = () => {
       }
     };
     
-    fetchRooms();
-  }, [toast]);
+    if (!authLoading) {
+      fetchRooms();
+    }
+  }, [toast, authLoading]);
   
   const handleSaveRooms = async (updatedRooms: Room[]) => {
     try {
@@ -90,8 +94,20 @@ const RoomManagement = () => {
     }
   };
   
+  // Handle authentication states
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="text-lg">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+  
   // Redirect non-admin users
-  if (!isAdmin) {
+  if (!authLoading && !isAdmin) {
     return <Navigate to="/" replace />;
   }
   

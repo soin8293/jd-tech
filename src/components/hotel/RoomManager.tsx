@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Room, RoomFormData } from "@/types/hotel.types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import RoomList from "./RoomList";
 import RoomEditForm from "./RoomEditForm";
 import DeleteRoomDialog from "./DeleteRoomDialog";
+import { useRoomQuery } from "@/hooks/useRoomQuery";
 
 const defaultRoom: RoomFormData = {
   name: "New Room",
@@ -35,7 +35,13 @@ const RoomManager: React.FC<RoomManagerProps> = ({
   isLoading = false
 }) => {
   const { toast } = useToast();
-  const [rooms, setRooms] = useState<Room[]>(initialRooms);
+  const { 
+    rooms: queryRooms, 
+    saveRoomsMutation, 
+    deleteRoomMutation 
+  } = useRoomQuery();
+
+  const [rooms, setRooms] = useState<Room[]>(queryRooms.length > 0 ? queryRooms : initialRooms);
   const [editingRoom, setEditingRoom] = useState<RoomFormData | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [activeTab, setActiveTab] = useState('view');
@@ -79,22 +85,14 @@ const RoomManager: React.FC<RoomManagerProps> = ({
       return;
     }
     
-    let updatedRooms: Room[];
     const roomToSave: Room = {
       ...roomData,
-      id: roomData.id || `room-${Date.now()}`
+      id: roomData.id || `room-${Date.now()}`,
+      bookings: []
     };
     
-    if (isAdding) {
-      updatedRooms = [...rooms, roomToSave];
-    } else {
-      updatedRooms = rooms.map(room => 
-        room.id === roomToSave.id ? roomToSave : room
-      );
-    }
+    saveRoomsMutation.mutate([roomToSave]);
     
-    setRooms(updatedRooms);
-    onSaveRooms(updatedRooms);
     setEditingRoom(null);
     setActiveTab('view');
     

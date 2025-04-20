@@ -65,4 +65,3 @@ const UserProfileDropdown = () => {
 };
 
 export default UserProfileDropdown;
-

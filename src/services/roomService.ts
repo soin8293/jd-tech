@@ -7,11 +7,14 @@ import {
   deleteDoc, 
   query, 
   where, 
-  getDoc
+  getDoc,
+  updateDoc,
+  arrayUnion
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Room } from "@/types/hotel.types";
+import { Room, BookingPeriod } from "@/types/hotel.types";
 import { hotelRooms } from "@/data/hotel.data";
+import { toNigerianTime, getCheckoutTimeOnDate } from "@/utils/availabilityUtils";
 
 // Collection reference
 const ROOMS_COLLECTION = "rooms";
@@ -81,7 +84,8 @@ export const saveRoom = async (room: Room): Promise<void> => {
       bed: room.bed,
       amenities: room.amenities,
       images: room.images,
-      availability: room.availability
+      availability: room.availability,
+      bookings: room.bookings || []
     });
     
     console.log(`Room ${room.id} saved successfully`);
@@ -116,6 +120,84 @@ export const saveRooms = async (rooms: Room[]): Promise<void> => {
     console.error("Error saving rooms:", error);
     throw error;
   }
+};
+
+/**
+ * Add a booking to a room
+ */
+export const addBookingToRoom = async (roomId: string, bookingPeriod: BookingPeriod): Promise<void> => {
+  try {
+    const roomRef = doc(db, ROOMS_COLLECTION, roomId);
+    await updateDoc(roomRef, {
+      bookings: arrayUnion({
+        checkIn: bookingPeriod.checkIn,
+        checkOut: bookingPeriod.checkOut
+      })
+    });
+    console.log(`Booking added to room ${roomId}`);
+  } catch (error) {
+    console.error(`Error adding booking to room ${roomId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Get available rooms for a specified period
+ */
+export const getAvailableRooms = async (checkIn: Date, checkOut: Date): Promise<Room[]> => {
+  try {
+    const allRooms = await getRooms();
+    const now = new Date();
+    
+    // Filter out rooms that are booked for the requested period
+    return allRooms.filter(room => {
+      // Skip rooms that are marked unavailable
+      if (!room.availability) return false;
+      
+      // If room has no bookings, it's available
+      if (!room.bookings || room.bookings.length === 0) return true;
+      
+      // Check each booking for overlap
+      return !room.bookings.some(booking => {
+        const bookingCheckIn = new Date(booking.checkIn);
+        const bookingCheckOut = new Date(booking.checkOut);
+        
+        // Special case: If today is checkout day and it's past 11 AM Nigerian time
+        if (isSameDay(bookingCheckOut, now)) {
+          const currentNigerianTime = toNigerianTime(now);
+          const checkoutTimeToday = getCheckoutTimeOnDate(currentNigerianTime);
+          
+          if (currentNigerianTime >= checkoutTimeToday) {
+            // After 11 AM Nigerian time, the room becomes available
+            return false;
+          }
+        }
+        
+        // Check for date overlap
+        return (
+          (checkIn >= bookingCheckIn && checkIn < bookingCheckOut) ||
+          (checkOut > bookingCheckIn && checkOut <= bookingCheckOut) ||
+          (checkIn <= bookingCheckIn && checkOut >= bookingCheckOut)
+        );
+      });
+    });
+  } catch (error) {
+    console.error("Error fetching available rooms:", error);
+    throw error;
+  }
+};
+
+/**
+ * Helper function to check if two dates are the same day
+ */
+const isSameDay = (date1: Date, date2: Date): boolean => {
+  date1 = new Date(date1);
+  date2 = new Date(date2);
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
 };
 
 /**

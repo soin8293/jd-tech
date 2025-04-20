@@ -10,6 +10,7 @@ export interface Room {
   amenities: string[];
   images: string[];
   availability: boolean;
+  bookings?: BookingPeriod[]; // New field to track booked periods
 }
 
 export interface BookingPeriod {
@@ -35,4 +36,11 @@ export interface RoomFormData {
   amenities: string[];
   images: string[];
   availability: boolean;
+}
+
+// Interface for room availability check
+export interface RoomAvailabilityCheck {
+  isAvailable: boolean;
+  unavailableReason?: string;
+  nextAvailableTime?: Date;
 }

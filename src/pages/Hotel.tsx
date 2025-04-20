@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { BookingPeriod, Room, BookingDetails } from "@/types/hotel.types";
+import { BookingPeriod, Room, BookingDetails, RoomAvailabilityCheck } from "@/types/hotel.types";
 import { hotelRooms } from "@/data/hotel.data";
 import HotelHeader from "@/components/hotel/HotelHeader";
 import BookingForm from "@/components/hotel/BookingForm";
@@ -14,6 +15,8 @@ import { Settings } from "lucide-react";
 import { format, addDays, differenceInDays } from "date-fns";
 import InitializeAdmin from "@/components/admin/InitializeAdmin";
 import { useAuth } from "@/contexts/AuthContext";
+import { getAvailableRooms } from "@/services/roomService";
+import { checkRoomAvailability } from "@/utils/availabilityUtils";
 
 const Hotel = () => {
   const { toast } = useToast();
@@ -25,22 +28,63 @@ const Hotel = () => {
   });
   const [guests, setGuests] = useState<number>(2);
   const [availableRooms, setAvailableRooms] = useState<Room[]>(hotelRooms);
+  const [roomAvailability, setRoomAvailability] = useState<Record<string, RoomAvailabilityCheck>>({});
   const [hasSearched, setHasSearched] = useState(false);
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSearchRooms = (period: BookingPeriod, guestCount: number) => {
+  const handleSearchRooms = async (period: BookingPeriod, guestCount: number) => {
+    setIsLoading(true);
     setBookingPeriod(period);
     setGuests(guestCount);
     setHasSearched(true);
     
-    const filteredRooms = hotelRooms.filter(room => room.capacity >= guestCount);
-    setAvailableRooms(filteredRooms);
-    
-    setSelectedRooms([]);
+    try {
+      // Try to fetch available rooms from the server
+      const roomsData = await getAvailableRooms(period.checkIn, period.checkOut);
+      
+      // Filter rooms by capacity
+      const filteredRooms = roomsData.filter(room => room.capacity >= guestCount);
+      setAvailableRooms(filteredRooms);
+      
+      // Check availability for each room and store the result
+      const availabilityChecks: Record<string, RoomAvailabilityCheck> = {};
+      filteredRooms.forEach(room => {
+        availabilityChecks[room.id] = checkRoomAvailability(room, period);
+      });
+      
+      setRoomAvailability(availabilityChecks);
+    } catch (error) {
+      console.error("Error fetching rooms:", error);
+      
+      // Fallback to local data if server fetch fails
+      const filteredRooms = hotelRooms.filter(room => room.capacity >= guestCount);
+      setAvailableRooms(filteredRooms);
+      
+      toast({
+        title: "Error fetching rooms",
+        description: "Using local data instead. Some availability information may not be accurate.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+      setSelectedRooms([]);
+    }
   };
 
   const handleSelectRoom = (room: Room) => {
+    // Check if room is available first
+    const availability = roomAvailability[room.id];
+    if (availability && !availability.isAvailable) {
+      toast({
+        title: "Room Unavailable",
+        description: availability.unavailableReason || "This room is not available for the selected dates.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSelectedRooms(current => {
       const isSelected = current.some(r => r.id === room.id);
       
@@ -84,6 +128,20 @@ const Hotel = () => {
       description: `You have successfully booked ${selectedRooms.length} room(s) from ${format(bookingPeriod.checkIn, "MMM d, yyyy")} to ${format(bookingPeriod.checkOut, "MMM d, yyyy")}.`,
     });
     
+    // Immediately update room availability in the UI
+    if (selectedRooms.length > 0) {
+      const updatedAvailability = { ...roomAvailability };
+      
+      selectedRooms.forEach(room => {
+        updatedAvailability[room.id] = {
+          isAvailable: false,
+          unavailableReason: "This room was just booked by you"
+        };
+      });
+      
+      setRoomAvailability(updatedAvailability);
+    }
+    
     setSelectedRooms([]);
   };
 
@@ -96,6 +154,7 @@ const Hotel = () => {
           <BookingForm 
             onSearch={handleSearchRooms} 
             className="mb-10"
+            isLoading={isLoading}
           />
           
           {currentUser?.email === "amirahcolorado@gmail.com" && (
@@ -113,21 +172,28 @@ const Hotel = () => {
                   <h2 className="text-2xl font-light">
                     Available Rooms
                     <span className="text-sm font-normal text-muted-foreground ml-2">
-                      ({availableRooms.length} options)
+                      ({availableRooms.filter(room => 
+                        roomAvailability[room.id]?.isAvailable !== false
+                      ).length} available)
                     </span>
                   </h2>
                 </div>
                 
                 {availableRooms.length > 0 ? (
                   <div className="grid grid-cols-1 gap-6 animate-fade-in">
-                    {availableRooms.map((room) => (
-                      <RoomCard
-                        key={room.id}
-                        room={room}
-                        onSelect={handleSelectRoom}
-                        selectedRooms={selectedRooms}
-                      />
-                    ))}
+                    {availableRooms.map((room) => {
+                      const availability = roomAvailability[room.id] || { isAvailable: true };
+                      return (
+                        <RoomCard
+                          key={room.id}
+                          room={room}
+                          onSelect={handleSelectRoom}
+                          selectedRooms={selectedRooms}
+                          isAvailable={availability.isAvailable}
+                          nextAvailableTime={availability.nextAvailableTime}
+                        />
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-12 bg-secondary/50 rounded-lg">
@@ -162,7 +228,7 @@ const Hotel = () => {
                 <Separator className="my-2" />
                 <div className="space-y-1 mt-3 text-muted-foreground">
                   <p>• Check-in from 3:00 PM</p>
-                  <p>• Check-out until 11:00 AM</p>
+                  <p>• Check-out until 11:00 AM (Nigerian time)</p>
                   <p>• Free cancellation up to 48 hours before arrival</p>
                   <p>• Breakfast included with all bookings</p>
                   <p>• Free WiFi throughout the property</p>

@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Room } from "@/types/hotel.types";
-import { Bed, Users, Maximize, Check, Pencil, TrashIcon } from "lucide-react";
+import { Bed, Users, Maximize, Check, Pencil, TrashIcon, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatNigerianTime } from "@/utils/availabilityUtils";
 
 interface RoomCardProps {
   room: Room;
@@ -15,6 +16,8 @@ interface RoomCardProps {
   selectedRooms?: Room[];
   className?: string;
   context?: 'booking' | 'room-management';
+  isAvailable?: boolean;
+  nextAvailableTime?: Date;
 }
 
 const RoomCard: React.FC<RoomCardProps> = ({ 
@@ -24,7 +27,9 @@ const RoomCard: React.FC<RoomCardProps> = ({
   onDelete = () => {},
   selectedRooms = [],
   className,
-  context = 'booking'
+  context = 'booking',
+  isAvailable = true,
+  nextAvailableTime
 }) => {
   const isSelected = selectedRooms.some(r => r.id === room.id);
   
@@ -33,10 +38,11 @@ const RoomCard: React.FC<RoomCardProps> = ({
       className={cn(
         "overflow-hidden transition-all hover:shadow-lg", 
         isSelected && "ring-2 ring-primary",
+        !isAvailable && "opacity-60 grayscale",
         className
       )}
     >
-      <div className="hotel-image-container h-48">
+      <div className="hotel-image-container h-48 relative">
         <img
           src={room.images[0]}
           alt={room.name}
@@ -44,6 +50,15 @@ const RoomCard: React.FC<RoomCardProps> = ({
           loading="lazy"
         />
         <div className="image-overlay" />
+        
+        {!isAvailable && (
+          <div className="absolute top-0 right-0 left-0 bg-black bg-opacity-70 text-white py-2 px-4 text-center">
+            <p className="text-sm font-medium">Unavailable</p>
+            {nextAvailableTime && (
+              <p className="text-xs">Available after {formatNigerianTime(nextAvailableTime)}</p>
+            )}
+          </div>
+        )}
       </div>
       
       <CardContent className="p-6">
@@ -91,6 +106,13 @@ const RoomCard: React.FC<RoomCardProps> = ({
             )}
           </div>
         </div>
+        
+        {!isAvailable && nextAvailableTime && (
+          <div className="mt-4 flex items-center text-sm border border-amber-300 bg-amber-50 text-amber-700 rounded p-2">
+            <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span>Available after {formatNigerianTime(nextAvailableTime)}</span>
+          </div>
+        )}
       </CardContent>
       
       <CardFooter className="px-6 py-4 bg-secondary/40 border-t">
@@ -99,8 +121,9 @@ const RoomCard: React.FC<RoomCardProps> = ({
             className="w-full"
             variant={isSelected ? "outline" : "default"}
             onClick={() => onSelect(room)}
+            disabled={!isAvailable}
           >
-            {isSelected ? "Remove Selection" : "Select Room"}
+            {isSelected ? "Remove Selection" : isAvailable ? "Select Room" : "Unavailable"}
           </Button>
         ) : (
           <div className="flex w-full gap-2">

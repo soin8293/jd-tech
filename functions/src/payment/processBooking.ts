@@ -112,6 +112,33 @@ export const processBooking = functions.https.onCall(async (data: ProcessBooking
       
       await admin.firestore().collection('bookings').doc(bookingId).set(bookingData);
       console.log(`Booking stored in Firestore with ID: ${bookingId}`);
+      
+      // 6. Update room availability by adding this booking period to each room
+      const roomUpdates = bookingDetails.rooms.map(async (roomData) => {
+        if (!roomData.id) return Promise.resolve();
+        
+        const roomRef = admin.firestore().collection('rooms').doc(roomData.id);
+        const roomDoc = await roomRef.get();
+        
+        if (!roomDoc.exists) {
+          console.log(`Room ${roomData.id} not found, skipping availability update`);
+          return Promise.resolve();
+        }
+        
+        const bookingPeriod = {
+          checkIn: bookingDetails.period.checkIn,
+          checkOut: bookingDetails.period.checkOut
+        };
+        
+        // Add booking to the room's bookings array
+        return roomRef.update({
+          bookings: admin.firestore.FieldValue.arrayUnion(bookingPeriod)
+        });
+      });
+      
+      await Promise.all(roomUpdates);
+      console.log(`Room availability updated for ${bookingDetails.rooms.length} rooms`);
+      
     } catch (firestoreError: unknown) {
       console.error("Error storing booking in Firestore:", firestoreError);
       let errorMessage = "Failed to store booking details.";
@@ -130,7 +157,7 @@ export const processBooking = functions.https.onCall(async (data: ProcessBooking
       };
     }
     
-    // 6. Return success response with booking ID
+    // 7. Return success response with booking ID
     console.log(`Booking processed successfully. Booking ID: ${bookingId}`);
     
     return {

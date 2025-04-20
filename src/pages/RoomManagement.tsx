@@ -1,6 +1,5 @@
 
 import React, { useEffect } from "react";
-import { Room } from "@/types/hotel.types";
 import RoomManager from "@/components/hotel/RoomManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -50,6 +49,7 @@ const RoomManagement = () => {
       </header>
       
       <main className="container mx-auto px-4 py-8">
+        {/* Only render the banner once usingLocalData is stable */}
         {usingLocalData && <LocalDataBanner />}
         
         {error && !usingLocalData && (

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Room } from "@/types/hotel.types";
 import { useToast } from "@/hooks/use-toast";
 import { getRooms, saveRooms, deleteRoom } from "@/services/roomService";
@@ -11,8 +11,17 @@ export const useRoomManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [usingLocalData, setUsingLocalData] = useState(false);
+  
+  // Use a stable reference for toast notifications to prevent rapid re-renders
+  const notifyLocalDataUse = useCallback(() => {
+    toast({
+      title: "Using Local Data",
+      description: "Unable to access database due to permissions. Using local data for now.",
+      variant: "default",
+    });
+  }, [toast]);
 
-  const fetchRooms = async () => {
+  const fetchRooms = useCallback(async () => {
     try {
       setLoading(true);
       console.log("Fetching rooms...");
@@ -30,11 +39,8 @@ export const useRoomManagement = () => {
         setRooms(hotelRooms);
         setUsingLocalData(true);
         setError("Database permission error. Using local data until permissions are fixed.");
-        toast({
-          title: "Using Local Data",
-          description: "Unable to access database due to permissions. Using local data for now.",
-          variant: "default",
-        });
+        // Only show the toast once when switching to local data
+        notifyLocalDataUse();
       } else {
         setError("Failed to load rooms. Please try again.");
         toast({
@@ -46,13 +52,14 @@ export const useRoomManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [notifyLocalDataUse, toast]);
 
   const handleSaveRooms = async (updatedRooms: Room[]) => {
     try {
       setLoading(true);
       
       if (usingLocalData) {
+        // If already using local data, just update state without notification
         setRooms(updatedRooms);
         toast({
           title: "Local changes applied",
@@ -60,32 +67,34 @@ export const useRoomManagement = () => {
           variant: "default",
         });
       } else {
-        await saveRooms(updatedRooms);
-        setRooms(updatedRooms);
-        toast({
-          title: "Rooms updated",
-          description: "Your room changes have been saved to the database",
-        });
+        try {
+          await saveRooms(updatedRooms);
+          setRooms(updatedRooms);
+          toast({
+            title: "Rooms updated",
+            description: "Your room changes have been saved to the database",
+          });
+        } catch (err) {
+          const isPermissionError = (err as any)?.code === 'permission-denied';
+          
+          if (isPermissionError && !usingLocalData) {
+            setUsingLocalData(true);
+            setRooms(updatedRooms);
+            setError("Database permission error. Using local data until permissions are fixed.");
+            // Only show the toast once when switching to local data
+            notifyLocalDataUse();
+          } else {
+            throw err; // Re-throw non-permission errors
+          }
+        }
       }
     } catch (err) {
       console.error("Error saving rooms:", err);
-      const isPermissionError = (err as any)?.code === 'permission-denied';
-      
-      if (isPermissionError) {
-        setUsingLocalData(true);
-        setRooms(updatedRooms);
-        toast({
-          title: "Database Permission Error",
-          description: "Changes saved locally only. They won't persist after refresh until permissions are fixed.",
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to save room changes. Please try again.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: "Failed to save room changes. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -96,6 +105,7 @@ export const useRoomManagement = () => {
       setLoading(true);
       
       if (usingLocalData) {
+        // If already using local data, just update state without notification
         const updatedRooms = rooms.filter(room => room.id !== roomId);
         setRooms(updatedRooms);
         toast({
@@ -104,34 +114,36 @@ export const useRoomManagement = () => {
           variant: "default",
         });
       } else {
-        await deleteRoom(roomId);
-        const updatedRooms = rooms.filter(room => room.id !== roomId);
-        setRooms(updatedRooms);
-        toast({
-          title: "Room deleted",
-          description: "The room has been removed from your offerings",
-        });
+        try {
+          await deleteRoom(roomId);
+          const updatedRooms = rooms.filter(room => room.id !== roomId);
+          setRooms(updatedRooms);
+          toast({
+            title: "Room deleted",
+            description: "The room has been removed from your offerings",
+          });
+        } catch (err) {
+          const isPermissionError = (err as any)?.code === 'permission-denied';
+          
+          if (isPermissionError && !usingLocalData) {
+            setUsingLocalData(true);
+            const updatedRooms = rooms.filter(room => room.id !== roomId);
+            setRooms(updatedRooms);
+            setError("Database permission error. Using local data until permissions are fixed.");
+            // Only show the toast once when switching to local data
+            notifyLocalDataUse();
+          } else {
+            throw err; // Re-throw non-permission errors
+          }
+        }
       }
     } catch (err) {
       console.error("Error deleting room:", err);
-      const isPermissionError = (err as any)?.code === 'permission-denied';
-      
-      if (isPermissionError) {
-        setUsingLocalData(true);
-        const updatedRooms = rooms.filter(room => room.id !== roomId);
-        setRooms(updatedRooms);
-        toast({
-          title: "Database Permission Error",
-          description: "Room removed locally only. This won't persist after refresh until permissions are fixed.",
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to delete room. Please try again.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: "Failed to delete room. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

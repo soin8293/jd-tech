@@ -37,20 +37,19 @@ const AdminManageDialog: React.FC<AdminManageDialogProps> = ({
     try {
       console.log(`Attempting to ${makeAdmin ? 'add' : 'remove'} admin role for ${email}`);
       const manageAdminRoleFunc = httpsCallable(functions, 'manageAdminRole');
-      
       const data = { email, makeAdmin };
       console.log('Calling manageAdminRole with data:', data);
-      
+
       const result = await manageAdminRoleFunc(data);
       console.log('Response from manageAdminRole:', result);
-      
+
       const responseData = result.data as { success: boolean; message: string };
-      
+
       toast({
         title: makeAdmin ? "Admin Added" : "Admin Removed",
         description: responseData.message,
       });
-      
+
       setEmail("");
       await refreshUserClaims();
     } catch (error: any) {
@@ -58,7 +57,7 @@ const AdminManageDialog: React.FC<AdminManageDialogProps> = ({
       console.error("Error code:", error?.code);
       console.error("Error message:", error?.message);
       console.error("Error details:", error?.details);
-      
+
       if (error?.code === 'functions/not-found') {
         toast({
           title: "User Not Found",
@@ -78,7 +77,7 @@ const AdminManageDialog: React.FC<AdminManageDialogProps> = ({
   };
 
   return (
-    <ScrollArea className="max-h-[80vh]">
+    <div className="max-h-[80vh] overflow-y-auto px-1 py-2">
       <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -127,10 +126,11 @@ const AdminManageDialog: React.FC<AdminManageDialogProps> = ({
             </Button>
           </CardFooter>
         </Card>
-        
-        <AdminList />
+        <div className="max-h-[240px]">
+          <AdminList />
+        </div>
       </div>
-    </ScrollArea>
+    </div>
   );
 };
 

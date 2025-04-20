@@ -8,7 +8,6 @@ import { RefreshCw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/hooks/use-toast";
-import { isDevelopmentEnvironment } from "@/contexts/authHelpers";
 
 const AdminList: React.FC = () => {
   const [admins, setAdmins] = useState<string[]>([]);
@@ -18,41 +17,30 @@ const AdminList: React.FC = () => {
   const fetchAdmins = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       console.log("Fetching admin list...");
       const adminConfigRef = doc(db, 'config', 'admin');
       const adminConfigSnap = await getDoc(adminConfigRef);
-      
+
       if (adminConfigSnap.exists()) {
         const data = adminConfigSnap.data();
         console.log("Admin data retrieved:", data);
         setAdmins(data.adminEmails || []);
       } else {
-        console.log("No admin document exists");
+        console.log("No admin document exists or adminEmails missing");
         setAdmins([]);
-        
-        // In development environment, show mock data
-        if (isDevelopmentEnvironment()) {
-          console.log("Using mock admin data for development");
-          setAdmins(["dev@example.com", "admin@example.com"]);
-        }
+        setError("No administrators found.");
       }
     } catch (error) {
       console.error("Error fetching admins:", error);
       setError("Failed to load administrator list");
-      
-      // In development environment, show mock data
-      if (isDevelopmentEnvironment()) {
-        console.log("Using mock admin data for development after error");
-        setAdmins(["dev@example.com", "admin@example.com"]);
-      } else {
-        toast({
-          title: "Error loading admins",
-          description: "There was a problem loading the administrator list",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error loading admins",
+        description: "There was a problem loading the administrator list",
+        variant: "destructive",
+      });
+      setAdmins([]);
     } finally {
       setIsLoading(false);
     }

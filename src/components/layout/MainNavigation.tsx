@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Home, Building2, Settings } from "lucide-react";
+import { Home, Building2 } from "lucide-react";
 
 const MainNavigation = () => {
   const { isAdmin } = useAuth();
@@ -15,11 +15,6 @@ const MainNavigation = () => {
       <Link to="/hotel" className="text-sm font-medium hover:text-primary transition-colors" aria-label="Rooms">
         <Building2 className="h-5 w-5" />
       </Link>
-      {isAdmin && (
-        <Link to="/room-management" className="text-sm font-medium hover:text-primary transition-colors" aria-label="Room Management">
-          <Settings className="h-5 w-5" />
-        </Link>
-      )}
     </nav>
   );
 };

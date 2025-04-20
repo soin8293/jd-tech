@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useRoomManagement } from "@/hooks/useRoomManagement";
 import RoomManager from "@/components/hotel/RoomManager";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import InitializeAdmin from "@/components/admin/InitializeAdmin";
@@ -16,7 +15,6 @@ import { getRooms } from "@/services/room/roomQueries";
 const RoomManagement = () => {
   const { rooms, loading, error, usingLocalData, fetchRooms, handleSaveRooms, handleDeleteRoom } = useRoomManagement();
   const { isAdmin, currentUser, refreshUserClaims } = useAuth();
-  const { toast } = useToast();
   const [showAdminManagement, setShowAdminManagement] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
@@ -59,13 +57,8 @@ const RoomManagement = () => {
     }
   }, [initialized, handleSaveRooms, rooms.length]);
 
-  // Redirect non-admin users
+  // Redirect non-admin users silently without showing the error message
   if (!isAdmin) {
-    toast({
-      title: "Access Denied",
-      description: "You need administrator privileges to access this page.",
-      variant: "destructive",
-    });
     return <Navigate to="/" replace />;
   }
 

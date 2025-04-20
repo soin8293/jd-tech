@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { addDays, differenceInDays, format } from "date-fns";
 import PaymentModal from "@/components/payment/PaymentModal";
 import RoomList from "@/components/hotel/RoomList";
+import FloatingBookButton from "@/components/hotel/FloatingBookButton";
 
 const Hotel = () => {
   const { toast } = useToast();
@@ -172,6 +173,11 @@ const Hotel = () => {
             />
           </div>
         )}
+
+        <FloatingBookButton 
+          onBookNow={handleBookNow}
+          disabled={selectedRooms.length === 0}
+        />
 
         {bookingDetails && (
           <PaymentModal

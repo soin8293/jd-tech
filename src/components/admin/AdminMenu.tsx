@@ -8,7 +8,11 @@ import { UsersIcon, RefreshCw } from "lucide-react";
 import AdminManageDialog from "./AdminManageDialog";
 import InitAdminDialog from "./InitAdminDialog";
 
-const AdminMenu: React.FC = () => {
+interface AdminMenuProps {
+  roomCount?: number;
+}
+
+const AdminMenu: React.FC<AdminMenuProps> = ({ roomCount = 0 }) => {
   const { isAdmin, refreshUserClaims } = useAuth();
   const [isManagingAdmins, setIsManagingAdmins] = useState(false);
   const [showInitAdminDialog, setShowInitAdminDialog] = useState(false);
@@ -30,6 +34,19 @@ const AdminMenu: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex flex-col space-y-2">
+            <div className="grid grid-cols-2 gap-2 text-sm mb-2">
+              <div className="font-medium">Total Rooms:</div>
+              <div>{roomCount}</div>
+              <div className="font-medium">Admin Status:</div>
+              <div>
+                <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                  Active
+                </span>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Link to="/room-management">
               <Button variant="secondary" className="w-full">Manage Rooms</Button>

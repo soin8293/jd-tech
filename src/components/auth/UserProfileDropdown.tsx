@@ -21,7 +21,7 @@ const UserProfileDropdown = () => {
   const [showAdminMenu, setShowAdminMenu] = useState(false);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center justify-end w-auto min-w-[120px]">
       {currentUser ? (
         <>
           <DropdownMenu>
@@ -88,9 +88,13 @@ const UserProfileDropdown = () => {
           />
         </>
       ) : (
-        <Button onClick={signInWithGoogle} variant="outline" className="flex items-center gap-2">
+        <Button 
+          onClick={signInWithGoogle} 
+          variant="outline" 
+          className="flex items-center gap-2 h-10 px-4"
+        >
           <User className="h-4 w-4" />
-          Login with Google
+          Login
         </Button>
       )}
       

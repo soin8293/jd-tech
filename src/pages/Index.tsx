@@ -48,33 +48,33 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="bg-white/95 backdrop-blur-sm shadow-md border-0">
               <CardHeader>
-                <CardTitle>Luxury Rooms</CardTitle>
+                <CardTitle>Nigerian Elegance</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Choose from our selection of premium rooms and suites, each designed for your comfort.
+                  Our suites blend contemporary design with authentic Nigerian elements for a unique stay experience.
                 </p>
               </CardContent>
             </Card>
             
             <Card className="bg-white/95 backdrop-blur-sm shadow-md border-0">
               <CardHeader>
-                <CardTitle>Easy Booking</CardTitle>
+                <CardTitle>Local Cuisine</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Book your stay with our simple and secure online booking system.
+                  Enjoy our signature Nigerian dishes prepared by local chefs, alongside international favorites.
                 </p>
               </CardContent>
             </Card>
             
             <Card className="bg-white/95 backdrop-blur-sm shadow-md border-0">
               <CardHeader>
-                <CardTitle>24/7 Support</CardTitle>
+                <CardTitle>Prime Location</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Our dedicated team is always available to assist you with any needs.
+                  Conveniently located in Rumukparali, Port Harcourt, with easy access to business districts and local attractions.
                 </p>
               </CardContent>
             </Card>

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { 
   GoogleAuthProvider, 
@@ -68,8 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('Initiating Google sign-in from domain:', window.location.hostname);
       console.log('Firebase Auth Config:', {
-        authDomain: auth.config.authDomain,
-        projectId: auth.config.projectId
+        authDomain: auth.app.options.authDomain,
+        projectId: auth.app.options.projectId
       });
       
       const provider = new GoogleAuthProvider();

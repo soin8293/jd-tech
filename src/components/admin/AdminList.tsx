@@ -27,8 +27,11 @@ const AdminList: React.FC = () => {
         const data = adminConfigSnap.data();
         console.log("Admin data retrieved:", data);
         setAdmins(data.adminEmails || []);
+        if (!data.adminEmails || data.adminEmails.length === 0) {
+          setError(null); // Clear any previous error
+        }
       } else {
-        console.log("No admin document exists or adminEmails missing");
+        console.log("No admin document exists");
         setAdmins([]);
         setError("No administrators found.");
       }

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useRoomManagement } from "@/hooks/useRoomManagement";
 import RoomManager from "@/components/hotel/RoomManager";
@@ -10,6 +9,7 @@ import InitializeAdmin from "@/components/admin/InitializeAdmin";
 import AdminManageDialog from "@/components/admin/AdminManageDialog";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
+import { hotelRooms } from "@/data/hotel.data";
 
 const RoomManagement = () => {
   const { rooms, loading, error, usingLocalData, fetchRooms, handleSaveRooms, handleDeleteRoom } = useRoomManagement();
@@ -18,8 +18,21 @@ const RoomManagement = () => {
   const [showAdminManagement, setShowAdminManagement] = useState(false);
 
   useEffect(() => {
-    fetchRooms();
-  }, [fetchRooms]);
+    const initializeRooms = async () => {
+      try {
+        await fetchRooms();
+        // If no rooms are found, initialize with default rooms
+        if (!rooms || rooms.length === 0) {
+          console.log('No rooms found, initializing with default rooms');
+          await handleSaveRooms(hotelRooms);
+        }
+      } catch (error) {
+        console.error('Error initializing rooms:', error);
+      }
+    };
+
+    initializeRooms();
+  }, []);
 
   // Redirect non-admin users
   if (!isAdmin) {
@@ -59,7 +72,8 @@ const RoomManagement = () => {
         <CardHeader>
           <CardTitle>Room Management</CardTitle>
           <CardDescription>
-            Add, edit, or remove rooms from your hotel inventory.
+            Add, edit, or remove rooms from your hotel inventory. {usingLocalData && 
+              "(Using local data - some features may be limited)"}
           </CardDescription>
         </CardHeader>
         <CardContent>

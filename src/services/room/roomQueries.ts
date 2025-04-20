@@ -19,7 +19,15 @@ export const getRooms = async (): Promise<Room[]> => {
     
     const rooms: Room[] = [];
     roomsSnapshot.forEach((doc) => {
-      rooms.push({ id: doc.id, ...doc.data() } as Room);
+      const data = doc.data();
+      rooms.push({ 
+        id: doc.id, 
+        ...data,
+        // Ensure rooms are available by default if not specified
+        availability: data.availability !== false,
+        // Initialize empty bookings array if none exists
+        bookings: data.bookings || []
+      } as Room);
     });
     
     console.log("Fetched rooms from Firestore:", rooms);

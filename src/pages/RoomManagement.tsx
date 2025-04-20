@@ -6,6 +6,7 @@ import { Navigate } from "react-router-dom";
 import LoadingSpinner from "@/components/hotel/LoadingSpinner";
 import LocalDataBanner from "@/components/hotel/LocalDataBanner";
 import { useRoomManagement } from "@/hooks/useRoomManagement";
+import AdminMenu from "@/components/admin/AdminMenu";
 
 const RoomManagement = () => {
   const { isAdmin, isLoading: authLoading } = useAuth();
@@ -45,9 +46,9 @@ const RoomManagement = () => {
     <div className="min-h-screen bg-background">
       <header className="bg-primary text-primary-foreground py-6">
         <div className="container mx-auto px-4">
-          <h1 className="text-2xl font-bold">Room Management</h1>
+          <h1 className="text-2xl font-bold mb-2">Hotel Management</h1>
           <p className="text-primary-foreground/80">
-            Add, edit, or remove room offerings for your hotel
+            Manage your hotel rooms and administrative access
           </p>
         </div>
       </header>
@@ -61,14 +62,22 @@ const RoomManagement = () => {
           </div>
         )}
         
-        <div className="max-w-5xl mx-auto">
-          <RoomManager 
-            initialRooms={rooms} 
-            onSaveRooms={handleSaveRooms} 
-            onDeleteRoom={handleDeleteRoom}
-            showEditButtons={true}
-            isLoading={loading}
-          />
+        <div className="grid gap-8">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-xl font-semibold mb-4">Room Management</h2>
+            <RoomManager 
+              initialRooms={rooms} 
+              onSaveRooms={handleSaveRooms} 
+              onDeleteRoom={handleDeleteRoom}
+              showEditButtons={true}
+              isLoading={loading}
+            />
+          </div>
+          
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-xl font-semibold mb-4">Admin Management</h2>
+            <AdminMenu />
+          </div>
         </div>
       </main>
     </div>

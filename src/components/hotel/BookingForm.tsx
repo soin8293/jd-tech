@@ -76,11 +76,11 @@ const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch, isLoadin
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {dateRange.from && dateRange.to ? (
-            <div className="flex items-center w-full justify-between">
-              <span className="truncate">
+            <div className="flex items-center w-full justify-between overflow-hidden">
+              <span className="truncate flex-grow">
                 {format(dateRange.from, "MMM d, yyyy")} - {format(dateRange.to, "MMM d, yyyy")}
               </span>
-              <span className="ml-1 text-muted-foreground text-sm bg-muted px-2 py-1 rounded-full flex-shrink-0">
+              <span className="ml-2 text-muted-foreground text-sm bg-muted px-2 py-0.5 rounded-full flex-shrink-0">
                 {nights} night{nights !== 1 ? 's' : ''}
               </span>
             </div>
@@ -97,11 +97,11 @@ const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch, isLoadin
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {dateRange.from && dateRange.to ? (
-                <div className="flex items-center w-full justify-between">
-                  <span className="truncate">
+                <div className="flex items-center w-full justify-between overflow-hidden">
+                  <span className="truncate flex-grow">
                     {format(dateRange.from, "MMM d, yyyy")} - {format(dateRange.to, "MMM d, yyyy")}
                   </span>
-                  <span className="ml-1 text-muted-foreground text-sm bg-muted px-2 py-1 rounded-full flex-shrink-0">
+                  <span className="ml-2 text-muted-foreground text-sm bg-muted px-2 py-0.5 rounded-full flex-shrink-0">
                     {nights} night{nights !== 1 ? 's' : ''}
                   </span>
                 </div>

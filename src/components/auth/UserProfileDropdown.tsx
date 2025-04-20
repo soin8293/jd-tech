@@ -21,15 +21,15 @@ const UserProfileDropdown = () => {
         <>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+              <Button variant="ghost" className="relative h-10 w-10 p-0 rounded-full overflow-hidden">
                 {currentUser.photoURL ? (
                   <img
                     src={currentUser.photoURL}
                     alt={currentUser.displayName || "User"}
-                    className="h-10 w-10 aspect-square rounded-full object-cover"
+                    className="w-full h-full block rounded-full object-cover"
                   />
                 ) : (
-                  <User className="h-6 w-6" />
+                  <User className="h-6 w-6 mx-auto" />
                 )}
               </Button>
             </DropdownMenuTrigger>

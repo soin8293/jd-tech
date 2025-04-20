@@ -27,15 +27,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isDevelopmentEnvironment = () => {
     const hostname = window.location.hostname;
-    // Add ALL authorized domains here to ensure consistent behavior
     const validDomains = [
       'localhost',
       'lovableproject.com',
       'jd-suites-backend.web.app',
-      'jd-suites-backend.firebaseapp.com'
+      'jd-suites-backend.firebaseapp.com',
+      'c09097ef-16d0-43bf-b1c5-ea78455f9bda.lovableproject.com'
     ];
     
-    // Log the current domain for debugging
     console.log('Current hostname:', hostname);
     const isDev = validDomains.some(domain => hostname.includes(domain));
     console.log('Environment check:', { hostname, isDev, validDomains });
@@ -88,8 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let errorMessage = "Could not sign in with Google. Please try again.";
       
       if (error?.code === 'auth/unauthorized-domain') {
-        errorMessage = `This domain (${window.location.hostname}) is not authorized for Google sign-in. Please contact support.`;
-        console.error(`Unauthorized domain error. Make sure ${window.location.hostname} is added to Firebase Authentication authorized domains.`);
+        errorMessage = `This domain (${window.location.hostname}) is not authorized for Google sign-in. Please contact support and request domain authorization.`;
+        console.error(`Unauthorized domain error. Current hostname: ${window.location.hostname}`);
       } else if (error?.code === 'auth/popup-closed-by-user') {
         errorMessage = "Sign-in popup was closed before completion.";
       } else if (error?.code === 'auth/network-request-failed') {

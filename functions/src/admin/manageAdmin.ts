@@ -19,8 +19,22 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
     );
   }
   
-  if (!context.auth.token?.admin) {
-    console.error("Permission denied: Caller is not an admin", context.auth.token);
+  // Check if token exists before accessing admin property
+  if (!context.auth.token) {
+    console.error("Token missing in auth context:", context.auth);
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "Authentication token is missing or invalid."
+    );
+  }
+  
+  // Check the admin claim specifically
+  if (context.auth.token.admin !== true) {
+    console.error("Permission denied: Caller is not an admin", {
+      uid: context.auth.uid,
+      email: context.auth.token.email,
+      claims: context.auth.token
+    });
     throw new functions.https.HttpsError(
       "permission-denied",
       "Caller must be an admin to manage roles."
@@ -50,6 +64,12 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
       console.log("Retrieved userRecord:", JSON.stringify(userRecord));
     } catch (getUserError: any) {
       console.error("Error getting user by email:", getUserError);
+      console.error("Error details:", {
+        code: getUserError.code,
+        message: getUserError.message,
+        stack: getUserError.stack
+      });
+      
       if (getUserError.code === 'auth/user-not-found') {
         throw new functions.https.HttpsError(
           "not-found", 
@@ -64,6 +84,7 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
     }
     
     const uid = userRecord.uid;
+    console.log(`Retrieved user with UID: ${uid}`);
     
     // 4. Set the custom claim
     try {
@@ -72,6 +93,12 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
       console.log("Custom claims set successfully");
     } catch (setClaimsError: any) {
       console.error("Error setting custom claims:", setClaimsError);
+      console.error("Error details:", {
+        code: setClaimsError.code,
+        message: setClaimsError.message,
+        stack: setClaimsError.stack
+      });
+      
       throw new functions.https.HttpsError(
         "internal", 
         "Failed to set custom claims",
@@ -84,35 +111,42 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
     const adminConfigRef = admin.firestore().collection('config').doc('admin');
     
     try {
-      if (makeAdmin) {
-        console.log(`Adding ${email} to admin list`);
-        await adminConfigRef.update({
-          adminEmails: admin.firestore.FieldValue.arrayUnion(email)
-        });
-      } else {
-        console.log(`Removing ${email} from admin list`);
-        await adminConfigRef.update({
-          adminEmails: admin.firestore.FieldValue.arrayRemove(email)
-        });
-      }
-      console.log("Firestore admin list updated successfully");
+      // First check if the document exists
+      const docSnapshot = await adminConfigRef.get();
+      console.log(`Admin config document exists: ${docSnapshot.exists}`);
       
+      if (docSnapshot.exists) {
+        if (makeAdmin) {
+          console.log(`Adding ${email} to admin list`);
+          await adminConfigRef.update({
+            adminEmails: admin.firestore.FieldValue.arrayUnion(email)
+          });
+        } else {
+          console.log(`Removing ${email} from admin list`);
+          await adminConfigRef.update({
+            adminEmails: admin.firestore.FieldValue.arrayRemove(email)
+          });
+        }
+        console.log("Firestore admin list updated successfully");
+      } else {
+        // Document doesn't exist, create it
+        console.log("Admin config document does not exist, creating it");
+        await adminConfigRef.set({
+          adminEmails: makeAdmin ? [email] : []
+        });
+        console.log("Admin config document created successfully");
+      }
     } catch (firestoreError: any) {
       console.error("Failed to update adminEmails list in Firestore:", firestoreError);
+      console.error("Firestore error details:", {
+        code: firestoreError.code,
+        message: firestoreError.message,
+        stack: firestoreError.stack
+      });
       
-      // Document might not exist, try to create it
-      if (firestoreError.code === 'not-found') {
-        try {
-          console.log("Attempting to create admin config document");
-          await adminConfigRef.set({
-            adminEmails: makeAdmin ? [email] : []
-          });
-          console.log("Admin config document created successfully");
-        } catch (setError: any) {
-          console.error("Failed to create admin config document:", setError);
-          // Continue anyway since we already set the claims
-        }
-      }
+      // Don't throw here, since we already set the custom claims
+      // Just log the error and continue with success response
+      console.warn("Continuing despite Firestore error since custom claims were set successfully");
     }
     
     console.log("Admin role management completed successfully");
@@ -122,6 +156,13 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
     };
   } catch (error: any) {
     console.error("Error managing admin role:", error);
+    
+    const errorDetails = {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : null,
+      code: error?.code
+    };
+    console.error("Detailed error information:", errorDetails);
     
     if (error instanceof functions.https.HttpsError) {
       // If it's already an HttpsError, just rethrow it
@@ -153,7 +194,10 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError(
       "internal", 
       "An unexpected error occurred while managing admin role.",
-      { originalError: error?.message || "Unknown error" }
+      { 
+        originalError: error?.message || "Unknown error",
+        details: errorDetails
+      }
     );
   }
 });

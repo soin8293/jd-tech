@@ -2,8 +2,9 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { Room } from "@/types/hotel.types";
 import { useToast } from "@/hooks/use-toast";
-import { getRooms, saveRooms, deleteRoom } from "@/services/room/roomService";
+import { getRooms as fetchRoomsFromService, saveRooms, deleteRoom } from "@/services/room/roomService";
 import { hotelRooms } from "@/data/hotel.data";
+import { getRooms as fetchRoomsDirectly } from "@/services/room/roomQueries";
 
 export const useRoomManagement = () => {
   const { toast } = useToast();
@@ -27,13 +28,39 @@ export const useRoomManagement = () => {
   const fetchRooms = useCallback(async () => {
     try {
       setLoading(true);
-      console.log("Fetching rooms...");
-      const roomsData = await getRooms();
-      console.log("Rooms data received:", roomsData);
-      setRooms(roomsData);
-      setError(null);
-      setUsingLocalData(false);
-      return roomsData; // Return the rooms data for immediate use
+      console.log("Fetching rooms in useRoomManagement...");
+      
+      // First try to fetch directly using our query function
+      const roomsData = await fetchRoomsDirectly();
+      console.log("Direct query results:", roomsData);
+      
+      if (roomsData && roomsData.length > 0) {
+        console.log("Setting rooms from direct query:", roomsData);
+        setRooms(roomsData);
+        setError(null);
+        setUsingLocalData(false);
+        return roomsData; // Return the rooms data for immediate use
+      }
+      
+      // If direct fetch returned empty, try through the service
+      console.log("Direct query returned empty, trying through service...");
+      const serviceFetchedRooms = await fetchRoomsFromService();
+      console.log("Service fetched rooms:", serviceFetchedRooms);
+      
+      if (serviceFetchedRooms && serviceFetchedRooms.length > 0) {
+        setRooms(serviceFetchedRooms);
+        setError(null);
+        setUsingLocalData(false);
+        return serviceFetchedRooms;
+      }
+      
+      // If both methods return empty, use default rooms
+      console.log("Both fetch methods returned empty, using default rooms");
+      setRooms(hotelRooms);
+      setUsingLocalData(true);
+      setError("No rooms found in database. Using default rooms.");
+      notifyLocalDataUse();
+      return hotelRooms;
     } catch (err) {
       console.error("Error loading rooms:", err);
       const isPermissionError = (err as any)?.code === 'permission-denied';
@@ -65,7 +92,7 @@ export const useRoomManagement = () => {
   // Initial fetch on mount
   useEffect(() => {
     fetchRooms();
-  }, []);
+  }, [fetchRooms]);
 
   const handleSaveRooms = useCallback(async (updatedRooms: Room[]) => {
     try {

@@ -11,6 +11,7 @@ import AdminManageDialog from "@/components/admin/AdminManageDialog";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { hotelRooms } from "@/data/hotel.data";
+import { getRooms } from "@/services/room/roomQueries";
 
 const RoomManagement = () => {
   const { rooms, loading, error, usingLocalData, fetchRooms, handleSaveRooms, handleDeleteRoom } = useRoomManagement();
@@ -20,38 +21,43 @@ const RoomManagement = () => {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    if (!initialized) {
-      const initializeRooms = async () => {
-        try {
-          console.log('Initializing rooms...');
-          const fetchedRooms = await fetchRooms();
-          
-          if (!fetchedRooms || fetchedRooms.length === 0) {
-            console.log('No rooms found, initializing with default rooms');
-            await handleSaveRooms(hotelRooms);
-            
-            // If saving to Firebase fails due to permissions, at least set local state
-            if (rooms.length === 0) {
-              console.log('Setting default rooms locally');
-              await handleSaveRooms(hotelRooms);
-            }
-          }
-          
-          setInitialized(true);
-        } catch (error) {
-          console.error('Error initializing rooms:', error);
-          // If there's an error, set local rooms anyway
-          if (rooms.length === 0) {
-            console.log('Setting default rooms locally after error');
-            await handleSaveRooms(hotelRooms);
-          }
-          setInitialized(true);
+    console.log("Room Management: Current rooms state:", rooms);
+    
+    const initializeRooms = async () => {
+      try {
+        console.log('Initializing rooms in RoomManagement...');
+        // Directly fetch rooms from the query function to ensure we get the latest data
+        const fetchedRooms = await getRooms();
+        console.log('Directly fetched rooms:', fetchedRooms);
+        
+        if (fetchedRooms.length === 0) {
+          console.log('No rooms found, initializing with default rooms');
+          // Try to save default rooms via the hook
+          await handleSaveRooms(hotelRooms);
+        } else if (rooms.length === 0) {
+          // If fetchedRooms has data but our state doesn't, update our state
+          console.log('Updating local room state with fetched rooms');
+          await handleSaveRooms(fetchedRooms);
         }
-      };
+        
+        setInitialized(true);
+      } catch (error) {
+        console.error('Error initializing rooms:', error);
+        
+        // If there's an error and we have no rooms, initialize with default rooms
+        if (rooms.length === 0) {
+          console.log('Error encountered, falling back to default rooms');
+          await handleSaveRooms(hotelRooms);
+        }
+        
+        setInitialized(true);
+      }
+    };
 
+    if (!initialized) {
       initializeRooms();
     }
-  }, [initialized, fetchRooms, handleSaveRooms, rooms.length]);
+  }, [initialized, handleSaveRooms, rooms.length]);
 
   // Redirect non-admin users
   if (!isAdmin) {
@@ -96,7 +102,7 @@ const RoomManagement = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {!loading && rooms.length === 0 && !initialized ? (
+          {loading && !initialized ? (
             <div className="text-center py-6">
               <p>Loading rooms...</p>
             </div>

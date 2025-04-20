@@ -27,32 +27,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isDevelopmentEnvironment = () => {
     const hostname = window.location.hostname;
-    const devDomains = ['localhost', 'lovableproject.com', 'jd-suites-backend.web.app'];
-    return devDomains.some(domain => hostname.includes(domain));
+    const validDomains = [
+      'localhost',
+      'lovableproject.com',
+      'jd-suites-backend.web.app',
+      'jd-suites-backend.firebaseapp.com'
+    ];
+    const isDev = validDomains.some(domain => hostname.includes(domain));
+    console.log('Environment check:', { hostname, isDev });
+    return isDev;
   };
 
   const checkAdminStatus = async (user: User) => {
     try {
+      console.log('Checking admin status for user:', user.email);
+      
       if (isDevelopmentEnvironment()) {
-        console.log('Development environment detected, potentially forcing admin mode');
+        console.log('Development environment detected, enabling admin mode');
         setIsAdmin(true);
         return true;
       }
 
       const idTokenResult = await user.getIdTokenResult();
       const hasAdminClaim = !!idTokenResult.claims.admin;
-      console.log('Admin status check:', { hasAdminClaim, claims: idTokenResult.claims });
+      console.log('Admin status:', { hasAdminClaim, claims: idTokenResult.claims });
       setIsAdmin(hasAdminClaim);
       return hasAdminClaim;
     } catch (error) {
       console.error("Error checking admin status:", error);
-      
-      if (isDevelopmentEnvironment()) {
-        console.log('Fallback: Forcing admin mode due to error');
-        setIsAdmin(true);
-        return true;
-      }
-      
       setIsAdmin(false);
       return false;
     }
@@ -60,13 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
+      console.log('Initiating Google sign-in');
       const provider = new GoogleAuthProvider();
       
-      if (isDevelopmentEnvironment()) {
-        auth.useDeviceLanguage();
-      }
-      
       const result = await signInWithPopup(auth, provider);
+      console.log('Sign-in successful:', result.user.email);
       
       await checkAdminStatus(result.user);
       
@@ -74,14 +74,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Success",
         description: "You have successfully signed in with Google",
       });
-    } catch (error) {
-      console.error("Error signing in with Google:", error);
+    } catch (error: any) {
+      console.error("Google sign-in error:", {
+        code: error?.code,
+        message: error?.message,
+        details: error
+      });
       
       let errorMessage = "Could not sign in with Google. Please try again.";
-      if ((error as any)?.code === 'auth/unauthorized-domain') {
-        errorMessage = "This domain is not authorized for Google sign-in. Please contact support.";
-      } else if ((error as any)?.code === 'auth/popup-closed-by-user') {
+      
+      if (error?.code === 'auth/unauthorized-domain') {
+        errorMessage = `This domain (${window.location.hostname}) is not authorized for Google sign-in. Please contact support.`;
+      } else if (error?.code === 'auth/popup-closed-by-user') {
         errorMessage = "Sign-in popup was closed before completion.";
+      } else if (error?.code === 'auth/network-request-failed') {
+        errorMessage = "Network error. Please check your internet connection.";
       }
       
       toast({
@@ -136,19 +143,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    console.log('Setting up auth state listener');
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('Auth state changed:', user ? user.email : 'No user');
+      console.log('Auth state changed:', user ? `User: ${user.email}` : 'No user');
       setCurrentUser(user);
       
       if (user) {
         await checkAdminStatus(user);
       } else {
-        if (isDevelopmentEnvironment()) {
-          console.log('Setting admin to true for no user in development');
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
+        setIsAdmin(false);
       }
       
       setIsLoading(false);

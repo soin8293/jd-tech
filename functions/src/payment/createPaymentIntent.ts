@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import { stripe } from "../config/stripe";
-import * as admin from "firebase/admin";
+import * as admin from "firebase-admin";
 
 // Interface definitions for type safety
 interface Room {
@@ -40,6 +40,8 @@ interface CreatePaymentIntentResponse {
  */
 export const createPaymentIntent = functions.https.onCall(async (data: CreatePaymentIntentData, context: functions.https.CallableContext): Promise<CreatePaymentIntentResponse> => {
   try {
+    console.log("Creating payment intent with data:", JSON.stringify(data, null, 2));
+    
     // 1. Authentication Check (Optional but Recommended for Production)
     // if (!context.auth) {
     //   throw new functions.https.HttpsError("unauthenticated", "User must be authenticated to create a payment intent.");
@@ -72,140 +74,150 @@ export const createPaymentIntent = functions.https.onCall(async (data: CreatePay
     const checkOut = new Date(period.checkOut);
     const numberOfNights = Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 3600 * 24)));
     
-    console.log(`Booking duration: ${numberOfNights} nights from ${checkIn.toISOString()} to ${checkOut.toISOString()}`);
+    console.log(`Booking duration calculated: ${numberOfNights} nights`);
     
-    // 5. Calculate total price from room details and nights
-    // Fetch room prices from Firestore for security
-    let totalAmount = 0;
-    
-    // SECURITY ENHANCEMENT: In production, always fetch room prices from Firestore
-    // Initialize Firestore if it hasn't been initialized
+    // Initialize Firestore
     if (!admin.apps.length) {
       admin.initializeApp();
     }
     
     const firestore = admin.firestore();
+    let totalAmount = 0;
     
+    // Enhanced room price retrieval with detailed logging
     for (const room of rooms) {
       try {
         if (!room.id) {
-          console.error('Invalid room data: Missing room ID', { rooms });
-          throw new functions.https.HttpsError('invalid-argument', 'Invalid room data: Missing room ID', {
-            type: 'validation_error',
-            details: { rooms }
-          });
+          console.error('Missing room ID:', { room });
+          throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Invalid room data: Missing room ID',
+            { type: 'validation_error', details: { room } }
+          );
         }
         
+        console.log(`Fetching price for room ${room.id}`);
         const roomDoc = await firestore.collection('rooms').doc(room.id).get();
+        
         if (!roomDoc.exists) {
-          throw new functions.https.HttpsError("not-found", `Room ${room.id} not found in database`);
+          console.error(`Room ${room.id} not found in database`);
+          throw new functions.https.HttpsError(
+            'not-found',
+            `Room ${room.id} not found in database`,
+            { type: 'room_not_found', details: { roomId: room.id } }
+          );
         }
         
         const roomData = roomDoc.data();
         if (!roomData || typeof roomData.price !== 'number') {
-          throw new functions.https.HttpsError("invalid-argument", `Invalid price for room: ${room.id}`);
+          console.error(`Invalid price data for room ${room.id}:`, roomData);
+          throw new functions.https.HttpsError(
+            'invalid-argument',
+            `Invalid price data for room: ${room.id}`,
+            { type: 'invalid_price', details: { roomId: room.id, data: roomData } }
+          );
         }
         
-        totalAmount += roomData.price * numberOfNights;
-        console.log(`Room ${room.id} price: $${roomData.price} x ${numberOfNights} nights = $${roomData.price * numberOfNights}`);
-      } catch (error) {
-        console.error(`Error fetching room ${room.id}:`, error);
-        throw new functions.https.HttpsError("internal", `Failed to fetch room data: ${error.message}`);
+        const roomTotal = roomData.price * numberOfNights;
+        totalAmount += roomTotal;
+        console.log(`Room ${room.id} calculation: $${roomData.price} x ${numberOfNights} nights = $${roomTotal}`);
+        
+      } catch (error: any) {
+        console.error(`Error processing room ${room.id}:`, error);
+        throw new functions.https.HttpsError(
+          'internal',
+          `Failed to process room ${room.id}: ${error.message}`,
+          { type: 'room_processing_error', details: { error: error.message, roomId: room.id } }
+        );
       }
     }
 
-    // 6. Apply taxes, fees, or discounts if needed
-    // const taxRate = 0.08; // 8% tax rate example
-    // totalAmount += totalAmount * taxRate;
-
-    // 7. Convert to cents for Stripe
     const amountInCents = Math.round(totalAmount * 100);
-    
-    console.log(`Calculated amount: $${totalAmount} (${amountInCents} cents)`);
+    console.log(`Final amount calculated: $${totalAmount} (${amountInCents} cents)`);
     
     if (amountInCents <= 0) {
-      console.error(`Invalid amount calculated: ${amountInCents} cents`);
-      throw new functions.https.HttpsError("invalid-argument", "Total amount must be greater than zero.");
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Total amount must be greater than zero',
+        { type: 'invalid_amount', details: { amount: amountInCents } }
+      );
     }
 
-    // 8. Create Stripe Payment Intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountInCents,
-      currency: currency,
-      metadata: {
-        booking_reference: booking_reference || '',
-        transaction_id: transaction_id || '',
-        nights: numberOfNights,
-        rooms: rooms.length,
-        guests: guests || 1,
-        roomIds: rooms.map(room => room.id).join(',')
-      },
-      automatic_payment_methods: { enabled: true }, // Enable automatic payment methods for convenience
-    });
-
-    console.log(`Payment Intent created successfully: ${paymentIntent.id}`, {
-      amount: amountInCents,
-      currency,
-      rooms: rooms.length,
-      nights: numberOfNights
-    });
-
-    // 9. Return Client Secret to the Frontend
-    return { 
-      clientSecret: paymentIntent.client_secret,
-      paymentIntentId: paymentIntent.id, // Return the ID for verification later
-      calculatedAmount: amountInCents / 100, // Send back the calculated amount for validation
-      details: {
-        nights: numberOfNights,
-        roomCount: rooms.length
-      }
-    };
-
-  } catch (error: unknown) {
-    // 10. Enhanced Error Handling
-    console.error("Error creating Payment Intent:", error);
-    
-    // Detailed Stripe error handling
-    if (error instanceof Error) {
-      console.error('Detailed Error:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
+    // Create Stripe Payment Intent with enhanced error handling
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amountInCents,
+        currency: currency,
+        metadata: {
+          booking_reference: booking_reference || '',
+          transaction_id: transaction_id || '',
+          nights: numberOfNights,
+          rooms: rooms.length,
+          guests: guests || 1,
+          roomIds: rooms.map(room => room.id).join(',')
+        },
+        automatic_payment_methods: { enabled: true },
       });
-    }
-    
-    // More specific error type and message handling
-    if (typeof error === 'object' && error !== null) {
-      if ('type' in error) {
-        const stripeError = error as { type: string; message: string };
-        
-        // Specific error type handling
-        switch (stripeError.type) {
-          case 'StripeCardError':
-            throw new functions.https.HttpsError('failed-precondition', stripeError.message, { 
-              type: 'payment_failed', 
-              details: { 
-                stripeMessage: stripeError.message 
-              } 
-            });
-          
-          case 'StripeAPIError':
-            throw new functions.https.HttpsError('internal', `Stripe API error: ${stripeError.message}`, { 
-              type: 'system_error' 
-            });
-          
-          default:
-            throw new functions.https.HttpsError('internal', 'Unexpected payment processing error', { 
-              type: 'unknown',
-              details: stripeError
-            });
+
+      console.log(`Payment Intent created successfully:`, {
+        id: paymentIntent.id,
+        amount: amountInCents,
+        currency,
+        rooms: rooms.length,
+        nights: numberOfNights
+      });
+
+      return {
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+        calculatedAmount: amountInCents / 100,
+        details: {
+          nights: numberOfNights,
+          roomCount: rooms.length
         }
+      };
+    } catch (stripeError: any) {
+      console.error('Stripe error creating payment intent:', {
+        error: stripeError,
+        code: stripeError.code,
+        type: stripeError.type,
+        message: stripeError.message
+      });
+
+      // Enhanced Stripe error handling
+      if (stripeError.type === 'StripeCardError') {
+        throw new functions.https.HttpsError(
+          'failed-precondition',
+          stripeError.message,
+          { type: 'payment_failed', details: { stripeError: stripeError.message } }
+        );
+      } else if (stripeError.type === 'StripeAPIError') {
+        throw new functions.https.HttpsError(
+          'internal',
+          'Payment processing error',
+          { type: 'stripe_api_error', details: { stripeError: stripeError.message } }
+        );
+      } else {
+        throw new functions.https.HttpsError(
+          'internal',
+          'Unexpected payment processing error',
+          { type: 'stripe_unknown_error', details: { stripeError: stripeError.message } }
+        );
       }
     }
+  } catch (error: any) {
+    console.error('Error in createPaymentIntent:', error);
     
-    // Fallback error handling
-    throw new functions.https.HttpsError('internal', 'Failed to create Payment Intent', { 
-      type: 'unknown_error' 
-    });
+    // If it's already an HttpsError, throw it as is
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    
+    // Otherwise, wrap it in an HttpsError
+    throw new functions.https.HttpsError(
+      'internal',
+      'Failed to create payment intent',
+      { type: 'unknown_error', details: { error: error.message } }
+    );
   }
 });

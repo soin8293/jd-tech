@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { 
   GoogleAuthProvider, 
@@ -87,8 +88,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let errorMessage = "Could not sign in with Google. Please try again.";
       
       if (error?.code === 'auth/unauthorized-domain') {
-        errorMessage = `This domain (${window.location.hostname}) is not authorized for Google sign-in. Please contact support and request domain authorization.`;
-        console.error(`Unauthorized domain error. Current hostname: ${window.location.hostname}`);
+        const currentDomain = window.location.hostname;
+        errorMessage = `Authentication Error: This domain (${currentDomain}) is not authorized in Firebase.`;
+        
+        console.error(`Unauthorized domain error. Domain "${currentDomain}" must be added to Firebase Console.`);
+        console.error(`To fix this: Go to Firebase Console > Authentication > Settings > Authorized Domains and add "${currentDomain}"`);
+        
+        toast({
+          title: "Domain Not Authorized",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        
+        // Second toast with more detailed instructions
+        setTimeout(() => {
+          toast({
+            title: "How to Fix",
+            description: "The site owner needs to add this domain to Firebase authorized domains list.",
+            variant: "destructive",
+          });
+        }, 1000);
+        
       } else if (error?.code === 'auth/popup-closed-by-user') {
         errorMessage = "Sign-in popup was closed before completion.";
       } else if (error?.code === 'auth/network-request-failed') {

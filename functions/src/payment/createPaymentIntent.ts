@@ -1,4 +1,3 @@
-
 import * as functions from "firebase-functions";
 import { stripe } from "../config/stripe";
 import * as admin from "firebase/admin";
@@ -40,12 +39,12 @@ interface CreatePaymentIntentResponse {
  * @returns {Object} - Response containing the clientSecret for the Payment Intent.
  */
 export const createPaymentIntent = functions.https.onCall(async (data: CreatePaymentIntentData, context: functions.https.CallableContext): Promise<CreatePaymentIntentResponse> => {
-  // 1. Authentication Check (Optional but Recommended for Production)
-  // if (!context.auth) {
-  //   throw new functions.https.HttpsError("unauthenticated", "User must be authenticated to create a payment intent.");
-  // }
-
   try {
+    // 1. Authentication Check (Optional but Recommended for Production)
+    // if (!context.auth) {
+    //   throw new functions.https.HttpsError("unauthenticated", "User must be authenticated to create a payment intent.");
+    // }
+
     // 2. Extract booking details from request
     const { rooms, period, guests, transaction_id, booking_reference } = data;
     const currency = data.currency || "usd"; // Default to USD if currency is not provided
@@ -90,7 +89,11 @@ export const createPaymentIntent = functions.https.onCall(async (data: CreatePay
     for (const room of rooms) {
       try {
         if (!room.id) {
-          throw new functions.https.HttpsError("invalid-argument", "Room ID is required");
+          console.error('Invalid room data: Missing room ID', { rooms });
+          throw new functions.https.HttpsError('invalid-argument', 'Invalid room data: Missing room ID', {
+            type: 'validation_error',
+            details: { rooms }
+          });
         }
         
         const roomDoc = await firestore.collection('rooms').doc(room.id).get();
@@ -134,12 +137,18 @@ export const createPaymentIntent = functions.https.onCall(async (data: CreatePay
         transaction_id: transaction_id || '',
         nights: numberOfNights,
         rooms: rooms.length,
-        guests: guests || 1
+        guests: guests || 1,
+        roomIds: rooms.map(room => room.id).join(',')
       },
       automatic_payment_methods: { enabled: true }, // Enable automatic payment methods for convenience
     });
 
-    console.log(`Payment Intent created successfully: ${paymentIntent.id}`);
+    console.log(`Payment Intent created successfully: ${paymentIntent.id}`, {
+      amount: amountInCents,
+      currency,
+      rooms: rooms.length,
+      nights: numberOfNights
+    });
 
     // 9. Return Client Secret to the Frontend
     return { 
@@ -156,38 +165,47 @@ export const createPaymentIntent = functions.https.onCall(async (data: CreatePay
     // 10. Enhanced Error Handling
     console.error("Error creating Payment Intent:", error);
     
+    // Detailed Stripe error handling
+    if (error instanceof Error) {
+      console.error('Detailed Error:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+    }
+    
+    // More specific error type and message handling
     if (typeof error === 'object' && error !== null) {
       if ('type' in error) {
         const stripeError = error as { type: string; message: string };
-        if (stripeError.type === 'StripeCardError') {
-          // Handle specific Stripe card errors (e.g., card declined)
-          throw new functions.https.HttpsError('failed-precondition', stripeError.message, { type: 'payment_failed' });
-        } else if (stripeError.type === 'StripeAPIError') {
-          // Handle Stripe API errors
-          throw new functions.https.HttpsError('internal', `Stripe API error: ${stripeError.message}`, { type: 'system_error' });
-        } else if (stripeError.type === 'StripeConnectionError') {
-          // Handle Stripe connection errors (network issues)
-          throw new functions.https.HttpsError('unavailable', `Connection to Stripe failed: ${stripeError.message}`, { type: 'network_error' });
-        } else if (stripeError.type === 'StripeInvalidRequestError') {
-          // Handle invalid request errors (e.g., missing parameters)
-          throw new functions.https.HttpsError('invalid-argument', stripeError.message, { type: 'validation_error' });
+        
+        // Specific error type handling
+        switch (stripeError.type) {
+          case 'StripeCardError':
+            throw new functions.https.HttpsError('failed-precondition', stripeError.message, { 
+              type: 'payment_failed', 
+              details: { 
+                stripeMessage: stripeError.message 
+              } 
+            });
+          
+          case 'StripeAPIError':
+            throw new functions.https.HttpsError('internal', `Stripe API error: ${stripeError.message}`, { 
+              type: 'system_error' 
+            });
+          
+          default:
+            throw new functions.https.HttpsError('internal', 'Unexpected payment processing error', { 
+              type: 'unknown',
+              details: stripeError
+            });
         }
       }
-      
-      if ('code' in error && typeof error.code === 'string' && error.code.startsWith('functions/')) {
-        // Pass through existing HttpsError
-        throw error;
-      }
     }
     
-    // Handle generic API errors or other unexpected errors
-    let errorMessage = 'Failed to create Payment Intent. Contact support.';
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
-      errorMessage = error.message;
-    }
-    
-    throw new functions.https.HttpsError('internal', errorMessage, { type: 'unknown' });
+    // Fallback error handling
+    throw new functions.https.HttpsError('internal', 'Failed to create Payment Intent', { 
+      type: 'unknown_error' 
+    });
   }
 });

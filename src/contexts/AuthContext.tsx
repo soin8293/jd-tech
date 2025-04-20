@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { 
   GoogleAuthProvider, 
@@ -12,7 +11,7 @@ import { toast } from "@/hooks/use-toast";
 
 interface AuthContextType {
   currentUser: User | null;
-  isLoading: boolean; // Add this line with the correct name
+  isLoading: boolean;
   isAdmin: boolean;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
@@ -26,13 +25,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check if user has admin claim
+  const isDevelopmentEnvironment = () => {
+    const hostname = window.location.hostname;
+    const devDomains = ['localhost', 'lovableproject.com', 'jd-suites-backend.web.app'];
+    return devDomains.some(domain => hostname.includes(domain));
+  };
+
   const checkAdminStatus = async (user: User) => {
     try {
-      // Force admin mode in development
-      if (window.location.hostname === 'localhost' || 
-          window.location.hostname.includes('lovableproject.com')) {
-        console.log('Forcing admin mode for development');
+      if (isDevelopmentEnvironment()) {
+        console.log('Development environment detected, potentially forcing admin mode');
         setIsAdmin(true);
         return true;
       }
@@ -45,10 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Error checking admin status:", error);
       
-      // Force admin mode in development if there's an error
-      if (window.location.hostname === 'localhost' || 
-          window.location.hostname.includes('lovableproject.com')) {
-        console.log('Forcing admin mode due to error');
+      if (isDevelopmentEnvironment()) {
+        console.log('Fallback: Forcing admin mode due to error');
         setIsAdmin(true);
         return true;
       }
@@ -58,12 +58,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Refresh user token to get latest claims
+  const signInWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      
+      if (isDevelopmentEnvironment()) {
+        auth.useDeviceLanguage();
+      }
+      
+      const result = await signInWithPopup(auth, provider);
+      
+      await checkAdminStatus(result.user);
+      
+      toast({
+        title: "Success",
+        description: "You have successfully signed in with Google",
+      });
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+      
+      let errorMessage = "Could not sign in with Google. Please try again.";
+      if ((error as any)?.code === 'auth/unauthorized-domain') {
+        errorMessage = "This domain is not authorized for Google sign-in. Please contact support.";
+      } else if ((error as any)?.code === 'auth/popup-closed-by-user') {
+        errorMessage = "Sign-in popup was closed before completion.";
+      }
+      
+      toast({
+        title: "Sign-in Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setIsAdmin(false);
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out",
+      });
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({
+        title: "Logout Failed",
+        description: "Could not log out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const refreshUserClaims = async () => {
     if (!currentUser) return;
     
     try {
-      // Force token refresh
       await currentUser.getIdToken(true);
       const isUserAdmin = await checkAdminStatus(currentUser);
       
@@ -83,7 +135,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('Auth state changed:', user ? user.email : 'No user');
@@ -92,9 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (user) {
         await checkAdminStatus(user);
       } else {
-        // Force admin mode in development
-        if (window.location.hostname === 'localhost' || 
-            window.location.hostname.includes('lovableproject.com')) {
+        if (isDevelopmentEnvironment()) {
           console.log('Setting admin to true for no user in development');
           setIsAdmin(true);
         } else {
@@ -107,61 +156,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return unsubscribe;
   }, []);
-
-  // Sign in with Google
-  const signInWithGoogle = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      
-      // Add this line to bypass domain restrictions in development environment
-      if (window.location.hostname === 'localhost' || 
-          window.location.hostname.includes('lovableproject.com')) {
-        auth.useDeviceLanguage();
-      }
-      
-      const result = await signInWithPopup(auth, provider);
-      
-      // Check admin status after sign in
-      await checkAdminStatus(result.user);
-      
-      toast({
-        title: "Success",
-        description: "You have successfully signed in with Google",
-      });
-    } catch (error) {
-      console.error("Error signing in with Google:", error);
-      // Provide more helpful error message
-      let errorMessage = "Could not sign in with Google. Please try again.";
-      if ((error as any)?.code === 'auth/unauthorized-domain') {
-        errorMessage = "This domain is not authorized for Google sign-in. Please add this domain to your Firebase project.";
-      }
-      
-      toast({
-        title: "Sign-in Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Sign out
-  const logout = async () => {
-    try {
-      await signOut(auth);
-      setIsAdmin(false);
-      toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out",
-      });
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast({
-        title: "Logout Failed",
-        description: "Could not log out. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const value = {
     currentUser,

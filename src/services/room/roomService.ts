@@ -4,7 +4,7 @@ import { getRooms as fetchRooms, getRoom as fetchRoom } from "./roomQueries";
 import { saveRoom, saveRooms, deleteRoom, addBookingToRoom } from "./roomMutations";
 import { seedRooms } from "./roomSeed";
 import { getAvailableRooms } from "./roomAvailability";
-import { addNoteToBooking, addChargeToBooking } from "./roomIssueTracking";
+import { addNoteToBooking, addChargeToBooking, getBookingIssues } from "./roomIssueTracking";
 
 // Re-export all room-related functionality
 export {
@@ -17,5 +17,6 @@ export {
   getAvailableRooms,
   addBookingToRoom,
   addNoteToBooking,
-  addChargeToBooking
+  addChargeToBooking,
+  getBookingIssues
 };

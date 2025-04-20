@@ -13,6 +13,20 @@ export interface Room {
   bookings?: BookingPeriod[]; // New field to track booked periods
 }
 
+// Adding RoomFormData type for form handling
+export interface RoomFormData {
+  id?: string;
+  name: string;
+  description: string;
+  price: number;
+  capacity: number;
+  size: number;
+  bed: string;
+  amenities: string[];
+  images: string[];
+  availability: boolean;
+}
+
 export interface BookingPeriod {
   checkIn: Date;
   checkOut: Date;

@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Room } from "@/types/hotel.types";
 import { useToast } from "@/hooks/use-toast";
 import { getRooms, saveRooms, deleteRoom } from "@/services/roomService";
@@ -11,15 +11,19 @@ export const useRoomManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [usingLocalData, setUsingLocalData] = useState(false);
+  const [hasShownLocalDataToast, setHasShownLocalDataToast] = useState(false);
   
-  // Use a stable reference for toast notifications to prevent rapid re-renders
+  // Create a stable reference for toast notifications
   const notifyLocalDataUse = useCallback(() => {
-    toast({
-      title: "Using Local Data",
-      description: "Unable to access database due to permissions. Using local data for now.",
-      variant: "default",
-    });
-  }, [toast]);
+    if (!hasShownLocalDataToast) {
+      toast({
+        title: "Using Local Data",
+        description: "Unable to access database due to permissions. Using local data for now.",
+        variant: "default",
+      });
+      setHasShownLocalDataToast(true);
+    }
+  }, [toast, hasShownLocalDataToast]);
 
   const fetchRooms = useCallback(async () => {
     try {
@@ -39,7 +43,6 @@ export const useRoomManagement = () => {
         setRooms(hotelRooms);
         setUsingLocalData(true);
         setError("Database permission error. Using local data until permissions are fixed.");
-        // Only show the toast once when switching to local data
         notifyLocalDataUse();
       } else {
         setError("Failed to load rooms. Please try again.");
@@ -54,7 +57,7 @@ export const useRoomManagement = () => {
     }
   }, [notifyLocalDataUse, toast]);
 
-  const handleSaveRooms = async (updatedRooms: Room[]) => {
+  const handleSaveRooms = useCallback(async (updatedRooms: Room[]) => {
     try {
       setLoading(true);
       
@@ -77,11 +80,10 @@ export const useRoomManagement = () => {
         } catch (err) {
           const isPermissionError = (err as any)?.code === 'permission-denied';
           
-          if (isPermissionError && !usingLocalData) {
+          if (isPermissionError) {
             setUsingLocalData(true);
             setRooms(updatedRooms);
             setError("Database permission error. Using local data until permissions are fixed.");
-            // Only show the toast once when switching to local data
             notifyLocalDataUse();
           } else {
             throw err; // Re-throw non-permission errors
@@ -98,9 +100,9 @@ export const useRoomManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [usingLocalData, toast, notifyLocalDataUse]);
 
-  const handleDeleteRoom = async (roomId: string) => {
+  const handleDeleteRoom = useCallback(async (roomId: string) => {
     try {
       setLoading(true);
       
@@ -125,12 +127,11 @@ export const useRoomManagement = () => {
         } catch (err) {
           const isPermissionError = (err as any)?.code === 'permission-denied';
           
-          if (isPermissionError && !usingLocalData) {
+          if (isPermissionError) {
             setUsingLocalData(true);
             const updatedRooms = rooms.filter(room => room.id !== roomId);
             setRooms(updatedRooms);
             setError("Database permission error. Using local data until permissions are fixed.");
-            // Only show the toast once when switching to local data
             notifyLocalDataUse();
           } else {
             throw err; // Re-throw non-permission errors
@@ -147,7 +148,7 @@ export const useRoomManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [rooms, usingLocalData, toast, notifyLocalDataUse]);
 
   return {
     rooms,

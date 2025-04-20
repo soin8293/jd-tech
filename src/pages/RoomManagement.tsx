@@ -49,7 +49,6 @@ const RoomManagement = () => {
       </header>
       
       <main className="container mx-auto px-4 py-8">
-        {/* Only render the banner once usingLocalData is stable */}
         {usingLocalData && <LocalDataBanner />}
         
         {error && !usingLocalData && (

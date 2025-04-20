@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { BookingPeriod, Room, BookingDetails, RoomAvailabilityCheck } from "@/types/hotel.types";
@@ -156,39 +155,7 @@ const Hotel = () => {
             </div>
           )}
         </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-          <div className="lg:col-span-2">
-            <SearchResults
-              hasSearched={hasSearched}
-              isLoading={isLoading}
-              availableRooms={availableRooms}
-              roomAvailability={roomAvailability}
-              selectedRooms={selectedRooms}
-              onSelectRoom={handleSelectRoom}
-            />
-          </div>
-          
-          <div className="lg:col-span-1">
-            <div className="sticky top-6">
-              <BookingSummary
-                bookingPeriod={bookingPeriod}
-                guests={guests}
-                selectedRooms={selectedRooms}
-                onBookNow={handleBookNow}
-              />
-              <StayInformation />
-            </div>
-          </div>
-        </div>
       </div>
-      
-      <PaymentModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setPaymentModalOpen(false)}
-        bookingDetails={bookingDetails}
-        onPaymentComplete={handlePaymentComplete}
-      />
     </div>
   );
 };

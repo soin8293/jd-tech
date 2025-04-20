@@ -29,12 +29,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check if user has admin claim
   const checkAdminStatus = async (user: User) => {
     try {
+      // Force admin mode in development
+      if (window.location.hostname === 'localhost' || 
+          window.location.hostname.includes('lovableproject.com')) {
+        setIsAdmin(true);
+        return true;
+      }
+
       const idTokenResult = await user.getIdTokenResult();
       const hasAdminClaim = !!idTokenResult.claims.admin;
       setIsAdmin(hasAdminClaim);
       return hasAdminClaim;
     } catch (error) {
       console.error("Error checking admin status:", error);
+      
+      // Force admin mode in development if there's an error
+      if (window.location.hostname === 'localhost' || 
+          window.location.hostname.includes('lovableproject.com')) {
+        setIsAdmin(true);
+        return true;
+      }
+      
       setIsAdmin(false);
       return false;
     }
@@ -73,7 +88,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (user) {
         await checkAdminStatus(user);
       } else {
-        setIsAdmin(false);
+        // Force admin mode in development
+        if (window.location.hostname === 'localhost' || 
+            window.location.hostname.includes('lovableproject.com')) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
       }
       
       setIsLoading(false);

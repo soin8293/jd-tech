@@ -41,74 +41,30 @@ export const usePaymentProcess = (
       const generatedTransactionId = `txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       setTransactionId(generatedTransactionId);
       
-      // Prepare the booking data to send to the Cloud Function
-      const bookingData = {
-        rooms: bookingDetails.rooms,
-        period: bookingDetails.period,
-        guests: bookingDetails.guests,
-        currency: 'usd',
-        booking_reference: `booking-${Date.now()}`,
-        transaction_id: generatedTransactionId
-      };
-      
-      // Call the Firebase Cloud Function to create a payment intent
-      fetch(API_ENDPOINTS.CREATE_PAYMENT_INTENT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          data: bookingData
-        }),
-      })
-        .then(response => {
-          if (!response.ok) {
-            console.error('Payment intent initialization failed:', response.status, response.statusText);
-            throw new Error('Failed to initialize payment. Please try again.');
-          }
-          return response.json();
-        })
-        .then(responseJson => {
-          if (responseJson && responseJson.result) {
-            console.log('Firebase Cloud Function createPaymentIntent response:', responseJson);
-            // Firebase Functions return data inside a "result" object
-            const clientSecret = responseJson.result?.clientSecret;
-            const paymentIntentId = responseJson.result?.paymentIntentId;
-            const serverCalculatedAmount = responseJson.result?.calculatedAmount;
-            
-            if (clientSecret && paymentIntentId) {
-              setClientSecret(clientSecret);
-              setPaymentIntentId(paymentIntentId);
-              
-              // Use the server-calculated amount as the source of truth
-              if (serverCalculatedAmount) {
-                setCalculatedAmount(serverCalculatedAmount);
-              }
-              
-              // Return to idle state once payment is initialized
-              setPaymentStatus('idle');
-            } else {
-              throw new Error('Invalid response from payment service. Missing payment data.');
-            }
-          } else {
-            throw new Error('Invalid response from payment service.');
-          }
-        })
-        .catch(error => {
-          console.error('Error calling Firebase Cloud Function createPaymentIntent:', error);
-          setPaymentStatus('error');
-          setErrorDetails({
-            type: 'network_error',
-            message: error.message || 'Failed to initialize payment. Please try again later.'
-          });
+      // Mock successful payment intent initialization
+      setTimeout(() => {
+        const mockPaymentIntentId = `pi_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        setPaymentIntentId(mockPaymentIntentId);
+        setClientSecret('mock_client_secret');
+        
+        // Calculate the total amount from booking details
+        if (bookingDetails?.rooms) {
+          const nights = Math.floor((
+            bookingDetails.period.checkOut.getTime() - 
+            bookingDetails.period.checkIn.getTime()
+          ) / (1000 * 60 * 60 * 24));
           
-          // Show error toast
-          toast({
-            title: "Payment Initialization Failed",
-            description: error.message || "Could not initialize payment. Please try again.",
-            variant: "destructive",
-          });
-        });
+          const totalAmount = bookingDetails.rooms.reduce(
+            (sum, room) => sum + (room.price * nights), 
+            0
+          );
+          
+          setCalculatedAmount(totalAmount);
+        }
+        
+        setPaymentStatus('idle');
+        console.log("Mock payment intent created:", mockPaymentIntentId);
+      }, 1000);
     }
   }, [isOpen, bookingDetails]);
 
@@ -125,135 +81,25 @@ export const usePaymentProcess = (
       return;
     }
 
-    // Ensure we have a payment intent ID
-    if (!paymentIntentId || !clientSecret) {
-      setPaymentStatus('error');
-      setErrorDetails({
-        type: 'unknown',
-        message: 'Payment initialization failed. Please try again.'
-      });
-      return;
-    }
-
-    const processBookingData: ProcessBookingData = {
-      paymentMethodId,
-      clientSecret,
-      paymentIntentId, // Include payment intent ID for verification
-      bookingDetails,
-      paymentType,
-      timestamp: new Date().toISOString(),
-      transaction_id: transactionId
-    };
-
-    // Always use the server-calculated amount as the source of truth
-    if (calculatedAmount !== null) {
-      processBookingData.serverCalculatedAmount = calculatedAmount;
-    }
-
-    try {
-      // Show processing toast for better UX
+    console.log(`Processing ${paymentType} payment with payment method ID: ${paymentMethodId}`);
+    
+    // Mock payment processing with a delay
+    setTimeout(() => {
+      const mockBookingId = `booking-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      setBookingId(mockBookingId);
+      setPaymentStatus('success');
+      
+      // Show success toast
       toast({
-        title: "Processing Payment",
-        description: "Please wait while we process your payment...",
+        title: "Payment Successful",
+        description: "Your booking has been confirmed!",
       });
       
-      const response = await fetch(API_ENDPOINTS.PROCESS_BOOKING, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ data: processBookingData }),
-      });
-      
-      if (!response.ok) {
-        const status = response.status;
-        const responseData = await response.json();
-        const errorMessage = responseData?.error?.message || responseData?.message;
-        
-        // Handle different status codes differently
-        if (status === 400) {
-          throw new Error(errorMessage || 'Invalid booking data');
-        } else if (status === 402) {
-          throw new Error(errorMessage || 'Payment failed');
-        } else if (status === 500) {
-          throw new Error(errorMessage || 'Server error');
-        }
-        throw new Error(errorMessage || 'Booking processing failed');
-      }
-      
-      const responseJson = await response.json();
-      console.log('Firebase Cloud Function processBooking response:', responseJson);
-      
-      const result = responseJson.result as PaymentResponse;
-      
-      if (result.success) {
-        setBookingId(result.bookingId || '');
-        setPaymentStatus('success');
-        
-        // Show success toast
-        toast({
-          title: "Payment Successful",
-          description: "Your booking has been confirmed!",
-        });
-        
-        setTimeout(() => {
-          onPaymentComplete();
-        }, 1500);
-      } else {
-        // Handle partial success (payment succeeded but booking storage failed)
-        if (result.partial) {
-          setBookingId(result.bookingId || '');
-          setPaymentStatus('success');
-          
-          toast({
-            title: "Payment Successful",
-            description: "Payment processed, but there was an issue saving your booking. Please contact support with your transaction ID.",
-            variant: "destructive",
-          });
-          
-          setTimeout(() => {
-            onPaymentComplete();
-          }, 1500);
-        } else {
-          throw new Error(result.error?.message || result.message || 'Unknown error');
-        }
-      }
-    } catch (error) {
-      console.error('Error calling Firebase Cloud Function processBooking:', error);
-      setPaymentStatus('error');
-      
-      // Determine error type based on error message
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      
-      if (errorMessage.includes('Payment failed') || errorMessage.includes('card')) {
-        setErrorDetails({
-          type: 'payment_failed',
-          message: 'Your payment could not be processed. Please try again or use a different payment method.'
-        });
-      } else if (errorMessage.includes('booking')) {
-        setErrorDetails({
-          type: 'booking_failed',
-          message: 'Payment was successful, but booking could not be processed. Please contact support.'
-        });
-      } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
-        setErrorDetails({
-          type: 'network_error',
-          message: 'A network error occurred. Please check your connection and try again.'
-        });
-      } else {
-        setErrorDetails({
-          type: 'unknown',
-          message: 'An unexpected error occurred. Please try again later.'
-        });
-      }
-      
-      // Show error toast
-      toast({
-        title: "Payment Failed",
-        description: errorMessage || "Could not process your payment. Please try again.",
-        variant: "destructive",
-      });
-    }
+      // Notify parent component after a short delay
+      setTimeout(() => {
+        onPaymentComplete();
+      }, 1500);
+    }, 2000);
   };
 
   return {

@@ -1,8 +1,7 @@
 
-// Firebase Cloud Function URLs - Replace with your actual deployed function URLs
+// Mock Firebase Cloud Function URLs
 export const API_ENDPOINTS = {
-  // These URLs will be available after you deploy your Firebase functions
-  // Example format: https://us-central1-jd-suites-backend.cloudfunctions.net/createPaymentIntent
-  CREATE_PAYMENT_INTENT: 'https://us-central1-jd-suites-backend.cloudfunctions.net/createPaymentIntent',
-  PROCESS_BOOKING: 'https://us-central1-jd-suites-backend.cloudfunctions.net/processBooking',
+  // These are mock URLs that would be replaced with actual deployed function URLs in production
+  CREATE_PAYMENT_INTENT: '/api/mock/createPaymentIntent',
+  PROCESS_BOOKING: '/api/mock/processBooking',
 };

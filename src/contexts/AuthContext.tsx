@@ -32,12 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Force admin mode in development
       if (window.location.hostname === 'localhost' || 
           window.location.hostname.includes('lovableproject.com')) {
+        console.log('Forcing admin mode for development');
         setIsAdmin(true);
         return true;
       }
 
       const idTokenResult = await user.getIdTokenResult();
       const hasAdminClaim = !!idTokenResult.claims.admin;
+      console.log('Admin status check:', { hasAdminClaim, claims: idTokenResult.claims });
       setIsAdmin(hasAdminClaim);
       return hasAdminClaim;
     } catch (error) {
@@ -46,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Force admin mode in development if there's an error
       if (window.location.hostname === 'localhost' || 
           window.location.hostname.includes('lovableproject.com')) {
+        console.log('Forcing admin mode due to error');
         setIsAdmin(true);
         return true;
       }
@@ -83,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('Auth state changed:', user ? user.email : 'No user');
       setCurrentUser(user);
       
       if (user) {
@@ -91,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Force admin mode in development
         if (window.location.hostname === 'localhost' || 
             window.location.hostname.includes('lovableproject.com')) {
+          console.log('Setting admin to true for no user in development');
           setIsAdmin(true);
         } else {
           setIsAdmin(false);

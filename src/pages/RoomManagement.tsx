@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Room } from "@/types/hotel.types";
 import RoomManager from "@/components/hotel/RoomManager";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,7 +42,7 @@ const RoomManagement = () => {
           toast({
             title: "Using Local Data",
             description: "Unable to access database due to permissions. Using local data for now.",
-            variant: "warning",
+            variant: "default",
           });
         } else {
           setError("Failed to load rooms. Please try again.");
@@ -72,7 +72,7 @@ const RoomManagement = () => {
         toast({
           title: "Local changes applied",
           description: "Your changes have been saved locally. They won't persist after page refresh until database permissions are fixed.",
-          variant: "warning",
+          variant: "default",
         });
       } else {
         // Save to Firestore
@@ -98,7 +98,7 @@ const RoomManagement = () => {
         toast({
           title: "Database Permission Error",
           description: "Changes saved locally only. They won't persist after refresh until permissions are fixed.",
-          variant: "warning",
+          variant: "default",
         });
       } else {
         toast({
@@ -123,7 +123,7 @@ const RoomManagement = () => {
         toast({
           title: "Room deleted locally",
           description: "The room has been removed from your local view",
-          variant: "warning",
+          variant: "default",
         });
       } else {
         // Delete from Firestore
@@ -151,7 +151,7 @@ const RoomManagement = () => {
         toast({
           title: "Database Permission Error",
           description: "Room removed locally only. This won't persist after refresh until permissions are fixed.",
-          variant: "warning",
+          variant: "default",
         });
       } else {
         toast({
@@ -238,3 +238,4 @@ const RoomManagement = () => {
 };
 
 export default RoomManagement;
+

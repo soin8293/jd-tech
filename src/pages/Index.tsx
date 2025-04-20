@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ const Index = () => {
   return (
     <div className="min-h-screen pt-16">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-cyan-500 to-blue-500 py-20 relative">
+      <div className="bg-gradient-to-r from-cyan-500 to-blue-500 py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6">
@@ -29,16 +30,9 @@ const Index = () => {
             </Link>
           </div>
         </div>
-        {/* Gradient overlay for smooth transition */}
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-32" 
-          style={{
-            background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.1))"
-          }}
-        />
       </div>
 
-      {/* Features Section with Image Background */}
+      {/* Features Section with Image Background - Integrated with hero for seamless transition */}
       <div className="relative">
         {/* Feature Cards */}
         <div className="container mx-auto px-4 py-16 relative z-10">
@@ -85,14 +79,16 @@ const Index = () => {
             alt="JD Suites Building"
             className="w-full h-full object-cover rounded-b-[64px]"
           />
-          {/* Gradient overlay for smooth transition with image */}
-          <div 
-            className="absolute top-0 left-0 right-0 h-32"
-            style={{
-              background: "linear-gradient(to top, transparent, rgba(59, 130, 246, 0.5))"
-            }}
-          />
         </div>
+        
+        {/* Completely seamless gradient overlay - positioned to cover both sections */}
+        <div 
+          className="absolute top-[-400px] left-0 right-0 h-[500px] pointer-events-none"
+          style={{
+            background: "linear-gradient(to bottom, #38bdf8, rgba(56, 189, 248, 0.9), rgba(56, 189, 248, 0.7), rgba(56, 189, 248, 0.4), rgba(56, 189, 248, 0.1), transparent)",
+            zIndex: -1
+          }}
+        />
       </div>
     </div>
   );

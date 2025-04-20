@@ -67,6 +67,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       console.log('Initiating Google sign-in from domain:', window.location.hostname);
+      console.log('Firebase Auth Config:', {
+        authDomain: auth.config.authDomain,
+        projectId: auth.config.projectId
+      });
+      
       const provider = new GoogleAuthProvider();
       
       const result = await signInWithPopup(auth, provider);

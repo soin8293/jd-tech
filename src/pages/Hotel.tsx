@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { BookingPeriod, Room, BookingDetails, RoomAvailabilityCheck } from "@/types/hotel.types";
@@ -12,7 +11,7 @@ import StayInformation from "@/components/hotel/StayInformation";
 import { format, addDays, differenceInDays } from "date-fns";
 import InitializeAdmin from "@/components/admin/InitializeAdmin";
 import { useAuth } from "@/contexts/AuthContext";
-import { getAvailableRooms } from "@/services/roomService";
+import { getRooms, getAvailableRooms } from "@/services/room/roomService";
 import { checkRoomAvailability } from "@/utils/availabilityUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -134,7 +133,7 @@ const Hotel = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col pt-16">  {/* Added pt-16 to create padding for the fixed header */}
+    <div className="min-h-screen flex flex-col pt-16">
       <HotelHeader />
       
       <div className={cn(

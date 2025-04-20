@@ -1,8 +1,7 @@
-
 import { useState, useCallback, useMemo } from "react";
 import { Room } from "@/types/hotel.types";
 import { useToast } from "@/hooks/use-toast";
-import { getRooms, saveRooms, deleteRoom } from "@/services/roomService";
+import { getRooms, saveRooms, deleteRoom } from "@/services/room/roomService";
 import { hotelRooms } from "@/data/hotel.data";
 
 export const useRoomManagement = () => {
@@ -13,7 +12,6 @@ export const useRoomManagement = () => {
   const [usingLocalData, setUsingLocalData] = useState(false);
   const [hasShownLocalDataToast, setHasShownLocalDataToast] = useState(false);
   
-  // Create a stable reference for toast notifications
   const notifyLocalDataUse = useCallback(() => {
     if (!hasShownLocalDataToast) {
       toast({
@@ -62,7 +60,6 @@ export const useRoomManagement = () => {
       setLoading(true);
       
       if (usingLocalData) {
-        // If already using local data, just update state without notification
         setRooms(updatedRooms);
         toast({
           title: "Local changes applied",
@@ -86,7 +83,7 @@ export const useRoomManagement = () => {
             setError("Database permission error. Using local data until permissions are fixed.");
             notifyLocalDataUse();
           } else {
-            throw err; // Re-throw non-permission errors
+            throw err;
           }
         }
       }
@@ -107,7 +104,6 @@ export const useRoomManagement = () => {
       setLoading(true);
       
       if (usingLocalData) {
-        // If already using local data, just update state without notification
         const updatedRooms = rooms.filter(room => room.id !== roomId);
         setRooms(updatedRooms);
         toast({
@@ -134,7 +130,7 @@ export const useRoomManagement = () => {
             setError("Database permission error. Using local data until permissions are fixed.");
             notifyLocalDataUse();
           } else {
-            throw err; // Re-throw non-permission errors
+            throw err;
           }
         }
       }
@@ -150,7 +146,6 @@ export const useRoomManagement = () => {
     }
   }, [rooms, usingLocalData, toast, notifyLocalDataUse]);
 
-  // Use a memoized object for returning values to prevent re-renders
   const returnValue = useMemo(() => ({
     rooms,
     loading,

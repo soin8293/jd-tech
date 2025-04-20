@@ -32,41 +32,53 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Features Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Luxury Rooms</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Choose from our selection of premium rooms and suites, each designed for your comfort.
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Easy Booking</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Book your stay with our simple and secure online booking system.
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>24/7 Support</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Our dedicated team is always available to assist you with any needs.
-              </p>
-            </CardContent>
-          </Card>
+      {/* Features Section with Image Background */}
+      <div className="relative">
+        {/* Feature Cards */}
+        <div className="container mx-auto px-4 py-16 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="bg-white/95 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle>Luxury Rooms</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Choose from our selection of premium rooms and suites, each designed for your comfort.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-white/95 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle>Easy Booking</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Book your stay with our simple and secure online booking system.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-white/95 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle>24/7 Support</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Our dedicated team is always available to assist you with any needs.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Background Image */}
+        <div className="absolute inset-0 w-full h-full -z-0">
+          <img 
+            src="/lovable-uploads/4abd0589-5c26-4b24-a377-de00e13215f9.png"
+            alt="JD Suites Building"
+            className="w-full h-full object-cover"
+          />
         </div>
       </div>
     </div>
@@ -74,3 +86,4 @@ const Index = () => {
 };
 
 export default Index;
+

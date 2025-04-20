@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
       <div className="container px-4 py-16 text-center">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-500">
           Welcome to JD Suites
@@ -13,6 +13,15 @@ const Index = () => {
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
           Experience authentic Nigerian hospitality in the heart of luxury, where traditional warmth meets modern comfort.
         </p>
+        
+        <div className="relative w-full max-w-5xl mx-auto mb-12 rounded-lg overflow-hidden shadow-2xl">
+          <img
+            src="/lovable-uploads/0e22888d-28e9-4b8d-b699-36b62b4bf466.png"
+            alt="JD Suites Exterior"
+            className="w-full h-auto object-cover rounded-lg"
+          />
+        </div>
+
         <Link to="/hotel">
           <Button size="lg" className="gap-2">
             Explore Our Suites

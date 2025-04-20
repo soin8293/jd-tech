@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback } from "react";
 import RoomManager from "@/components/hotel/RoomManager";
 import { useAuth } from "@/contexts/AuthContext";
@@ -64,6 +63,11 @@ const RoomManagement = () => {
         
         <div className="grid gap-8">
           <div className="max-w-5xl mx-auto">
+            <h2 className="text-xl font-semibold mb-4">Admin Management</h2>
+            <AdminMenu />
+          </div>
+          
+          <div className="max-w-5xl mx-auto">
             <h2 className="text-xl font-semibold mb-4">Room Management</h2>
             <RoomManager 
               initialRooms={rooms} 
@@ -72,11 +76,6 @@ const RoomManagement = () => {
               showEditButtons={true}
               isLoading={loading}
             />
-          </div>
-          
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-xl font-semibold mb-4">Admin Management</h2>
-            <AdminMenu />
           </div>
         </div>
       </main>

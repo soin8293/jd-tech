@@ -2,7 +2,7 @@
 import React from "react";
 import { Room } from "@/types/hotel.types";
 import { Button } from "@/components/ui/button";
-import { Loader2, PlusCircle, Pencil, TrashIcon } from "lucide-react";
+import { Loader2, PlusCircle } from "lucide-react";
 import RoomCard from "./RoomCard";
 
 interface RoomListProps {
@@ -43,35 +43,15 @@ const RoomList: React.FC<RoomListProps> = ({
       {rooms.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 animate-fade-in">
           {rooms.map((room) => (
-            <div key={room.id} className="relative">
-              <RoomCard
-                room={room}
-                onSelect={() => {}}
-                className={showEditButtons ? "pr-16" : ""}
-              />
-              {showEditButtons && (
-                <div className="absolute top-4 right-4 flex flex-col gap-1">
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    onClick={() => onEditRoom(room)}
-                    className="h-8 w-8"
-                    disabled={isLoading}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    onClick={() => onDeleteRoom(room.id)}
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                    disabled={isLoading}
-                  >
-                    <TrashIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
+            <RoomCard
+              key={room.id}
+              room={room}
+              onSelect={() => {}}
+              onEdit={onEditRoom}
+              onDelete={onDeleteRoom}
+              context="room-management"
+              className="shadow-sm"
+            />
           ))}
         </div>
       ) : (

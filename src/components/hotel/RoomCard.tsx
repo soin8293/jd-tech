@@ -4,21 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Room } from "@/types/hotel.types";
-import { Bed, Users, Maximize, Check } from "lucide-react";
+import { Bed, Users, Maximize, Check, Pencil, TrashIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface RoomCardProps {
   room: Room;
-  onSelect: (room: Room) => void;
+  onSelect?: (room: Room) => void;
+  onEdit?: (room: Room) => void;
+  onDelete?: (roomId: string) => void;
   selectedRooms?: Room[];
   className?: string;
+  context?: 'booking' | 'room-management';
 }
 
 const RoomCard: React.FC<RoomCardProps> = ({ 
   room, 
-  onSelect, 
+  onSelect = () => {}, 
+  onEdit = () => {}, 
+  onDelete = () => {},
   selectedRooms = [],
-  className 
+  className,
+  context = 'booking'
 }) => {
   const isSelected = selectedRooms.some(r => r.id === room.id);
   
@@ -88,13 +94,32 @@ const RoomCard: React.FC<RoomCardProps> = ({
       </CardContent>
       
       <CardFooter className="px-6 py-4 bg-secondary/40 border-t">
-        <Button 
-          className="w-full"
-          variant={isSelected ? "outline" : "default"}
-          onClick={() => onSelect(room)}
-        >
-          {isSelected ? "Remove Selection" : "Select Room"}
-        </Button>
+        {context === 'booking' ? (
+          <Button 
+            className="w-full"
+            variant={isSelected ? "outline" : "default"}
+            onClick={() => onSelect(room)}
+          >
+            {isSelected ? "Remove Selection" : "Select Room"}
+          </Button>
+        ) : (
+          <div className="flex w-full gap-2">
+            <Button 
+              onClick={() => onEdit(room)}
+              variant="outline"
+              className="flex-1"
+            >
+              <Pencil className="mr-2 h-4 w-4" /> Edit
+            </Button>
+            <Button 
+              onClick={() => onDelete(room.id)}
+              variant="destructive"
+              className="flex-1"
+            >
+              <TrashIcon className="mr-2 h-4 w-4" /> Delete
+            </Button>
+          </div>
+        )}
       </CardFooter>
     </Card>
   );

@@ -1,4 +1,3 @@
-
 import { Room } from "../types/hotel.types";
 
 export const hotelRooms: Room[] = [
@@ -131,5 +130,5 @@ export const hotelDetails = {
     "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=2000",
     "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=2000"
   ],
-  headerImage: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=2000"
+  headerImage: "https://images.unsplash.com/photo-1466442929976-97f336a657be"
 };

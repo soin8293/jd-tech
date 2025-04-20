@@ -4,7 +4,6 @@ import { Room, BookingPeriod, RoomAvailabilityCheck } from "@/types/hotel.types"
 import { Button } from "@/components/ui/button";
 import { Loader2, PlusCircle } from "lucide-react";
 import RoomCard from "./RoomCard";
-import { format } from "date-fns";
 
 export interface RoomListProps {
   rooms: Room[];
@@ -40,7 +39,7 @@ const RoomList: React.FC<RoomListProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        {rooms.length > 0 && showEditButtons && (
+        {showEditButtons && !isBookingContext && (
           <Button onClick={onAddRoom} className="gap-1" disabled={isLoading}>
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlusCircle className="h-4 w-4" />}
             Add Room
@@ -54,7 +53,7 @@ const RoomList: React.FC<RoomListProps> = ({
         )}
       </div>
 
-      {isLoading && rooms.length > 0 && (
+      {isLoading && (
         <div className="flex items-center justify-center py-4 space-x-2">
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
           <span className="text-sm text-muted-foreground">Processing...</span>
@@ -68,11 +67,11 @@ const RoomList: React.FC<RoomListProps> = ({
               key={room.id}
               room={room}
               onSelect={() => onSelectRoom(room)}
-              isSelected={selectedRooms.some(r => r.id === room.id)}
+              selectedRooms={selectedRooms}
               availability={roomAvailability[room.id]}
-              bookingPeriod={isBookingContext ? bookingPeriod : undefined}
-              onEdit={onEditRoom}
-              onDelete={onDeleteRoom}
+              bookingPeriod={bookingPeriod}
+              onEdit={() => onEditRoom(room)}
+              onDelete={() => onDeleteRoom(room.id)}
               context={context}
               className="shadow-sm"
             />

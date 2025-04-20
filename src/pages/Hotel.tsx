@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { BookingPeriod, Room, BookingDetails, RoomAvailabilityCheck } from "@/types/hotel.types";
@@ -145,7 +144,6 @@ const Hotel = () => {
         isMobile ? "-mt-32" : "-mt-12"
       )}>
         <div className="flex justify-between items-center">
-          
           <BookingForm 
             onSearch={handleSearchRooms} 
             className="mb-10"
@@ -169,6 +167,7 @@ const Hotel = () => {
               roomAvailability={roomAvailability}
               onBookNow={handleBookNow}
               context="booking"
+              showEditButtons={false}
               isLoading={isLoading}
             />
           </div>

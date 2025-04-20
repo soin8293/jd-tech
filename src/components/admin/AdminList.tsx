@@ -8,12 +8,15 @@ import { RefreshCw, AlertTriangle, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AdminList: React.FC = () => {
   const [admins, setAdmins] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [permissionDenied, setPermissionDenied] = useState(false);
+
+  const { currentUser, isLoading: authLoading } = useAuth();
 
   const fetchAdmins = async () => {
     setIsLoading(true);
@@ -39,7 +42,7 @@ const AdminList: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Error fetching admins:", error);
-      
+
       if (error?.code === 'permission-denied') {
         setPermissionDenied(true);
         setError("You don't have permission to view the admin list.");
@@ -58,8 +61,16 @@ const AdminList: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchAdmins();
-  }, []);
+    if (currentUser) {
+      fetchAdmins();
+    } else {
+      setError(null); // Clear any previous error
+      setAdmins([]);
+      console.log("User not logged in, skipping admin fetch");
+    }
+    // Only refetch when currentUser changes & is present (avoid unnecessary fetch)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser]);
 
   return (
     <Card>
@@ -70,12 +81,16 @@ const AdminList: React.FC = () => {
             Users with full system access
           </CardDescription>
         </div>
-        <Button variant="outline" size="icon" onClick={fetchAdmins} disabled={isLoading}>
+        <Button variant="outline" size="icon" onClick={fetchAdmins} disabled={isLoading || !currentUser}>
           <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
         </Button>
       </CardHeader>
       <CardContent>
-        {permissionDenied ? (
+        {!currentUser ? (
+          <div className="text-center py-4 text-muted-foreground">
+            Please log in to view administrators
+          </div>
+        ) : permissionDenied ? (
           <div className="flex items-center justify-center gap-2 text-amber-600 py-4">
             <ShieldAlert className="h-4 w-4" />
             <span>Permission denied. You need to be authenticated as an admin to view this list.</span>
@@ -119,3 +134,4 @@ const AdminList: React.FC = () => {
 };
 
 export default AdminList;
+

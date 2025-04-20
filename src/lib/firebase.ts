@@ -6,12 +6,12 @@ import { getFunctions } from "firebase/functions";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDReplaceWithYourActualAPIKey",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "your-project-id.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "your-project-id",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "your-project-id.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "your-messaging-sender-id",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "your-app-id"
+  apiKey: "AIzaSyBEOMvNQtNC4GCoffyr0LR_v1b78093HAM",
+  authDomain: "jd-suites-backend.firebaseapp.com",
+  projectId: "jd-suites-backend",
+  storageBucket: "jd-suites-backend.firebasestorage.app",
+  messagingSenderId: "754152210086",
+  appId: "1:754152210086:web:d08d83743e39ded4b9fe67"
 };
 
 // Initialize Firebase
@@ -23,3 +23,4 @@ export const db = getFirestore(app);
 export const functions = getFunctions(app);
 
 export default app;
+

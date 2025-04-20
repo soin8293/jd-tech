@@ -6,7 +6,9 @@ import RoomManager from "@/components/hotel/RoomManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { getRooms, saveRooms, deleteRoom } from "@/services/roomService";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { hotelRooms } from "@/data/hotel.data";
+import { Button } from "@/components/ui/button";
 
 const RoomManagement = () => {
   const { toast } = useToast();
@@ -14,6 +16,7 @@ const RoomManagement = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [usingLocalData, setUsingLocalData] = useState(false);
   
   // Load rooms from Firestore
   useEffect(() => {
@@ -25,14 +28,30 @@ const RoomManagement = () => {
         console.log("Rooms data received:", roomsData);
         setRooms(roomsData);
         setError(null);
+        setUsingLocalData(false);
       } catch (err) {
         console.error("Error loading rooms:", err);
-        setError("Failed to load rooms. Please try again.");
-        toast({
-          title: "Error",
-          description: "Failed to load rooms. Please try again.",
-          variant: "destructive",
-        });
+        // Check if it's a permission error
+        const isPermissionError = (err as any)?.code === 'permission-denied';
+        
+        if (isPermissionError) {
+          console.log("Permission error detected, using local data instead");
+          setRooms(hotelRooms);
+          setUsingLocalData(true);
+          setError("Database permission error. Using local data until permissions are fixed.");
+          toast({
+            title: "Using Local Data",
+            description: "Unable to access database due to permissions. Using local data for now.",
+            variant: "warning",
+          });
+        } else {
+          setError("Failed to load rooms. Please try again.");
+          toast({
+            title: "Error",
+            description: "Failed to load rooms. Please try again.",
+            variant: "destructive",
+          });
+        }
       } finally {
         setLoading(false);
       }
@@ -46,23 +65,48 @@ const RoomManagement = () => {
   const handleSaveRooms = async (updatedRooms: Room[]) => {
     try {
       setLoading(true);
-      // Save to Firestore
-      await saveRooms(updatedRooms);
       
-      // Update local state
-      setRooms(updatedRooms);
-      
-      toast({
-        title: "Rooms updated",
-        description: "Your room changes have been saved to the database",
-      });
+      if (usingLocalData) {
+        // If we're using local data, just update the state without saving to Firebase
+        setRooms(updatedRooms);
+        toast({
+          title: "Local changes applied",
+          description: "Your changes have been saved locally. They won't persist after page refresh until database permissions are fixed.",
+          variant: "warning",
+        });
+      } else {
+        // Save to Firestore
+        await saveRooms(updatedRooms);
+        
+        // Update local state
+        setRooms(updatedRooms);
+        
+        toast({
+          title: "Rooms updated",
+          description: "Your room changes have been saved to the database",
+        });
+      }
     } catch (err) {
       console.error("Error saving rooms:", err);
-      toast({
-        title: "Error",
-        description: "Failed to save room changes. Please try again.",
-        variant: "destructive",
-      });
+      // Check if it's a permission error
+      const isPermissionError = (err as any)?.code === 'permission-denied';
+      
+      if (isPermissionError) {
+        // Switch to local data mode
+        setUsingLocalData(true);
+        setRooms(updatedRooms); // Still update local state
+        toast({
+          title: "Database Permission Error",
+          description: "Changes saved locally only. They won't persist after refresh until permissions are fixed.",
+          variant: "warning",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to save room changes. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -71,24 +115,51 @@ const RoomManagement = () => {
   const handleDeleteRoom = async (roomId: string) => {
     try {
       setLoading(true);
-      // Delete from Firestore
-      await deleteRoom(roomId);
       
-      // Update local state
-      const updatedRooms = rooms.filter(room => room.id !== roomId);
-      setRooms(updatedRooms);
-      
-      toast({
-        title: "Room deleted",
-        description: "The room has been removed from your offerings",
-      });
+      if (usingLocalData) {
+        // If we're using local data, just update the state without saving to Firebase
+        const updatedRooms = rooms.filter(room => room.id !== roomId);
+        setRooms(updatedRooms);
+        toast({
+          title: "Room deleted locally",
+          description: "The room has been removed from your local view",
+          variant: "warning",
+        });
+      } else {
+        // Delete from Firestore
+        await deleteRoom(roomId);
+        
+        // Update local state
+        const updatedRooms = rooms.filter(room => room.id !== roomId);
+        setRooms(updatedRooms);
+        
+        toast({
+          title: "Room deleted",
+          description: "The room has been removed from your offerings",
+        });
+      }
     } catch (err) {
       console.error("Error deleting room:", err);
-      toast({
-        title: "Error",
-        description: "Failed to delete room. Please try again.",
-        variant: "destructive",
-      });
+      // Check if it's a permission error
+      const isPermissionError = (err as any)?.code === 'permission-denied';
+      
+      if (isPermissionError) {
+        // Switch to local data mode and still delete locally
+        setUsingLocalData(true);
+        const updatedRooms = rooms.filter(room => room.id !== roomId);
+        setRooms(updatedRooms);
+        toast({
+          title: "Database Permission Error",
+          description: "Room removed locally only. This won't persist after refresh until permissions are fixed.",
+          variant: "warning",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to delete room. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -134,7 +205,19 @@ const RoomManagement = () => {
       </header>
       
       <main className="container mx-auto px-4 py-8">
-        {error && (
+        {usingLocalData && (
+          <div className="bg-amber-100 border border-amber-300 text-amber-800 px-4 py-3 rounded-md mb-6 flex items-start">
+            <AlertTriangle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium">Working with local data</p>
+              <p className="text-sm mt-1">
+                Unable to connect to the database due to permission issues. Changes will only be saved locally and won't persist after page refresh.
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {error && !usingLocalData && (
           <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md mb-6">
             {error}
           </div>

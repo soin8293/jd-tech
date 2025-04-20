@@ -23,6 +23,7 @@ export interface BookingDetails {
   guests: number;
   rooms: Room[];
   totalPrice: number;
+  userEmail?: string; // Added this optional field for email storage
 }
 
 export interface RoomFormData {

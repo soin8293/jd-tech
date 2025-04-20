@@ -168,6 +168,8 @@ const Hotel = () => {
               bookingPeriod={bookingPeriod}
               roomAvailability={roomAvailability}
               onBookNow={handleBookNow}
+              context="booking"
+              isLoading={isLoading}
             />
           </div>
         )}

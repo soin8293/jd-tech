@@ -95,13 +95,16 @@ export const usePaymentProcess = (
       // Call the Firebase Cloud Function to process the booking
       const processBooking = httpsCallable(functions, 'processBooking');
       
+      // Get stored user email from localStorage or use a default
+      const userEmail = localStorage.getItem('userEmail') || 'guest@example.com';
+      
       const bookingData: ProcessBookingData = {
         paymentMethodId: paymentMethodId,
         clientSecret: clientSecret,
         paymentIntentId: paymentIntentId,
         bookingDetails: {
           ...bookingDetails,
-          userEmail: localStorage.getItem('userEmail') || 'guest@example.com' // Store user email for confirmation
+          userEmail // Add the userEmail to the booking details
         },
         paymentType: paymentType,
         timestamp: new Date().toISOString(),

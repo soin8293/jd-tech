@@ -20,13 +20,13 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const functions = getFunctions(app);
+export const functions = getFunctions(app, "us-central1");
 
 // Connect to Functions emulator in development
 if (window.location.hostname === 'localhost') {
   // Uncomment and set correct ports for local emulator testing
   // connectFunctionsEmulator(functions, "localhost", 5001);
-  console.log("Running in development mode. Functions emulator is available but not connected.");
+  console.log("Running in development mode. Functions will use production endpoints.");
 }
 
 export default app;

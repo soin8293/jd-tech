@@ -4,6 +4,8 @@ import { BookingDetails } from "@/types/hotel.types";
 import { PaymentStatus, APIError, PaymentResponse, ProcessBookingData, PaymentMethodType } from "@/components/payment/payment.types";
 import { API_ENDPOINTS } from "@/config/api";
 import { toast } from "@/hooks/use-toast";
+import { httpsCallable, getFunctions } from "firebase/functions";
+import { functions } from "@/lib/firebase";
 
 export const usePaymentProcess = (
   isOpen: boolean,
@@ -41,65 +43,117 @@ export const usePaymentProcess = (
       const generatedTransactionId = `txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       setTransactionId(generatedTransactionId);
       
-      // Mock successful payment intent initialization
-      setTimeout(() => {
-        const mockPaymentIntentId = `pi_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-        setPaymentIntentId(mockPaymentIntentId);
-        setClientSecret('mock_client_secret');
-        
-        // Calculate the total amount from booking details
-        if (bookingDetails?.rooms) {
-          const nights = Math.floor((
-            bookingDetails.period.checkOut.getTime() - 
-            bookingDetails.period.checkIn.getTime()
-          ) / (1000 * 60 * 60 * 24));
+      // Call the Firebase Cloud Function to create a payment intent
+      const createPaymentIntent = httpsCallable(functions, 'createPaymentIntent');
+      
+      const paymentData = {
+        rooms: bookingDetails.rooms,
+        period: {
+          checkIn: bookingDetails.period.checkIn.toISOString(),
+          checkOut: bookingDetails.period.checkOut.toISOString()
+        },
+        guests: bookingDetails.guests,
+        transaction_id: generatedTransactionId,
+        currency: 'usd'
+      };
+      
+      createPaymentIntent(paymentData)
+        .then((result: any) => {
+          const data = result.data;
+          console.log("Payment intent created:", data);
           
-          const totalAmount = bookingDetails.rooms.reduce(
-            (sum, room) => sum + (room.price * nights), 
-            0
-          );
-          
-          setCalculatedAmount(totalAmount);
-        }
-        
-        setPaymentStatus('idle');
-        console.log("Mock payment intent created:", mockPaymentIntentId);
-      }, 1000);
+          setClientSecret(data.clientSecret);
+          setPaymentIntentId(data.paymentIntentId);
+          setCalculatedAmount(data.calculatedAmount);
+          setPaymentStatus('idle');
+        })
+        .catch((error) => {
+          console.error("Error creating payment intent:", error);
+          setErrorDetails({
+            type: error.details?.type || 'unknown',
+            message: error.message || "Failed to initialize payment"
+          });
+          setPaymentStatus('error');
+        });
     }
   }, [isOpen, bookingDetails]);
 
   const processPayment = async (paymentType: PaymentMethodType, paymentMethodId: string) => {
-    // Only set processing state when user actually selects a payment method
-    setPaymentStatus('processing');
-    
-    if (!bookingDetails) {
+    if (!bookingDetails || !clientSecret || !paymentIntentId) {
       setPaymentStatus('error');
       setErrorDetails({
         type: 'unknown',
-        message: 'Booking details are missing'
+        message: 'Missing required payment information'
       });
       return;
     }
-
-    console.log(`Processing ${paymentType} payment with payment method ID: ${paymentMethodId}`);
     
-    // Mock payment processing with a delay
-    setTimeout(() => {
-      const mockBookingId = `booking-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      setBookingId(mockBookingId);
-      setPaymentStatus('success');
+    // Set processing state
+    setPaymentStatus('processing');
+    
+    try {
+      // Call the Firebase Cloud Function to process the booking
+      const processBooking = httpsCallable(functions, 'processBooking');
       
-      // Show success toast
-      toast({
-        title: "Payment Successful",
-        description: "Your booking has been confirmed!",
+      const bookingData: ProcessBookingData = {
+        paymentMethodId: paymentMethodId,
+        clientSecret: clientSecret,
+        paymentIntentId: paymentIntentId,
+        bookingDetails: bookingDetails,
+        paymentType: paymentType,
+        timestamp: new Date().toISOString(),
+        transaction_id: transactionId,
+        serverCalculatedAmount: calculatedAmount
+      };
+      
+      console.log("Processing payment with data:", bookingData);
+      
+      const result = await processBooking(bookingData);
+      const response = result.data as PaymentResponse;
+      
+      if (response.success) {
+        setBookingId(response.bookingId || '');
+        setPaymentStatus('success');
+        
+        // Show success toast
+        toast({
+          title: "Payment Successful",
+          description: response.message || "Your booking has been confirmed!",
+        });
+        
+        // Notify parent component after a short delay
+        setTimeout(() => {
+          onPaymentComplete();
+        }, 2000);
+      } else {
+        setPaymentStatus('error');
+        setErrorDetails(response.error || {
+          type: 'unknown',
+          message: 'Payment failed. Please try again.'
+        });
+        
+        // Show error toast
+        toast({
+          title: "Payment Failed",
+          description: response.error?.message || "There was a problem with your payment",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error processing payment:", error);
+      setPaymentStatus('error');
+      setErrorDetails({
+        type: error.details?.type || 'unknown',
+        message: error.message || "Failed to process payment"
       });
       
-      // Notify parent component after a short delay
-      setTimeout(() => {
-        onPaymentComplete();
-      }, 1500);
-    }, 2000);
+      // Show error toast
+      toast({
+        title: "Payment Error",
+        description: error.message || "There was a problem with your payment",
+        variant: "destructive",
+      });
+    }
   };
 
   return {

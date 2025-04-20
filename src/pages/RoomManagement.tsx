@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 
 const RoomManagement = () => {
   const { toast } = useToast();
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { isAdmin, isLoading: authLoading } = useAuth();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

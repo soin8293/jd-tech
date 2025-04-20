@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { BookingPeriod, Room, BookingDetails, RoomAvailabilityCheck } from "@/types/hotel.types";
@@ -13,6 +14,7 @@ import { format, addDays, differenceInDays } from "date-fns";
 import InitializeAdmin from "@/components/admin/InitializeAdmin";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAvailableRooms } from "@/services/roomService";
+import { checkRoomAvailability } from "@/utils/availabilityUtils";
 
 const Hotel = () => {
   const { toast } = useToast();

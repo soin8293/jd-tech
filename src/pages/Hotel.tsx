@@ -137,13 +137,10 @@ const Hotel = () => {
       <HotelHeader />
       
       <div className={cn(
-        "container mx-auto px-4 md:px-6 relative z-10 mb-12",
-        isMobile ? "" : "-mt-20"
+        "container mx-auto px-4 md:px-6 relative z-10",
+        isMobile ? "-mt-32" : "-mt-12"
       )}>
-        <div className={cn(
-          isMobile ? "pt-6" : "",
-          "flex justify-between items-center mb-6"
-        )}>
+        <div className="flex justify-between items-center">
           <BookingForm 
             onSearch={handleSearchRooms} 
             className="mb-10"
@@ -157,7 +154,7 @@ const Hotel = () => {
           )}
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           <div className="lg:col-span-2">
             <SearchResults
               hasSearched={hasSearched}

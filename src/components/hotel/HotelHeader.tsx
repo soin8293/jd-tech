@@ -13,7 +13,11 @@ const HotelHeader: React.FC<HotelHeaderProps> = ({ className }) => {
   const isMobile = useIsMobile();
   
   return (
-    <div className={cn("relative w-full overflow-hidden", isMobile ? "h-[85vh] pb-32" : "h-[70vh]", className)}>
+    <div className={cn(
+      "relative w-full overflow-hidden", 
+      isMobile ? "h-[85vh] pb-32" : "h-[60vh] mb-0", 
+      className
+    )}>
       {/* Background Image with Modernistic Sky Blue Gradient */}
       <div className="absolute inset-0 w-full h-full">
         <div className="relative w-full h-full bg-gradient-to-br from-blue-400 via-sky-300 to-blue-200">

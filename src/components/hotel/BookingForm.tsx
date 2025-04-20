@@ -134,7 +134,11 @@ const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch, isLoadin
 
   return (
     <>
-      <Card className={cn("animate-slide-up opacity-0 w-full", className)} style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}>
+      <Card className={cn(
+        "animate-slide-up opacity-0 w-full shadow-lg", 
+        isMobile ? "bg-white/95" : "",
+        className
+      )} style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">

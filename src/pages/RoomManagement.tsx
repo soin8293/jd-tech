@@ -6,10 +6,11 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
+import InitializeAdmin from "@/components/admin/InitializeAdmin";
 
 const RoomManagement = () => {
   const { rooms, loading, error, usingLocalData, fetchRooms, handleSaveRooms, handleDeleteRoom } = useRoomManagement();
-  const { isAdmin } = useAuth();
+  const { isAdmin, currentUser } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -28,7 +29,14 @@ const RoomManagement = () => {
 
   return (
     <div className="min-h-screen pt-16 container mx-auto px-4 py-8">
-      <Card className="mb-8">
+      <div className="flex justify-between items-center mb-8">
+        <div />
+        {currentUser?.email === "amirahcolorado@gmail.com" && (
+          <InitializeAdmin />
+        )}
+      </div>
+
+      <Card>
         <CardHeader>
           <CardTitle>Room Management</CardTitle>
           <CardDescription>

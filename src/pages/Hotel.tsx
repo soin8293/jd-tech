@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { BookingPeriod, Room, BookingDetails, RoomAvailabilityCheck } from "@/types/hotel.types";
 import { hotelRooms } from "@/data/hotel.data";
@@ -11,6 +12,8 @@ import { checkRoomAvailability } from "@/utils/availabilityUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { addDays, differenceInDays, format } from "date-fns";
+import PaymentModal from "@/components/payment/PaymentModal";
+import RoomList from "@/components/hotel/RoomList";
 
 const Hotel = () => {
   const { toast } = useToast();
@@ -100,6 +103,11 @@ const Hotel = () => {
       totalPrice
     };
     
+    // Store user email in localStorage for booking confirmation
+    if (currentUser?.email) {
+      localStorage.setItem('userEmail', currentUser.email);
+    }
+    
     setBookingDetails(details);
     setPaymentModalOpen(true);
   };
@@ -150,6 +158,28 @@ const Hotel = () => {
             </div>
           )}
         </div>
+        
+        {hasSearched && (
+          <div className="mt-6">
+            <RoomList 
+              rooms={availableRooms}
+              selectedRooms={selectedRooms}
+              onSelectRoom={handleSelectRoom}
+              bookingPeriod={bookingPeriod}
+              roomAvailability={roomAvailability}
+              onBookNow={handleBookNow}
+            />
+          </div>
+        )}
+
+        {bookingDetails && (
+          <PaymentModal
+            isOpen={isPaymentModalOpen}
+            onClose={() => setPaymentModalOpen(false)}
+            bookingDetails={bookingDetails}
+            onPaymentComplete={handlePaymentComplete}
+          />
+        )}
       </div>
     </div>
   );

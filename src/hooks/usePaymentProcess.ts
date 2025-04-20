@@ -99,7 +99,10 @@ export const usePaymentProcess = (
         paymentMethodId: paymentMethodId,
         clientSecret: clientSecret,
         paymentIntentId: paymentIntentId,
-        bookingDetails: bookingDetails,
+        bookingDetails: {
+          ...bookingDetails,
+          userEmail: localStorage.getItem('userEmail') || 'guest@example.com' // Store user email for confirmation
+        },
         paymentType: paymentType,
         timestamp: new Date().toISOString(),
         transaction_id: transactionId,

@@ -1,7 +1,9 @@
+
 import * as admin from "firebase-admin";
 import { createPaymentIntent } from "./payment/createPaymentIntent";
 import { processBooking } from "./payment/processBooking";
 import * as functions from "firebase-functions";
+import { sendBookingConfirmation } from "./email/sendBookingConfirmation";
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -197,5 +199,6 @@ export const updateRoomAvailability = functions.pubsub
 // Export all the functions
 export {
   createPaymentIntent,
-  processBooking
+  processBooking,
+  sendBookingConfirmation
 };

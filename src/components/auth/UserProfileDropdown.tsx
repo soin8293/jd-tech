@@ -1,8 +1,6 @@
-
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,13 +10,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User, LogOut, ShoppingBag, Mail, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import SupportModal from "../support/SupportModal";
 import AdminMenu from "../admin/AdminMenu";
+import UserAuthButton from "./UserAuthButton";
+import { useAdminMenu } from "@/hooks/useAdminMenu";
 
 const UserProfileDropdown = () => {
-  const { currentUser, isAdmin, logout, signInWithGoogle } = useAuth();
-  const [supportModalOpen, setSupportModalOpen] = useState(false);
-  const [showAdminMenu, setShowAdminMenu] = useState(false);
+  const { currentUser, logout, signInWithGoogle } = useAuth();
+  const { isAdmin, showAdminMenu, toggleAdminMenu, closeAdminMenu } = useAdminMenu();
+  const [supportModalOpen, setSupportModalOpen] = React.useState(false);
 
   return (
     <div className="flex items-center justify-end w-auto min-w-[120px]">
@@ -68,7 +69,7 @@ const UserProfileDropdown = () => {
                       Room Management
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowAdminMenu(!showAdminMenu)}>
+                  <DropdownMenuItem onClick={() => toggleAdminMenu()}>
                     <Settings className="mr-2 h-4 w-4" />
                     Admin Dashboard
                   </DropdownMenuItem>
@@ -88,18 +89,11 @@ const UserProfileDropdown = () => {
           />
         </>
       ) : (
-        <Button 
-          onClick={signInWithGoogle} 
-          variant="outline" 
-          className="flex items-center gap-2 h-10 px-4"
-        >
-          <User className="h-4 w-4" />
-          Login
-        </Button>
+        <UserAuthButton onClick={signInWithGoogle} />
       )}
       
       {showAdminMenu && isAdmin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowAdminMenu(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeAdminMenu}>
           <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <AdminMenu />
           </div>

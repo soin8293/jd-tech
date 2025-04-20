@@ -11,8 +11,16 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
   console.log("Auth context:", context.auth);
   
   // 1. Check if the caller is an admin
-  if (!context.auth?.token?.admin) {
-    console.error("Permission denied: Caller is not an admin", context.auth?.token);
+  if (!context.auth) {
+    console.error("Authentication required: No auth context provided");
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Authentication required to manage roles."
+    );
+  }
+  
+  if (!context.auth.token?.admin) {
+    console.error("Permission denied: Caller is not an admin", context.auth.token);
     throw new functions.https.HttpsError(
       "permission-denied",
       "Caller must be an admin to manage roles."
@@ -36,16 +44,39 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
   try {
     // 3. Get user by email
     console.log(`Attempting to get user by email: ${email}`);
-    const userRecord = await admin.auth().getUserByEmail(email);
-    console.log("Retrieved userRecord:", JSON.stringify(userRecord));
+    let userRecord;
+    try {
+      userRecord = await admin.auth().getUserByEmail(email);
+      console.log("Retrieved userRecord:", JSON.stringify(userRecord));
+    } catch (getUserError: any) {
+      console.error("Error getting user by email:", getUserError);
+      if (getUserError.code === 'auth/user-not-found') {
+        throw new functions.https.HttpsError(
+          "not-found", 
+          `User with email ${email} not found.`
+        );
+      }
+      throw new functions.https.HttpsError(
+        "internal",
+        `Failed to retrieve user: ${getUserError.message}`,
+        { originalError: getUserError.code }
+      );
+    }
+    
     const uid = userRecord.uid;
     
     // 4. Set the custom claim
     try {
+      console.log(`Setting custom claim for user ${uid} to admin=${makeAdmin}`);
       await admin.auth().setCustomUserClaims(uid, { admin: makeAdmin });
+      console.log("Custom claims set successfully");
     } catch (setClaimsError: any) {
       console.error("Error setting custom claims:", setClaimsError);
-      throw new functions.https.HttpsError("internal", "Failed to set custom claims", { error: setClaimsError.message });
+      throw new functions.https.HttpsError(
+        "internal", 
+        "Failed to set custom claims",
+        { error: setClaimsError.message }
+      );
     }
     
     // 5. Update the Firestore list for reference
@@ -54,29 +85,33 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
     
     try {
       if (makeAdmin) {
+        console.log(`Adding ${email} to admin list`);
         await adminConfigRef.update({
           adminEmails: admin.firestore.FieldValue.arrayUnion(email)
         });
       } else {
+        console.log(`Removing ${email} from admin list`);
         await adminConfigRef.update({
           adminEmails: admin.firestore.FieldValue.arrayRemove(email)
         });
       }
       console.log("Firestore admin list updated successfully");
       
-    } catch (firestoreError) {
+    } catch (firestoreError: any) {
       console.error("Failed to update adminEmails list in Firestore:", firestoreError);
       
-      // Try to create the document if it doesn't exist
-      try {
-        console.log("Attempting to create admin config document");
-        await adminConfigRef.set({
-          adminEmails: makeAdmin ? [email] : []
-        });
-        console.log("Admin config document created successfully");
-      } catch (setError) {
-        console.error("Failed to create admin config document:", setError);
-        // Continue anyway since we already set the claims
+      // Document might not exist, try to create it
+      if (firestoreError.code === 'not-found') {
+        try {
+          console.log("Attempting to create admin config document");
+          await adminConfigRef.set({
+            adminEmails: makeAdmin ? [email] : []
+          });
+          console.log("Admin config document created successfully");
+        } catch (setError: any) {
+          console.error("Failed to create admin config document:", setError);
+          // Continue anyway since we already set the claims
+        }
       }
     }
     
@@ -85,8 +120,13 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
       success: true,
       message: `Successfully ${makeAdmin ? 'granted' : 'revoked'} admin role for ${email}.`,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error managing admin role:", error);
+    
+    if (error instanceof functions.https.HttpsError) {
+      // If it's already an HttpsError, just rethrow it
+      throw error;
+    }
     
     if (error instanceof Error) {
       console.error("Error details:", error.message, error.stack);
@@ -112,8 +152,8 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
     // Handle other potential errors
     throw new functions.https.HttpsError(
       "internal", 
-      "An unexpected error occurred while managing admin role."
+      "An unexpected error occurred while managing admin role.",
+      { originalError: error?.message || "Unknown error" }
     );
   }
 });
-

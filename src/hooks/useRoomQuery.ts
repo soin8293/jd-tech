@@ -6,7 +6,14 @@ import { saveRooms, deleteRoom } from "@/services/room/roomService";
 import { notifySuccess, notifyError } from "@/utils/roomNotifications";
 
 export const useRoomQuery = () => {
-  const queryClient = useQueryClient();
+  // Safe check if we're in a QueryClientProvider context
+  let queryClient;
+  try {
+    queryClient = useQueryClient();
+  } catch (error) {
+    console.warn("useRoomQuery: QueryClient not found, some functionality may be limited");
+    // Continue without the queryClient - we'll handle this case
+  }
 
   // Fetch all rooms
   const { 
@@ -17,6 +24,7 @@ export const useRoomQuery = () => {
     queryKey: ['rooms'],
     queryFn: getRooms,
     staleTime: 5000, // 5 seconds cache
+    enabled: !!queryClient, // Only enable the query if we have a queryClient
   });
 
   // Fetch a single room
@@ -24,6 +32,7 @@ export const useRoomQuery = () => {
     return useQuery<Room | null>({
       queryKey: ['room', roomId],
       queryFn: () => getRoom(roomId),
+      enabled: !!queryClient && !!roomId, // Only enable if we have both a queryClient and a roomId
     });
   };
 
@@ -31,8 +40,10 @@ export const useRoomQuery = () => {
   const saveRoomsMutation = useMutation({
     mutationFn: saveRooms,
     onSuccess: () => {
-      // Invalidate and refetch rooms query
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      // Invalidate and refetch rooms query if we have a queryClient
+      if (queryClient) {
+        queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      }
       notifySuccess("Rooms Updated", "Room changes have been saved successfully");
     },
     onError: (error) => {
@@ -45,11 +56,13 @@ export const useRoomQuery = () => {
   const deleteRoomMutation = useMutation({
     mutationFn: deleteRoom,
     onSuccess: (_, roomId) => {
-      // Remove the deleted room from cache
-      queryClient.setQueryData(['rooms'], (oldRooms: Room[] = []) => 
-        oldRooms.filter(room => room.id !== roomId)
-      );
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      // Update cache if we have a queryClient
+      if (queryClient) {
+        queryClient.setQueryData(['rooms'], (oldRooms: Room[] = []) => 
+          oldRooms.filter(room => room.id !== roomId)
+        );
+        queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      }
       notifySuccess("Room Deleted", "The room has been removed from your offerings");
     },
     onError: (error) => {

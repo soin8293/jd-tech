@@ -26,7 +26,7 @@ const RoomImagesSection: React.FC<RoomImagesSectionProps> = ({
 
   return (
     <div className="space-y-3">
-      <Label>Images*</Label>
+      <Label>Images</Label>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
         {images.map((image, index) => (
           <div key={index} className="relative group rounded-md overflow-hidden h-24">
@@ -48,7 +48,7 @@ const RoomImagesSection: React.FC<RoomImagesSectionProps> = ({
         <Input
           value={newImageUrl}
           onChange={(e) => setNewImageUrl(e.target.value)}
-          placeholder="Enter image URL"
+          placeholder="Enter image URL (optional)"
           className="flex-1"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
@@ -66,7 +66,7 @@ const RoomImagesSection: React.FC<RoomImagesSectionProps> = ({
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        Add URLs for room images. At least one image is required.
+        Add optional images for your room. You can leave this section empty.
       </p>
     </div>
   );

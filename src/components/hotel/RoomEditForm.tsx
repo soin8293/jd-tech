@@ -9,6 +9,7 @@ import { RoomFormData } from "@/types/hotel.types";
 import RoomDetailsSection from "./form/RoomDetailsSection";
 import RoomAmenitiesSection from "./form/RoomAmenitiesSection";
 import RoomImagesSection from "./form/RoomImagesSection";
+import { useToast } from "@/hooks/use-toast";
 
 interface RoomEditFormProps {
   editingRoom: RoomFormData;
@@ -25,6 +26,7 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({
   onSave,
   onCancel,
 }) => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState<RoomFormData>(editingRoom);
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -55,6 +57,20 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({
         images: [...prev.images, imageUrl]
       }));
     }
+  };
+
+  const handleSave = () => {
+    // Remove the check for images
+    if (!formData.name || !formData.price) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in the room name and price.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    onSave(formData);
   };
 
   return (
@@ -119,7 +135,7 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({
           Cancel
         </Button>
         <Button 
-          onClick={() => onSave(formData)}
+          onClick={handleSave}
           className="gap-1"
           disabled={isLoading}
         >

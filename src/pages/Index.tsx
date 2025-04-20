@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ const Index = () => {
   return (
     <div className="min-h-screen pt-16">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-cyan-500 to-blue-500 py-20">
+      <div className="bg-gradient-to-r from-cyan-500 to-blue-500 py-20 relative">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6">
@@ -30,6 +29,13 @@ const Index = () => {
             </Link>
           </div>
         </div>
+        {/* Gradient overlay for smooth transition */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-32" 
+          style={{
+            background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.1))"
+          }}
+        />
       </div>
 
       {/* Features Section with Image Background */}
@@ -72,12 +78,19 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Background Image */}
-        <div className="absolute inset-0 w-full h-full -z-0">
+        {/* Background Image with rounded corners */}
+        <div className="absolute inset-0 w-full h-full -z-0 overflow-hidden">
           <img 
             src="/lovable-uploads/4abd0589-5c26-4b24-a377-de00e13215f9.png"
             alt="JD Suites Building"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover rounded-b-[64px]"
+          />
+          {/* Gradient overlay for smooth transition with image */}
+          <div 
+            className="absolute top-0 left-0 right-0 h-32"
+            style={{
+              background: "linear-gradient(to top, transparent, rgba(59, 130, 246, 0.5))"
+            }}
           />
         </div>
       </div>
@@ -86,4 +99,3 @@ const Index = () => {
 };
 
 export default Index;
-

@@ -8,15 +8,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BookingPeriod } from "@/types/hotel.types";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Users } from "lucide-react";
+import { CalendarIcon, Users, Loader2 } from "lucide-react";
 import { format, addDays, differenceInDays } from "date-fns";
 
 interface BookingFormProps {
   className?: string;
   onSearch: (booking: BookingPeriod, guests: number) => void;
+  isLoading?: boolean; // Add the isLoading prop
 }
 
-const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch }) => {
+const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch, isLoading = false }) => {
   const { toast } = useToast();
   const [guests, setGuests] = useState<number>(2);
   const [dateRange, setDateRange] = useState<{
@@ -131,8 +132,16 @@ const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch }) => {
             <Button 
               onClick={handleSearch} 
               className="h-12 transition-all hover:shadow-md"
+              disabled={isLoading}
             >
-              Search Availability
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                "Search Availability"
+              )}
             </Button>
           </div>
         </div>

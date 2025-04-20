@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { BookingPeriod, Room, BookingDetails, RoomAvailabilityCheck } from "@/types/hotel.types";
@@ -9,16 +8,18 @@ import BookingSummary from "@/components/hotel/BookingSummary";
 import PaymentModal from "@/components/payment/PaymentModal";
 import SearchResults from "@/components/hotel/SearchResults";
 import StayInformation from "@/components/hotel/StayInformation";
-import { Settings } from "lucide-react";
 import { format, addDays, differenceInDays } from "date-fns";
 import InitializeAdmin from "@/components/admin/InitializeAdmin";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAvailableRooms } from "@/services/roomService";
 import { checkRoomAvailability } from "@/utils/availabilityUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 const Hotel = () => {
   const { toast } = useToast();
   const { currentUser } = useAuth();
+  const isMobile = useIsMobile();
   const [selectedRooms, setSelectedRooms] = useState<Room[]>([]);
   const [bookingPeriod, setBookingPeriod] = useState<BookingPeriod>({
     checkIn: new Date(),
@@ -135,8 +136,14 @@ const Hotel = () => {
     <div className="min-h-screen flex flex-col">
       <HotelHeader />
       
-      <div className="container mx-auto px-4 md:px-6 -mt-20 relative z-10 mb-12">
-        <div className="flex justify-between items-center mb-6">
+      <div className={cn(
+        "container mx-auto px-4 md:px-6 relative z-10 mb-12",
+        isMobile ? "" : "-mt-20"
+      )}>
+        <div className={cn(
+          isMobile ? "pt-6" : "",
+          "flex justify-between items-center mb-6"
+        )}>
           <BookingForm 
             onSearch={handleSearchRooms} 
             className="mb-10"

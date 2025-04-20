@@ -26,7 +26,7 @@ const UserProfileDropdown = () => {
                   <img
                     src={currentUser.photoURL}
                     alt={currentUser.displayName || "User"}
-                    className="h-10 w-10 rounded-full object-cover"
+                    className="h-10 w-10 aspect-square rounded-full object-cover"
                   />
                 ) : (
                   <User className="h-6 w-6" />
@@ -51,7 +51,10 @@ const UserProfileDropdown = () => {
       )}
       
       {showAdminMenu && isAdmin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeAdminMenu}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={closeAdminMenu}
+        >
           <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <AdminMenu />
           </div>

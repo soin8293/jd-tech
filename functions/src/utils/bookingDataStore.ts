@@ -11,8 +11,18 @@ export const storeBookingData = async (
     console.log(`Storing booking data for ID: ${bookingId}`, {
       paymentIntentId: paymentIntent.id,
       transaction_id: bookingData.transaction_id,
-      amount: paymentIntent.amount / 100
+      amount: paymentIntent.amount / 100,
+      userEmail: bookingData.userEmail || 'not provided',
+      paymentType: bookingData.paymentType
     });
+    
+    // Log the booking details for debugging
+    console.log(`Booking details for ID: ${bookingId}`, JSON.stringify({
+      rooms: bookingData.bookingDetails?.rooms?.length || 0,
+      checkIn: bookingData.bookingDetails?.period?.checkIn,
+      checkOut: bookingData.bookingDetails?.period?.checkOut,
+      guests: bookingData.bookingDetails?.guests
+    }, null, 2));
     
     const bookingRecord = {
       id: bookingId,
@@ -41,6 +51,9 @@ export const storeBookingData = async (
       details: firestoreError,
       bookingId: bookingId
     });
+    
+    // Log full error object for debugging
+    console.error("Full Firestore error:", JSON.stringify(firestoreError, null, 2));
     
     throw new functions.https.HttpsError(
       'internal',

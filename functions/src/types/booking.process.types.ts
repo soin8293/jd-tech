@@ -11,6 +11,7 @@ export interface ProcessBookingData {
   serverCalculatedAmount?: number;
   timestamp?: string;
   userEmail?: string;
+  userId?: string; // Added to support user ID tracking
 }
 
 export interface PaymentResponse {

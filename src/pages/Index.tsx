@@ -11,7 +11,7 @@ const Index = () => {
   return (
     <div className="min-h-screen pt-16">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-cyan-500 to-blue-500 py-20">
+      <div className="bg-gradient-to-r from-cyan-500 to-blue-500 py-20 mb-12">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6">
@@ -32,12 +32,21 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Features Section with Image Background - Integrated with hero for seamless transition */}
-      <div className="relative">
+      {/* Features Section with Image Background */}
+      <div className="relative container mx-auto px-4 mb-16">
+        {/* Image Background with subtle rounded corners */}
+        <div className="absolute inset-0 w-full h-full -z-10 overflow-hidden">
+          <img 
+            src="/lovable-uploads/4abd0589-5c26-4b24-a377-de00e13215f9.png"
+            alt="JD Suites Building"
+            className="w-full h-full object-cover rounded-lg shadow-lg"
+          />
+        </div>
+        
         {/* Feature Cards */}
-        <div className="container mx-auto px-4 py-16 relative z-10">
+        <div className="py-16">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="bg-white/95 backdrop-blur-sm">
+            <Card className="bg-white/95 backdrop-blur-sm shadow-md border-0">
               <CardHeader>
                 <CardTitle>Luxury Rooms</CardTitle>
               </CardHeader>
@@ -48,7 +57,7 @@ const Index = () => {
               </CardContent>
             </Card>
             
-            <Card className="bg-white/95 backdrop-blur-sm">
+            <Card className="bg-white/95 backdrop-blur-sm shadow-md border-0">
               <CardHeader>
                 <CardTitle>Easy Booking</CardTitle>
               </CardHeader>
@@ -59,7 +68,7 @@ const Index = () => {
               </CardContent>
             </Card>
             
-            <Card className="bg-white/95 backdrop-blur-sm">
+            <Card className="bg-white/95 backdrop-blur-sm shadow-md border-0">
               <CardHeader>
                 <CardTitle>24/7 Support</CardTitle>
               </CardHeader>
@@ -71,24 +80,6 @@ const Index = () => {
             </Card>
           </div>
         </div>
-
-        {/* Background Image with rounded corners */}
-        <div className="absolute inset-0 w-full h-full -z-0 overflow-hidden">
-          <img 
-            src="/lovable-uploads/4abd0589-5c26-4b24-a377-de00e13215f9.png"
-            alt="JD Suites Building"
-            className="w-full h-full object-cover rounded-b-[64px]"
-          />
-        </div>
-        
-        {/* Completely seamless gradient overlay - positioned to cover both sections */}
-        <div 
-          className="absolute top-[-400px] left-0 right-0 h-[500px] pointer-events-none"
-          style={{
-            background: "linear-gradient(to bottom, #38bdf8, rgba(56, 189, 248, 0.9), rgba(56, 189, 248, 0.7), rgba(56, 189, 248, 0.4), rgba(56, 189, 248, 0.1), transparent)",
-            zIndex: -1
-          }}
-        />
       </div>
     </div>
   );

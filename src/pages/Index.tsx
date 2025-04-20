@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { Building2, ArrowRight } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
@@ -11,12 +11,15 @@ const Index = () => {
   return (
     <div className="min-h-screen pt-16">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-blue-400 via-sky-300 to-blue-200 py-20">
+      <div className="bg-gradient-to-r from-cyan-500 to-blue-500 py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-6xl font-light mb-6 text-white">
-              Welcome to JD Suites
-            </h1>
+            <div className="flex items-center gap-3 mb-6">
+              <Building2 className="h-12 w-12 text-white" />
+              <h1 className="text-5xl md:text-7xl font-extralight text-white">
+                JD Suites
+              </h1>
+            </div>
             <p className="text-xl text-white/90 mb-8">
               Experience luxury and comfort in our carefully curated selection of rooms and suites.
             </p>

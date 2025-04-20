@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/lib/firebase";
 import AdminList from "./AdminList";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AdminManageDialogProps {
   onClose: () => void;
@@ -34,8 +35,11 @@ const AdminManageDialog: React.FC<AdminManageDialogProps> = ({
 
     setIsProcessing(true);
     try {
+      console.log(`Attempting to ${makeAdmin ? 'add' : 'remove'} admin role for ${email}`);
       const manageAdminRoleFunc = httpsCallable(functions, 'manageAdminRole');
+      console.log('Calling manageAdminRole with data:', { email, makeAdmin });
       const result = await manageAdminRoleFunc({ email, makeAdmin });
+      console.log('Response from manageAdminRole:', result);
       const responseData = result.data as { success: boolean; message: string };
       
       toast({
@@ -47,6 +51,7 @@ const AdminManageDialog: React.FC<AdminManageDialogProps> = ({
       await refreshUserClaims();
     } catch (error: any) {
       console.error("Error managing admin role:", error);
+      console.error("Error details:", JSON.stringify(error));
       toast({
         title: "Operation Failed",
         description: error?.message || "Failed to manage admin role. Please try again.",
@@ -58,57 +63,59 @@ const AdminManageDialog: React.FC<AdminManageDialogProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Manage Admins</CardTitle>
-          <CardDescription>
-            Add or remove admin privileges for users
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="admin-email">User Email</Label>
-            <Input
-              id="admin-email"
-              placeholder="Enter user email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col sm:flex-row gap-3">
-          <Button
-            variant="outline"
-            className="sm:flex-1 w-full gap-1"
-            onClick={() => handleManageAdminRole(true)}
-            disabled={isProcessing}
-          >
-            <PlusCircle className="h-4 w-4" />
-            Make Admin
-          </Button>
-          <Button
-            variant="outline"
-            className="sm:flex-1 w-full gap-1 text-destructive"
-            onClick={() => handleManageAdminRole(false)}
-            disabled={isProcessing}
-          >
-            <MinusCircle className="h-4 w-4" />
-            Remove Admin
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full sm:w-auto"
-            onClick={onClose}
-            disabled={isProcessing}
-          >
-            Close
-          </Button>
-        </CardFooter>
-      </Card>
-      
-      <AdminList />
-    </div>
+    <ScrollArea className="max-h-[80vh]">
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Manage Admins</CardTitle>
+            <CardDescription>
+              Add or remove admin privileges for users
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin-email">User Email</Label>
+              <Input
+                id="admin-email"
+                placeholder="Enter user email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="flex flex-col sm:flex-row gap-3">
+            <Button
+              variant="outline"
+              className="sm:flex-1 w-full gap-1"
+              onClick={() => handleManageAdminRole(true)}
+              disabled={isProcessing}
+            >
+              <PlusCircle className="h-4 w-4" />
+              Make Admin
+            </Button>
+            <Button
+              variant="outline"
+              className="sm:flex-1 w-full gap-1 text-destructive"
+              onClick={() => handleManageAdminRole(false)}
+              disabled={isProcessing}
+            >
+              <MinusCircle className="h-4 w-4" />
+              Remove Admin
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full sm:w-auto"
+              onClick={onClose}
+              disabled={isProcessing}
+            >
+              Close
+            </Button>
+          </CardFooter>
+        </Card>
+        
+        <AdminList />
+      </div>
+    </ScrollArea>
   );
 };
 

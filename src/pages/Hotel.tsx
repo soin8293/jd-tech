@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { BookingPeriod, Room, BookingDetails, RoomAvailabilityCheck } from "@/types/hotel.types";
@@ -139,7 +138,7 @@ const Hotel = () => {
       
       <div className={cn(
         "container mx-auto px-4 md:px-6 relative z-10",
-        isMobile ? "-mt-32 pt-48" : "-mt-12 pt-32"  // Increased top padding
+        isMobile ? "-mt-32" : "-mt-12"
       )}>
         <div className="flex justify-between items-center">
           <BookingForm 

@@ -4,7 +4,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RefreshCw, AlertTriangle } from "lucide-react";
+import { RefreshCw, AlertTriangle, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/hooks/use-toast";
@@ -13,10 +13,12 @@ const AdminList: React.FC = () => {
   const [admins, setAdmins] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [permissionDenied, setPermissionDenied] = useState(false);
 
   const fetchAdmins = async () => {
     setIsLoading(true);
     setError(null);
+    setPermissionDenied(false);
 
     try {
       console.log("Fetching admin list...");
@@ -35,14 +37,20 @@ const AdminList: React.FC = () => {
         setAdmins([]);
         setError("No administrators found.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching admins:", error);
-      setError("Failed to load administrator list");
-      toast({
-        title: "Error loading admins",
-        description: "There was a problem loading the administrator list",
-        variant: "destructive",
-      });
+      
+      if (error?.code === 'permission-denied') {
+        setPermissionDenied(true);
+        setError("You don't have permission to view the admin list.");
+      } else {
+        setError("Failed to load administrator list");
+        toast({
+          title: "Error loading admins",
+          description: "There was a problem loading the administrator list",
+          variant: "destructive",
+        });
+      }
       setAdmins([]);
     } finally {
       setIsLoading(false);
@@ -67,7 +75,12 @@ const AdminList: React.FC = () => {
         </Button>
       </CardHeader>
       <CardContent>
-        {error ? (
+        {permissionDenied ? (
+          <div className="flex items-center justify-center gap-2 text-amber-600 py-4">
+            <ShieldAlert className="h-4 w-4" />
+            <span>Permission denied. You need to be authenticated as an admin to view this list.</span>
+          </div>
+        ) : error ? (
           <div className="flex items-center justify-center gap-2 text-amber-600 py-4">
             <AlertTriangle className="h-4 w-4" />
             <span>{error}</span>

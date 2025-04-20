@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -44,9 +45,9 @@ const Index = () => {
             </p>
           </div>
           <div className="p-6 rounded-lg">
-            <h3 className="text-xl font-medium mb-2">Victoria Island Luxury</h3>
+            <h3 className="text-xl font-medium mb-2">Prime Location</h3>
             <p className="text-muted-foreground">
-              Perfectly situated in Victoria Island, Lagos, with easy access to business districts and cultural attractions.
+              Conveniently located in Rumukparali, Port Harcourt, with easy access to business districts and local attractions.
             </p>
           </div>
         </div>

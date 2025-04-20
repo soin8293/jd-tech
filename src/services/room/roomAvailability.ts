@@ -1,7 +1,8 @@
 
 import { Room } from "@/types/hotel.types";
 import { getRooms } from "./roomQueries";
-import { toNigerianTime, getCheckoutTimeOnDate, isSameDay } from "@/utils/availabilityUtils";
+import { toNigerianTime, getCheckoutTimeOnDate } from "@/utils/availabilityUtils";
+import { isSameDay } from "date-fns";
 
 export const getAvailableRooms = async (checkIn: Date, checkOut: Date): Promise<Room[]> => {
   try {

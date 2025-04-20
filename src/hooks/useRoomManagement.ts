@@ -40,7 +40,7 @@ export const useRoomManagement = () => {
     fetchRooms();
   }, [fetchRooms]);
 
-  return useMemo(() => ({
+  return {
     rooms,
     loading: loading || mutationLoading,
     error,
@@ -48,14 +48,5 @@ export const useRoomManagement = () => {
     fetchRooms,
     handleSaveRooms,
     handleDeleteRoom
-  }), [
-    rooms,
-    loading,
-    mutationLoading,
-    error,
-    usingLocalData,
-    fetchRooms,
-    handleSaveRooms,
-    handleDeleteRoom
-  ]);
+  };
 };

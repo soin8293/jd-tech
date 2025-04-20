@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Room, BookingPeriod, RoomAvailabilityCheck } from "@/types/hotel.types";
-import { Bed, Users, Maximize, Check, Pencil, TrashIcon, Clock, ImageOff, Flag } from "lucide-react";
+import { Bed, Users, Maximize, Check, Pencil, TrashIcon, Clock, Info, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatNigerianTime } from "@/utils/availabilityUtils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface RoomCardProps {
   room: Room;
@@ -20,6 +21,7 @@ interface RoomCardProps {
   nextAvailableTime?: Date;
   availability?: RoomAvailabilityCheck;
   bookingPeriod?: BookingPeriod;
+  showBookingDetails?: boolean;
 }
 
 const RoomCard: React.FC<RoomCardProps> = ({ 
@@ -34,9 +36,11 @@ const RoomCard: React.FC<RoomCardProps> = ({
   isAvailable = true,
   nextAvailableTime,
   availability,
-  bookingPeriod
+  bookingPeriod,
+  showBookingDetails = false
 }) => {
   const isRoomSelected = isSelected || selectedRooms.some(r => r.id === room.id);
+  const [showDetails, setShowDetails] = useState(false);
   
   const roomIsAvailable = availability ? availability.isAvailable : isAvailable;
   const roomNextAvailableTime = availability ? availability.nextAvailableTime : nextAvailableTime;
@@ -53,11 +57,53 @@ const RoomCard: React.FC<RoomCardProps> = ({
       )}
     >
       {!roomIsAvailable && (
-        <div className="absolute top-2 right-2 z-10">
+        <div className="absolute top-2 right-2 z-10 flex gap-2">
           <Badge variant="destructive" className="flex items-center gap-1">
             <Flag className="w-3 h-3" />
             Booked
           </Badge>
+          
+          {(context === 'room-management' && showBookingDetails) && (
+            <Dialog open={showDetails} onOpenChange={setShowDetails}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon" className="h-6 w-6 rounded-full">
+                  <Info className="h-3 w-3" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Booking Details for {room.name}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  {room.bookings && room.bookings.length > 0 ? (
+                    <div className="space-y-4">
+                      {room.bookings.map((booking, index) => (
+                        <div key={index} className="border p-3 rounded-md">
+                          <p><strong>Check-in:</strong> {new Date(booking.checkIn).toLocaleDateString()}</p>
+                          <p><strong>Check-out:</strong> {new Date(booking.checkOut).toLocaleDateString()}</p>
+                          {booking.bookingReference && (
+                            <p>
+                              <strong>Booking Reference:</strong> {booking.bookingReference}
+                              <Button 
+                                variant="link" 
+                                size="sm" 
+                                className="px-0 h-auto text-xs" 
+                                onClick={() => window.open(`/admin/bookings/${booking.bookingReference}`, '_blank')}
+                              >
+                                View Details
+                              </Button>
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">No booking information available</p>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       )}
 

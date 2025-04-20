@@ -12,7 +12,7 @@ import { toast } from "@/hooks/use-toast";
 
 interface AuthContextType {
   currentUser: User | null;
-  isLoading: boolean;
+  isLoading: boolean; // Add this line with the correct name
   isAdmin: boolean;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;

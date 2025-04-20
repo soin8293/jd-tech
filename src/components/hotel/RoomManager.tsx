@@ -9,14 +9,26 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { PlusCircle, Pencil, TrashIcon, X, Plus, Check } from "lucide-react";
+import { PlusCircle, Pencil, TrashIcon, X, Plus, Check, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import RoomCard from "./RoomCard";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface RoomManagerProps {
   initialRooms: Room[];
   onSaveRooms: (rooms: Room[]) => void;
+  onDeleteRoom?: (roomId: string) => void;
   showEditButtons?: boolean;
+  isLoading?: boolean;
 }
 
 const defaultRoom: RoomFormData = {
@@ -34,7 +46,9 @@ const defaultRoom: RoomFormData = {
 const RoomManager: React.FC<RoomManagerProps> = ({ 
   initialRooms, 
   onSaveRooms,
-  showEditButtons = true
+  onDeleteRoom,
+  showEditButtons = true,
+  isLoading = false
 }) => {
   const { toast } = useToast();
   const [rooms, setRooms] = useState<Room[]>(initialRooms);
@@ -43,6 +57,11 @@ const RoomManager: React.FC<RoomManagerProps> = ({
   const [newAmenity, setNewAmenity] = useState('');
   const [newImageUrl, setNewImageUrl] = useState('');
   const [activeTab, setActiveTab] = useState('view');
+  const [roomToDelete, setRoomToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    setRooms(initialRooms);
+  }, [initialRooms]);
 
   const handleAddRoom = () => {
     setEditingRoom({ ...defaultRoom });
@@ -57,14 +76,19 @@ const RoomManager: React.FC<RoomManagerProps> = ({
   };
 
   const handleDeleteRoom = (roomId: string) => {
-    const updatedRooms = rooms.filter(room => room.id !== roomId);
-    setRooms(updatedRooms);
-    onSaveRooms(updatedRooms);
-    
-    toast({
-      title: "Room deleted",
-      description: "The room has been removed from your offerings",
-    });
+    if (onDeleteRoom) {
+      setRoomToDelete(null);
+      onDeleteRoom(roomId);
+    } else {
+      const updatedRooms = rooms.filter(room => room.id !== roomId);
+      setRooms(updatedRooms);
+      onSaveRooms(updatedRooms);
+      
+      toast({
+        title: "Room deleted",
+        description: "The room has been removed from your offerings",
+      });
+    }
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -175,6 +199,10 @@ const RoomManager: React.FC<RoomManagerProps> = ({
     setActiveTab('view');
   };
 
+  const confirmDelete = (roomId: string) => {
+    setRoomToDelete(roomId);
+  };
+
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -187,14 +215,21 @@ const RoomManager: React.FC<RoomManagerProps> = ({
           </TabsList>
           
           {activeTab === 'view' && showEditButtons && (
-            <Button onClick={handleAddRoom} className="gap-1">
-              <PlusCircle className="h-4 w-4" />
+            <Button onClick={handleAddRoom} className="gap-1" disabled={isLoading}>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlusCircle className="h-4 w-4" />}
               Add Room
             </Button>
           )}
         </div>
         
         <TabsContent value="view" className="mt-4">
+          {isLoading && rooms.length > 0 && (
+            <div className="flex items-center justify-center py-4 space-x-2">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">Processing...</span>
+            </div>
+          )}
+          
           {rooms.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 animate-fade-in">
               {rooms.map((room) => (
@@ -211,14 +246,16 @@ const RoomManager: React.FC<RoomManagerProps> = ({
                         size="icon"
                         onClick={() => handleEditRoom(room)}
                         className="h-8 w-8"
+                        disabled={isLoading}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button 
                         variant="outline" 
                         size="icon"
-                        onClick={() => handleDeleteRoom(room.id)}
+                        onClick={() => confirmDelete(room.id)}
                         className="h-8 w-8 text-destructive hover:text-destructive"
+                        disabled={isLoading}
                       >
                         <TrashIcon className="h-4 w-4" />
                       </Button>
@@ -234,8 +271,8 @@ const RoomManager: React.FC<RoomManagerProps> = ({
                 Add your first room to start attracting guests
               </p>
               {showEditButtons && (
-                <Button onClick={handleAddRoom}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
+                <Button onClick={handleAddRoom} disabled={isLoading}>
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />}
                   Add Your First Room
                 </Button>
               )}
@@ -441,8 +478,9 @@ const RoomManager: React.FC<RoomManagerProps> = ({
                 <Button 
                   onClick={handleSaveRoom}
                   className="gap-1"
+                  disabled={isLoading}
                 >
-                  <Check className="h-4 w-4" />
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   {isAdding ? "Add Room" : "Save Changes"}
                 </Button>
               </CardFooter>
@@ -450,6 +488,27 @@ const RoomManager: React.FC<RoomManagerProps> = ({
           )}
         </TabsContent>
       </Tabs>
+      
+      <AlertDialog open={!!roomToDelete} onOpenChange={(open) => !open && setRoomToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this room
+              and remove it from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => roomToDelete && handleDeleteRoom(roomToDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

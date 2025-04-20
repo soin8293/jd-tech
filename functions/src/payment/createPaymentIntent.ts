@@ -1,6 +1,7 @@
 
 import * as functions from "firebase-functions";
 import { stripe } from "../config/stripe";
+import * as admin from "firebase/admin";
 
 // Interface definitions for type safety
 interface Room {
@@ -75,39 +76,39 @@ export const createPaymentIntent = functions.https.onCall(async (data: CreatePay
     console.log(`Booking duration: ${numberOfNights} nights from ${checkIn.toISOString()} to ${checkOut.toISOString()}`);
     
     // 5. Calculate total price from room details and nights
-    // In a production environment, you should fetch room prices from your database
-    // instead of relying on client-provided prices
+    // Fetch room prices from Firestore for security
     let totalAmount = 0;
     
-    // SECURITY ENHANCEMENT: In a production environment, uncomment this code
-    // to fetch room prices from Firestore instead of using client-provided prices
-    /*
+    // SECURITY ENHANCEMENT: In production, always fetch room prices from Firestore
+    // Initialize Firestore if it hasn't been initialized
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+    
+    const firestore = admin.firestore();
+    
     for (const room of rooms) {
       try {
-        const roomDoc = await admin.firestore().collection('rooms').doc(room.id).get();
+        if (!room.id) {
+          throw new functions.https.HttpsError("invalid-argument", "Room ID is required");
+        }
+        
+        const roomDoc = await firestore.collection('rooms').doc(room.id).get();
         if (!roomDoc.exists) {
           throw new functions.https.HttpsError("not-found", `Room ${room.id} not found in database`);
         }
+        
         const roomData = roomDoc.data();
         if (!roomData || typeof roomData.price !== 'number') {
           throw new functions.https.HttpsError("invalid-argument", `Invalid price for room: ${room.id}`);
         }
+        
         totalAmount += roomData.price * numberOfNights;
+        console.log(`Room ${room.id} price: $${roomData.price} x ${numberOfNights} nights = $${roomData.price * numberOfNights}`);
       } catch (error) {
         console.error(`Error fetching room ${room.id}:`, error);
         throw new functions.https.HttpsError("internal", `Failed to fetch room data: ${error.message}`);
       }
-    }
-    */
-    
-    // For now, we're using client-provided prices - replace with the above code in production
-    for (const room of rooms) {
-      if (!room.price || typeof room.price !== 'number') {
-        console.error(`Invalid price for room: ${room.id || 'unknown'}`, room);
-        throw new functions.https.HttpsError("invalid-argument", `Invalid price for room: ${room.id || 'unknown'}`);
-      }
-      
-      totalAmount += room.price * numberOfNights;
     }
 
     // 6. Apply taxes, fees, or discounts if needed

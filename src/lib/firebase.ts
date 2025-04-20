@@ -2,7 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getFunctions } from "firebase/functions";
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -22,5 +22,11 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const functions = getFunctions(app);
 
-export default app;
+// Connect to Functions emulator in development
+if (window.location.hostname === 'localhost') {
+  // Uncomment and set correct ports for local emulator testing
+  // connectFunctionsEmulator(functions, "localhost", 5001);
+  console.log("Running in development mode. Functions emulator is available but not connected.");
+}
 
+export default app;

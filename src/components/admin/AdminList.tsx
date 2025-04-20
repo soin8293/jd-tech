@@ -4,28 +4,55 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "@/hooks/use-toast";
+import { isDevelopmentEnvironment } from "@/contexts/authHelpers";
 
 const AdminList: React.FC = () => {
   const [admins, setAdmins] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAdmins = async () => {
     setIsLoading(true);
+    setError(null);
+    
     try {
+      console.log("Fetching admin list...");
       const adminConfigRef = doc(db, 'config', 'admin');
       const adminConfigSnap = await getDoc(adminConfigRef);
       
       if (adminConfigSnap.exists()) {
         const data = adminConfigSnap.data();
+        console.log("Admin data retrieved:", data);
         setAdmins(data.adminEmails || []);
       } else {
+        console.log("No admin document exists");
         setAdmins([]);
+        
+        // In development environment, show mock data
+        if (isDevelopmentEnvironment()) {
+          console.log("Using mock admin data for development");
+          setAdmins(["dev@example.com", "admin@example.com"]);
+        }
       }
     } catch (error) {
       console.error("Error fetching admins:", error);
+      setError("Failed to load administrator list");
+      
+      // In development environment, show mock data
+      if (isDevelopmentEnvironment()) {
+        console.log("Using mock admin data for development after error");
+        setAdmins(["dev@example.com", "admin@example.com"]);
+      } else {
+        toast({
+          title: "Error loading admins",
+          description: "There was a problem loading the administrator list",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -49,7 +76,12 @@ const AdminList: React.FC = () => {
         </Button>
       </CardHeader>
       <CardContent>
-        {admins.length > 0 ? (
+        {error ? (
+          <div className="flex items-center justify-center gap-2 text-amber-600 py-4">
+            <AlertTriangle className="h-4 w-4" />
+            <span>{error}</span>
+          </div>
+        ) : admins.length > 0 ? (
           <ScrollArea className="h-[200px]">
             <Table>
               <TableHeader>

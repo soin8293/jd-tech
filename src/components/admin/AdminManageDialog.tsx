@@ -37,9 +37,13 @@ const AdminManageDialog: React.FC<AdminManageDialogProps> = ({
     try {
       console.log(`Attempting to ${makeAdmin ? 'add' : 'remove'} admin role for ${email}`);
       const manageAdminRoleFunc = httpsCallable(functions, 'manageAdminRole');
-      console.log('Calling manageAdminRole with data:', { email, makeAdmin });
-      const result = await manageAdminRoleFunc({ email, makeAdmin });
+      
+      const data = { email, makeAdmin };
+      console.log('Calling manageAdminRole with data:', data);
+      
+      const result = await manageAdminRoleFunc(data);
       console.log('Response from manageAdminRole:', result);
+      
       const responseData = result.data as { success: boolean; message: string };
       
       toast({
@@ -51,12 +55,23 @@ const AdminManageDialog: React.FC<AdminManageDialogProps> = ({
       await refreshUserClaims();
     } catch (error: any) {
       console.error("Error managing admin role:", error);
-      console.error("Error details:", JSON.stringify(error));
-      toast({
-        title: "Operation Failed",
-        description: error?.message || "Failed to manage admin role. Please try again.",
-        variant: "destructive",
-      });
+      console.error("Error code:", error?.code);
+      console.error("Error message:", error?.message);
+      console.error("Error details:", error?.details);
+      
+      if (error?.code === 'functions/not-found') {
+        toast({
+          title: "User Not Found",
+          description: `No user found with email ${email}. Make sure the user has signed in at least once.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Operation Failed",
+          description: error?.message || "Failed to manage admin role. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsProcessing(false);
     }

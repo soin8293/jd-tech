@@ -1,12 +1,12 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UsersIcon, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AdminManageDialog from "./AdminManageDialog";
 import InitAdminDialog from "./InitAdminDialog";
+import { Button } from "@/components/ui/button";
 
 interface AdminMenuProps {
   roomCount?: number;

@@ -37,21 +37,15 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
     // 3. Get user by email
     console.log(`Attempting to get user by email: ${email}`);
     const userRecord = await admin.auth().getUserByEmail(email);
-    console.log("User found:", JSON.stringify(userRecord, null, 2));
-    
+    console.log("Retrieved userRecord:", JSON.stringify(userRecord));
     const uid = userRecord.uid;
     
     // 4. Set the custom claim
-    console.log(`Setting custom claim { admin: ${makeAdmin} } for user ${uid}`);
     try {
       await admin.auth().setCustomUserClaims(uid, { admin: makeAdmin });
-      console.log("Custom claims set successfully");
-    } catch (setClaimsError) {
-      console.error("Failed to set custom claims:", setClaimsError);
-      throw new functions.https.HttpsError(
-        "internal", 
-        "Failed to update user permissions."
-      );
+    } catch (setClaimsError: any) {
+      console.error("Error setting custom claims:", setClaimsError);
+      throw new functions.https.HttpsError("internal", "Failed to set custom claims", { error: setClaimsError.message });
     }
     
     // 5. Update the Firestore list for reference
@@ -122,3 +116,4 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
     );
   }
 });
+

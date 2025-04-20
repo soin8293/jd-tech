@@ -137,7 +137,6 @@ const Hotel = () => {
         isMobile ? "-mt-32" : "-mt-12"
       )}>
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold mb-6">Book a Room</h1>
           
           <BookingForm 
             onSearch={handleSearchRooms} 

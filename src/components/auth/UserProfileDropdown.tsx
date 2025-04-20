@@ -9,6 +9,7 @@ import AdminMenu from "../admin/AdminMenu";
 import UserAuthButton from "./UserAuthButton";
 import { useAdminMenu } from "@/hooks/useAdminMenu";
 import UserProfileMenuContent from "./UserProfileMenuContent";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const UserProfileDropdown = () => {
   const { currentUser, logout, signInWithGoogle } = useAuth();
@@ -51,17 +52,11 @@ const UserProfileDropdown = () => {
       )}
       
       {showAdminMenu && isAdmin && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={closeAdminMenu}
-        >
-          <div 
-            className="w-full max-w-md bg-background rounded-lg shadow-lg m-4"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <Dialog open={showAdminMenu} onOpenChange={closeAdminMenu}>
+          <DialogContent className="sm:max-w-md">
             <AdminMenu />
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

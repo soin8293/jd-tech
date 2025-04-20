@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -8,10 +7,10 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <div className="container px-4 py-16 text-center">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-500">
-          Welcome to JD Suites
+          Welcome to JD Suites Rumukparali
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-          Experience authentic Nigerian hospitality in the heart of luxury, where traditional warmth meets modern comfort.
+          Experience authentic Nigerian hospitality in the heart of Rumukparali, Port Harcourt, where traditional warmth meets modern comfort.
         </p>
         
         <div className="relative w-full max-w-5xl mx-auto mb-12 rounded-lg overflow-hidden shadow-2xl">

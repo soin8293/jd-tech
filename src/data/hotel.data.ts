@@ -154,8 +154,8 @@ export const hotelRooms: Room[] = [
 
 export const hotelDetails = {
   name: "JD Suites",
-  description: "Experience authentic Nigerian hospitality in the heart of luxury, where traditional warmth meets modern comfort.",
-  address: "Victoria Island, Lagos, Nigeria",
+  description: "Experience authentic Nigerian hospitality in the heart of luxury at Rumukparali, where traditional warmth meets modern comfort.",
+  address: "Rumukparali, Port Harcourt, Rivers State, Nigeria",
   rating: 4.9,
   amenities: [
     "Free High-Speed WiFi",

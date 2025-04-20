@@ -4,17 +4,13 @@ import { BookingPeriod, Room, BookingDetails, RoomAvailabilityCheck } from "@/ty
 import { hotelRooms } from "@/data/hotel.data";
 import HotelHeader from "@/components/hotel/HotelHeader";
 import BookingForm from "@/components/hotel/BookingForm";
-import BookingSummary from "@/components/hotel/BookingSummary";
-import PaymentModal from "@/components/payment/PaymentModal";
-import SearchResults from "@/components/hotel/SearchResults";
-import StayInformation from "@/components/hotel/StayInformation";
-import { format, addDays, differenceInDays } from "date-fns";
 import InitializeAdmin from "@/components/admin/InitializeAdmin";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRooms, getAvailableRooms } from "@/services/room/roomService";
 import { checkRoomAvailability } from "@/utils/availabilityUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { addDays, differenceInDays, format } from "date-fns";
 
 const Hotel = () => {
   const { toast } = useToast();

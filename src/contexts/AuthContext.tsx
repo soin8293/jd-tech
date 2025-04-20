@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { 
   GoogleAuthProvider, 
@@ -11,6 +10,7 @@ import { auth } from "@/lib/firebase";
 import { toast } from "@/hooks/use-toast";
 import { AuthContextType } from "./AuthContext.types";
 import { isDevelopmentEnvironment, checkAdminStatus } from "./authHelpers";
+export { useAuth } from "./useAuth";
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

@@ -4,6 +4,8 @@ import { useStripe, useElements } from "@stripe/react-stripe-js";
 import PaymentMethodTypes from "./PaymentMethodTypes";
 import CardPaymentForm from "./CardPaymentForm";
 import PaymentFooter from "./PaymentFooter";
+import { useGooglePay } from "@/hooks/useGooglePay";
+import { createCardPayment } from "@/utils/paymentProcessor";
 
 interface PaymentMethodsProps {
   onCardPayment: (paymentMethodId: string) => void;
@@ -21,103 +23,43 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   const stripe = useStripe();
   const elements = useElements();
   const [showCardElement, setShowCardElement] = useState(false);
-  const [paymentRequest, setPaymentRequest] = useState<any>(null);
   const [processing, setProcessing] = useState(false);
   const [cardError, setCardError] = useState<string | null>(null);
-  const [googlePayError, setGooglePayError] = useState<string | null>(null);
-  const [googlePayAvailable, setGooglePayAvailable] = useState(false);
+  
+  const { paymentRequest, googlePayAvailable, googlePayError } = useGooglePay(amount);
 
-  // Set up Google Pay payment request
   useEffect(() => {
-    if (!stripe || !amount) return;
-    
-    try {
-      const pr = stripe.paymentRequest({
-        country: 'US',
-        currency: 'usd',
-        total: {
-          label: 'JD Suites Booking',
-          amount: Math.round(amount * 100),
-        },
-        requestPayerName: true,
-        requestPayerEmail: true,
-      });
-      
-      pr.canMakePayment().then(result => {
-        if (result) {
-          setPaymentRequest(pr);
-          setGooglePayAvailable(true);
-          setGooglePayError(null);
-        } else {
-          setGooglePayAvailable(false);
-          setGooglePayError("Google Pay is not available in this browser");
-        }
-      });
-      
-      pr.on('paymentmethod', async (e) => {
+    if (paymentRequest) {
+      paymentRequest.on('paymentmethod', async (e: any) => {
         try {
           setProcessing(true);
           onGooglePayment(e.paymentMethod.id);
           e.complete('success');
         } catch (error: any) {
           e.complete('fail');
-          setGooglePayError(error.message || "Failed to process Google Pay payment");
+          setCardError(error.message || "Failed to process Google Pay payment");
         }
       });
-    } catch (error: any) {
-      setGooglePayAvailable(false);
-      setGooglePayError(error.message);
     }
-  }, [stripe, amount, onGooglePayment]);
+  }, [paymentRequest, onGooglePayment]);
+
+  const handleCardSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setProcessing(true);
+    setCardError(null);
+    
+    try {
+      const paymentMethodId = await createCardPayment(stripe, elements);
+      onCardPayment(paymentMethodId);
+    } catch (error: any) {
+      setCardError(error.message);
+      setProcessing(false);
+    }
+  };
 
   const handleCardClick = () => {
     setShowCardElement(true);
     setCardError(null);
-  };
-
-  const handleCardSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    
-    if (!stripe || !elements) {
-      setCardError("Stripe has not initialized yet. Please try again.");
-      return;
-    }
-    
-    setProcessing(true);
-    setCardError(null);
-    
-    const cardElement = elements.getElement(CardElement);
-    
-    if (!cardElement) {
-      setCardError("Card information is missing. Please refresh and try again.");
-      setProcessing(false);
-      return;
-    }
-    
-    try {
-      const { error, paymentMethod } = await stripe.createPaymentMethod({
-        type: 'card',
-        card: cardElement,
-      });
-      
-      if (error) {
-        setCardError(error.message || "Your card was declined");
-        setProcessing(false);
-        return;
-      }
-      
-      if (!paymentMethod || !paymentMethod.id) {
-        setCardError("Failed to process your card. Please try again.");
-        setProcessing(false);
-        return;
-      }
-      
-      onCardPayment(paymentMethod.id);
-      
-    } catch (error: any) {
-      setCardError(error.message || "An unexpected error occurred. Please try again.");
-      setProcessing(false);
-    }
   };
 
   return (

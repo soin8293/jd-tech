@@ -1,15 +1,14 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Check, Loader2 } from "lucide-react";
 import { RoomFormData } from "@/types/hotel.types";
 import RoomDetailsSection from "./form/RoomDetailsSection";
 import RoomAmenitiesSection from "./form/RoomAmenitiesSection";
 import RoomImagesSection from "./form/RoomImagesSection";
-import { useToast } from "@/hooks/use-toast";
+import RoomAvailabilityToggle from "./form/RoomAvailabilityToggle";
+import { useRoomEditForm } from "./form/useRoomEditForm";
 
 interface RoomEditFormProps {
   editingRoom: RoomFormData;
@@ -26,52 +25,16 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({
   onSave,
   onCancel,
 }) => {
-  const { toast } = useToast();
-  const [formData, setFormData] = useState<RoomFormData>(editingRoom);
-
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : value
-    }));
-  };
-
-  const handleSwitchChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, availability: checked }));
-  };
-
-  const handleAddAmenity = (amenity: string) => {
-    if (!formData.amenities.includes(amenity)) {
-      setFormData(prev => ({
-        ...prev,
-        amenities: [...prev.amenities, amenity]
-      }));
-    }
-  };
-
-  const handleAddImage = (imageUrl: string) => {
-    if (!formData.images.includes(imageUrl)) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, imageUrl]
-      }));
-    }
-  };
-
-  const handleSave = () => {
-    // Remove the check for images
-    if (!formData.name || !formData.price) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in the room name and price.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    onSave(formData);
-  };
+  const {
+    formData,
+    handleFormChange,
+    handleSwitchChange,
+    handleAddAmenity,
+    handleAddImage,
+    handleRemoveAmenity,
+    handleRemoveImage,
+    handleSave,
+  } = useRoomEditForm(editingRoom, onSave);
 
   return (
     <Card>
@@ -89,42 +52,21 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({
           onChange={handleFormChange}
         />
         
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <Label>Availability</Label>
-            <Switch 
-              checked={formData.availability}
-              onCheckedChange={handleSwitchChange}
-            />
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {formData.availability 
-              ? "This room is available for booking"
-              : "This room is not available for booking"
-            }
-          </p>
-        </div>
+        <RoomAvailabilityToggle 
+          availability={formData.availability}
+          onToggle={handleSwitchChange}
+        />
         
         <RoomAmenitiesSection
           amenities={formData.amenities}
           onAddAmenity={handleAddAmenity}
-          onRemoveAmenity={(amenity) => 
-            setFormData(prev => ({
-              ...prev,
-              amenities: prev.amenities.filter(a => a !== amenity)
-            }))
-          }
+          onRemoveAmenity={handleRemoveAmenity}
         />
         
         <RoomImagesSection
           images={formData.images}
           onAddImage={handleAddImage}
-          onRemoveImage={(image) => 
-            setFormData(prev => ({
-              ...prev,
-              images: prev.images.filter(img => img !== image)
-            }))
-          }
+          onRemoveImage={handleRemoveImage}
         />
       </CardContent>
       <CardFooter className="flex justify-between">

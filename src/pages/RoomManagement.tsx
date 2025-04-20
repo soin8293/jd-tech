@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import RoomManager from "@/components/hotel/RoomManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -19,11 +19,15 @@ const RoomManagement = () => {
     handleDeleteRoom
   } = useRoomManagement();
   
-  useEffect(() => {
+  const initializePage = useCallback(() => {
     if (!authLoading) {
       fetchRooms();
     }
   }, [authLoading, fetchRooms]);
+  
+  useEffect(() => {
+    initializePage();
+  }, [initializePage]);
   
   if (authLoading) {
     return <LoadingSpinner message="Checking authentication..." />;

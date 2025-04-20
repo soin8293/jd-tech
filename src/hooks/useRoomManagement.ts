@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Room } from "@/types/hotel.types";
 import { useToast } from "@/hooks/use-toast";
 import { getRooms, saveRooms, deleteRoom } from "@/services/roomService";
@@ -55,7 +55,7 @@ export const useRoomManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [notifyLocalDataUse, toast]);
+  }, [toast, notifyLocalDataUse]);
 
   const handleSaveRooms = useCallback(async (updatedRooms: Room[]) => {
     try {
@@ -150,7 +150,8 @@ export const useRoomManagement = () => {
     }
   }, [rooms, usingLocalData, toast, notifyLocalDataUse]);
 
-  return {
+  // Use a memoized object for returning values to prevent re-renders
+  const returnValue = useMemo(() => ({
     rooms,
     loading,
     error,
@@ -158,5 +159,15 @@ export const useRoomManagement = () => {
     fetchRooms,
     handleSaveRooms,
     handleDeleteRoom
-  };
+  }), [
+    rooms,
+    loading,
+    error, 
+    usingLocalData,
+    fetchRooms,
+    handleSaveRooms,
+    handleDeleteRoom
+  ]);
+
+  return returnValue;
 };

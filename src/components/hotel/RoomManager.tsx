@@ -15,7 +15,7 @@ const defaultRoom: RoomFormData = {
   size: 400,
   bed: "Queen",
   amenities: ["Free Wi-Fi", "TV", "Air Conditioning"],
-  images: ["https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1000"],
+  images: [],
   availability: true
 };
 
@@ -70,10 +70,10 @@ const RoomManager: React.FC<RoomManagerProps> = ({
   };
 
   const handleSaveRoom = (roomData: RoomFormData) => {
-    if (!roomData.name || !roomData.price || roomData.images.length === 0) {
+    if (!roomData.name || !roomData.price) {
       toast({
         title: "Missing information",
-        description: "Please fill in all required fields (name, price, and at least one image).",
+        description: "Please fill in all required fields (name and price).",
         variant: "destructive",
       });
       return;

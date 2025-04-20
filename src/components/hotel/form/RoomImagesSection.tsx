@@ -26,24 +26,28 @@ const RoomImagesSection: React.FC<RoomImagesSectionProps> = ({
 
   return (
     <div className="space-y-3">
-      <Label>Images</Label>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-        {images.map((image, index) => (
-          <div key={index} className="relative group rounded-md overflow-hidden h-24">
-            <img 
-              src={image} 
-              alt={`Room preview ${index + 1}`}
-              className="w-full h-full object-cover"
-            />
-            <button
-              onClick={() => onRemoveImage(image)}
-              className="absolute top-1 right-1 bg-background/80 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        ))}
-      </div>
+      <Label>Images (Optional)</Label>
+      {images.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+          {images.map((image, index) => (
+            <div key={index} className="relative group rounded-md overflow-hidden h-24">
+              <img 
+                src={image} 
+                alt={`Room preview ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+              <button
+                onClick={() => onRemoveImage(image)}
+                className="absolute top-1 right-1 bg-background/80 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground italic">No images added yet</p>
+      )}
       <div className="flex gap-2">
         <Input
           value={newImageUrl}

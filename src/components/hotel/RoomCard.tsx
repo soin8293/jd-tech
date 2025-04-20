@@ -1,9 +1,10 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Room } from "@/types/hotel.types";
-import { Bed, Users, Maximize, Check, Pencil, TrashIcon, Clock, ImageOff } from "lucide-react";
+import { Bed, Users, Maximize, Check, Pencil, TrashIcon, Clock, ImageOff, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatNigerianTime } from "@/utils/availabilityUtils";
 
@@ -36,12 +37,21 @@ const RoomCard: React.FC<RoomCardProps> = ({
   return (
     <Card 
       className={cn(
-        "overflow-hidden transition-all hover:shadow-lg", 
+        "overflow-hidden transition-all hover:shadow-lg relative", 
         isSelected && "ring-2 ring-primary",
         !isAvailable && "opacity-60 grayscale",
         className
       )}
     >
+      {!isAvailable && (
+        <div className="absolute top-2 right-2 z-10">
+          <Badge variant="destructive" className="flex items-center gap-1">
+            <Flag className="w-3 h-3" />
+            Booked
+          </Badge>
+        </div>
+      )}
+
       {hasImages ? (
         <div className="hotel-image-container h-48 relative">
           <img

@@ -55,7 +55,7 @@ export const hotelRooms: Room[] = [
       "Work Desk"
     ],
     images: [],
-    availability: true
+    availability: false // This room is marked as booked for demonstration
   },
   // Upstairs Rooms
   {

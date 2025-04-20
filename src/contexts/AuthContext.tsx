@@ -86,6 +86,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
+      
+      // Add this line to bypass domain restrictions in development environment
+      if (window.location.hostname === 'localhost' || 
+          window.location.hostname.includes('lovableproject.com')) {
+        auth.useDeviceLanguage();
+      }
+      
       const result = await signInWithPopup(auth, provider);
       
       // Check admin status after sign in
@@ -97,9 +104,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       console.error("Error signing in with Google:", error);
+      // Provide more helpful error message
+      let errorMessage = "Could not sign in with Google. Please try again.";
+      if ((error as any)?.code === 'auth/unauthorized-domain') {
+        errorMessage = "This domain is not authorized for Google sign-in. Please add this domain to your Firebase project.";
+      }
+      
       toast({
         title: "Sign-in Failed",
-        description: "Could not sign in with Google. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }

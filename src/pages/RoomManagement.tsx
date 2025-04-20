@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useRoomManagement } from "@/hooks/useRoomManagement";
 import RoomManager from "@/components/hotel/RoomManager";
@@ -20,9 +21,10 @@ const RoomManagement = () => {
   useEffect(() => {
     const initializeRooms = async () => {
       try {
-        await fetchRooms();
-        // If no rooms are found, initialize with default rooms
-        if (!rooms || rooms.length === 0) {
+        const fetchedRooms = await fetchRooms();
+        
+        // If no rooms are found after fetching, initialize with default rooms
+        if (fetchedRooms && fetchedRooms.length === 0) {
           console.log('No rooms found, initializing with default rooms');
           await handleSaveRooms(hotelRooms);
         }

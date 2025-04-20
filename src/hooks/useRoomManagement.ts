@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useMemo } from "react";
 import { Room } from "@/types/hotel.types";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +33,7 @@ export const useRoomManagement = () => {
       setRooms(roomsData);
       setError(null);
       setUsingLocalData(false);
+      return roomsData; // Return the rooms data for immediate use
     } catch (err) {
       console.error("Error loading rooms:", err);
       const isPermissionError = (err as any)?.code === 'permission-denied';
@@ -42,6 +44,7 @@ export const useRoomManagement = () => {
         setUsingLocalData(true);
         setError("Database permission error. Using local data until permissions are fixed.");
         notifyLocalDataUse();
+        return hotelRooms; // Return the local data for immediate use
       } else {
         setError("Failed to load rooms. Please try again.");
         toast({
@@ -49,6 +52,7 @@ export const useRoomManagement = () => {
           description: "Failed to load rooms. Please try again.",
           variant: "destructive",
         });
+        return []; // Return empty array in case of error
       }
     } finally {
       setLoading(false);

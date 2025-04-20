@@ -11,16 +11,23 @@ interface HotelHeaderProps {
 const HotelHeader: React.FC<HotelHeaderProps> = ({ className }) => {
   return (
     <div className={cn("relative w-full h-[70vh] overflow-hidden", className)}>
-      {/* Background Image with Parallax Effect */}
+      {/* Background Image with Modernistic Sky Blue Gradient */}
       <div className="absolute inset-0 w-full h-full">
-        <div className="relative w-full h-full">
-          <img
-            src={hotelDetails.headerImage}
-            alt={hotelDetails.name}
-            className="w-full h-full object-cover"
-            loading="eager"
+        <div className="relative w-full h-full bg-gradient-to-br from-blue-400 via-sky-300 to-blue-200">
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: "radial-gradient(circle at 30% 50%, rgba(255,255,255,0.2) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(255,255,255,0.2) 0%, transparent 50%)",
+              opacity: 0.8
+            }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
+          <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5 bg-repeat-space mix-blend-overlay" />
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-1/3"
+            style={{
+              background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.3))"
+            }}
+          />
         </div>
       </div>
 

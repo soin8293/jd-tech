@@ -1,5 +1,6 @@
 
 import * as admin from "firebase-admin";
+import * as functions from "firebase-functions";
 
 export const storeBookingData = async (
   bookingId: string,
@@ -7,6 +8,12 @@ export const storeBookingData = async (
   bookingData: any
 ) => {
   try {
+    console.log(`Storing booking data for ID: ${bookingId}`, {
+      paymentIntentId: paymentIntent.id,
+      transaction_id: bookingData.transaction_id,
+      amount: paymentIntent.amount / 100
+    });
+    
     const bookingRecord = {
       id: bookingId,
       paymentIntentId: paymentIntent.id,
@@ -18,7 +25,8 @@ export const storeBookingData = async (
       currency: paymentIntent.currency,
       status: 'confirmed',
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      userId: bookingData.bookingDetails.userId || 'guest'
+      userId: bookingData.bookingDetails.userId || 'guest',
+      userEmail: bookingData.bookingDetails.userEmail || null
     };
     
     await admin.firestore().collection('bookings').doc(bookingId).set(bookingRecord);
@@ -26,7 +34,24 @@ export const storeBookingData = async (
     
     return bookingRecord;
   } catch (firestoreError: any) {
-    console.error("Error storing booking in Firestore:", firestoreError);
-    throw firestoreError;
+    console.error("Error storing booking in Firestore:", {
+      error: firestoreError,
+      message: firestoreError.message,
+      code: firestoreError.code,
+      details: firestoreError,
+      bookingId: bookingId
+    });
+    
+    throw new functions.https.HttpsError(
+      'internal',
+      'Failed to store booking data',
+      {
+        type: 'booking_storage_error',
+        details: {
+          message: firestoreError.message,
+          code: firestoreError.code || 'unknown'
+        }
+      }
+    );
   }
 };

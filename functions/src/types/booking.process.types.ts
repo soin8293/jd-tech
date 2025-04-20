@@ -9,6 +9,8 @@ export interface ProcessBookingData {
   paymentIntentId: string;
   bookingDetails: BookingDetails;
   serverCalculatedAmount?: number;
+  timestamp?: string;
+  userEmail?: string;
 }
 
 export interface PaymentResponse {
@@ -20,5 +22,6 @@ export interface PaymentResponse {
   error?: {
     type: string;
     message: string;
+    details?: any;
   };
 }

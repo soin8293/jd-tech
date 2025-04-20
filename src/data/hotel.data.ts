@@ -1,12 +1,11 @@
-
 import { Room } from "../types/hotel.types";
 
 export const hotelRooms: Room[] = [
   // Downstairs Rooms
   {
     id: "downstairs-1",
-    name: "Room 101",
-    description: "Comfortable downstairs room with king-size bed",
+    name: "The Palm Suite",
+    description: "Standard room located on the ground floor featuring a plush king-size bed and modern amenities",
     price: 320,
     capacity: 2,
     size: 400,
@@ -23,8 +22,8 @@ export const hotelRooms: Room[] = [
   },
   {
     id: "downstairs-2",
-    name: "Room 102",
-    description: "Comfortable downstairs room with king-size bed",
+    name: "The Hibiscus Suite",
+    description: "Standard room located on the ground floor featuring a plush king-size bed and modern amenities",
     price: 320,
     capacity: 2,
     size: 400,
@@ -41,8 +40,8 @@ export const hotelRooms: Room[] = [
   },
   {
     id: "downstairs-3",
-    name: "Room 103",
-    description: "Comfortable downstairs room with king-size bed",
+    name: "The Lotus Suite",
+    description: "Standard room located on the ground floor featuring a plush king-size bed and modern amenities",
     price: 320,
     capacity: 2,
     size: 400,
@@ -60,8 +59,8 @@ export const hotelRooms: Room[] = [
   // Upstairs Rooms
   {
     id: "upstairs-1",
-    name: "Room 201",
-    description: "Comfortable upstairs room with king-size bed",
+    name: "The Jasmine Suite",
+    description: "Standard room located on the upper floor featuring a plush king-size bed and modern amenities",
     price: 320,
     capacity: 2,
     size: 400,
@@ -78,8 +77,8 @@ export const hotelRooms: Room[] = [
   },
   {
     id: "upstairs-2",
-    name: "Room 202",
-    description: "Comfortable upstairs room with king-size bed",
+    name: "The Orchid Suite",
+    description: "Standard room located on the upper floor featuring a plush king-size bed and modern amenities",
     price: 320,
     capacity: 2,
     size: 400,
@@ -96,8 +95,8 @@ export const hotelRooms: Room[] = [
   },
   {
     id: "upstairs-3",
-    name: "Room 203",
-    description: "Comfortable upstairs room with king-size bed",
+    name: "The Rose Suite",
+    description: "Standard room located on the upper floor featuring a plush king-size bed and modern amenities",
     price: 320,
     capacity: 2,
     size: 400,
@@ -114,8 +113,8 @@ export const hotelRooms: Room[] = [
   },
   {
     id: "upstairs-4",
-    name: "Room 204",
-    description: "Comfortable upstairs room with king-size bed",
+    name: "The Lily Suite",
+    description: "Standard room located on the upper floor featuring a plush king-size bed and modern amenities",
     price: 320,
     capacity: 2,
     size: 400,
@@ -132,8 +131,8 @@ export const hotelRooms: Room[] = [
   },
   {
     id: "upstairs-suite",
-    name: "Executive Suite 205",
-    description: "Spacious upstairs suite with king and queen-size beds",
+    name: "The Royal Garden Suite",
+    description: "Our most luxurious accommodation featuring both king and queen-size beds, expanded living space, and premium amenities",
     price: 560,
     capacity: 4,
     size: 650,

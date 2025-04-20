@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -52,7 +51,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
         </div>
       )}
 
-      {hasImages ? (
+      {hasImages && (
         <div className="hotel-image-container h-48 relative">
           <img
             src={room.images[0]}
@@ -62,18 +61,6 @@ const RoomCard: React.FC<RoomCardProps> = ({
           />
           <div className="image-overlay" />
           
-          {!isAvailable && (
-            <div className="absolute top-0 right-0 left-0 bg-black bg-opacity-70 text-white py-2 px-4 text-center">
-              <p className="text-sm font-medium">Unavailable</p>
-              {nextAvailableTime && (
-                <p className="text-xs">Available after {formatNigerianTime(nextAvailableTime)}</p>
-              )}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="h-48 bg-muted flex items-center justify-center relative">
-          <ImageOff className="w-12 h-12 text-muted-foreground/50" />
           {!isAvailable && (
             <div className="absolute top-0 right-0 left-0 bg-black bg-opacity-70 text-white py-2 px-4 text-center">
               <p className="text-sm font-medium">Unavailable</p>

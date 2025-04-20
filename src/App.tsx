@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
+import ScrollToTop from "@/components/layout/ScrollToTop";
 import Index from "@/pages/Index";
 import Hotel from "@/pages/Hotel";
 import RoomManagement from "@/pages/RoomManagement";
@@ -14,6 +15,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <ScrollToTop />
         <Header />
         <Routes>
           <Route path="/" element={<Index />} />
@@ -29,3 +31,4 @@ function App() {
 }
 
 export default App;
+

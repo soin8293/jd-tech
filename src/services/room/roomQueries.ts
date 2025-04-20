@@ -13,8 +13,22 @@ export const getRooms = async (): Promise<Room[]> => {
     
     if (roomsSnapshot.empty) {
       console.log("No rooms found in Firestore, seeding with default data");
-      await seedRooms();
-      return hotelRooms;
+      try {
+        await seedRooms();
+      } catch (error) {
+        console.error("Error seeding rooms:", error);
+        // If seeding fails, just return the default rooms
+        return hotelRooms.map(room => ({
+          ...room,
+          availability: room.availability !== false,
+          bookings: room.bookings || []
+        }));
+      }
+      return hotelRooms.map(room => ({
+        ...room,
+        availability: room.availability !== false,
+        bookings: room.bookings || []
+      }));
     }
     
     const rooms: Room[] = [];
@@ -34,7 +48,12 @@ export const getRooms = async (): Promise<Room[]> => {
     return rooms;
   } catch (error) {
     console.error("Error fetching rooms:", error);
-    throw error;
+    // In case of any error (including permissions), return the default rooms
+    return hotelRooms.map(room => ({
+      ...room,
+      availability: room.availability !== false,
+      bookings: room.bookings || []
+    }));
   }
 };
 
@@ -43,12 +62,36 @@ export const getRoom = async (roomId: string): Promise<Room | null> => {
     const roomDoc = await getDoc(doc(db, ROOMS_COLLECTION, roomId));
     
     if (!roomDoc.exists()) {
+      // Look for the room in default data if not found in Firestore
+      const defaultRoom = hotelRooms.find(room => room.id === roomId);
+      if (defaultRoom) {
+        return {
+          ...defaultRoom,
+          availability: defaultRoom.availability !== false,
+          bookings: defaultRoom.bookings || []
+        };
+      }
       return null;
     }
     
-    return { id: roomDoc.id, ...roomDoc.data() } as Room;
+    const data = roomDoc.data();
+    return { 
+      id: roomDoc.id, 
+      ...data,
+      availability: data.availability !== false,
+      bookings: data.bookings || []
+    } as Room;
   } catch (error) {
     console.error(`Error fetching room ${roomId}:`, error);
+    // Look for the room in default data if Firestore access fails
+    const defaultRoom = hotelRooms.find(room => room.id === roomId);
+    if (defaultRoom) {
+      return {
+        ...defaultRoom,
+        availability: defaultRoom.availability !== false,
+        bookings: defaultRoom.bookings || []
+      };
+    }
     throw error;
   }
 };

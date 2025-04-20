@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Room } from "@/types/hotel.types";
 import { useToast } from "@/hooks/use-toast";
 import { getRooms, saveRooms, deleteRoom } from "@/services/room/roomService";
@@ -52,12 +52,20 @@ export const useRoomManagement = () => {
           description: "Failed to load rooms. Please try again.",
           variant: "destructive",
         });
-        return []; // Return empty array in case of error
+        
+        // Even on error, return hotel rooms rather than empty array
+        setRooms(hotelRooms);
+        return hotelRooms; 
       }
     } finally {
       setLoading(false);
     }
   }, [toast, notifyLocalDataUse]);
+
+  // Initial fetch on mount
+  useEffect(() => {
+    fetchRooms();
+  }, []);
 
   const handleSaveRooms = useCallback(async (updatedRooms: Room[]) => {
     try {

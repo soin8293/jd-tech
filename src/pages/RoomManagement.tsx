@@ -17,24 +17,41 @@ const RoomManagement = () => {
   const { isAdmin, currentUser, refreshUserClaims } = useAuth();
   const { toast } = useToast();
   const [showAdminManagement, setShowAdminManagement] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    const initializeRooms = async () => {
-      try {
-        const fetchedRooms = await fetchRooms();
-        
-        // If no rooms are found after fetching, initialize with default rooms
-        if (fetchedRooms && fetchedRooms.length === 0) {
-          console.log('No rooms found, initializing with default rooms');
-          await handleSaveRooms(hotelRooms);
+    if (!initialized) {
+      const initializeRooms = async () => {
+        try {
+          console.log('Initializing rooms...');
+          const fetchedRooms = await fetchRooms();
+          
+          if (!fetchedRooms || fetchedRooms.length === 0) {
+            console.log('No rooms found, initializing with default rooms');
+            await handleSaveRooms(hotelRooms);
+            
+            // If saving to Firebase fails due to permissions, at least set local state
+            if (rooms.length === 0) {
+              console.log('Setting default rooms locally');
+              await handleSaveRooms(hotelRooms);
+            }
+          }
+          
+          setInitialized(true);
+        } catch (error) {
+          console.error('Error initializing rooms:', error);
+          // If there's an error, set local rooms anyway
+          if (rooms.length === 0) {
+            console.log('Setting default rooms locally after error');
+            await handleSaveRooms(hotelRooms);
+          }
+          setInitialized(true);
         }
-      } catch (error) {
-        console.error('Error initializing rooms:', error);
-      }
-    };
+      };
 
-    initializeRooms();
-  }, []);
+      initializeRooms();
+    }
+  }, [initialized, fetchRooms, handleSaveRooms, rooms.length]);
 
   // Redirect non-admin users
   if (!isAdmin) {
@@ -79,12 +96,18 @@ const RoomManagement = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <RoomManager
-            initialRooms={rooms}
-            onSaveRooms={handleSaveRooms}
-            onDeleteRoom={handleDeleteRoom}
-            isLoading={loading}
-          />
+          {!loading && rooms.length === 0 && !initialized ? (
+            <div className="text-center py-6">
+              <p>Loading rooms...</p>
+            </div>
+          ) : (
+            <RoomManager
+              initialRooms={rooms.length > 0 ? rooms : hotelRooms}
+              onSaveRooms={handleSaveRooms}
+              onDeleteRoom={handleDeleteRoom}
+              isLoading={loading}
+            />
+          )}
         </CardContent>
       </Card>
     </div>

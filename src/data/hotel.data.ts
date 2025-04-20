@@ -1,110 +1,154 @@
+
 import { Room } from "../types/hotel.types";
 
 export const hotelRooms: Room[] = [
+  // Downstairs Rooms
   {
-    id: "deluxe-room",
-    name: "Lagos Deluxe Suite",
-    description: "Elegant suite with authentic Nigerian art pieces and premium amenities, featuring views of Victoria Island.",
+    id: "downstairs-1",
+    name: "Room 101",
+    description: "Comfortable downstairs room with king-size bed",
     price: 320,
     capacity: 2,
     size: 400,
     bed: "King",
     amenities: [
       "Free High-Speed Wi-Fi",
-      "55\" Smart TV",
-      "Mini Bar with local beverages",
-      "24/7 Room Service",
       "Air Conditioning",
-      "Premium Nigerian Toiletries",
+      "Premium Toiletries",
       "In-room Safe",
-      "Ergonomic Work Desk"
+      "Work Desk"
     ],
-    images: [
-      "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1000",
-      "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1000"
-    ],
+    images: [],
     availability: true
   },
   {
-    id: "suite",
-    name: "Executive Lagos Suite",
-    description: "Spacious suite with separate living area featuring Nigerian-inspired decor and panoramic city views.",
+    id: "downstairs-2",
+    name: "Room 102",
+    description: "Comfortable downstairs room with king-size bed",
+    price: 320,
+    capacity: 2,
+    size: 400,
+    bed: "King",
+    amenities: [
+      "Free High-Speed Wi-Fi",
+      "Air Conditioning",
+      "Premium Toiletries",
+      "In-room Safe",
+      "Work Desk"
+    ],
+    images: [],
+    availability: true
+  },
+  {
+    id: "downstairs-3",
+    name: "Room 103",
+    description: "Comfortable downstairs room with king-size bed",
+    price: 320,
+    capacity: 2,
+    size: 400,
+    bed: "King",
+    amenities: [
+      "Free High-Speed Wi-Fi",
+      "Air Conditioning",
+      "Premium Toiletries",
+      "In-room Safe",
+      "Work Desk"
+    ],
+    images: [],
+    availability: true
+  },
+  // Upstairs Rooms
+  {
+    id: "upstairs-1",
+    name: "Room 201",
+    description: "Comfortable upstairs room with king-size bed",
+    price: 320,
+    capacity: 2,
+    size: 400,
+    bed: "King",
+    amenities: [
+      "Free High-Speed Wi-Fi",
+      "Air Conditioning",
+      "Premium Toiletries",
+      "In-room Safe",
+      "Work Desk"
+    ],
+    images: [],
+    availability: true
+  },
+  {
+    id: "upstairs-2",
+    name: "Room 202",
+    description: "Comfortable upstairs room with king-size bed",
+    price: 320,
+    capacity: 2,
+    size: 400,
+    bed: "King",
+    amenities: [
+      "Free High-Speed Wi-Fi",
+      "Air Conditioning",
+      "Premium Toiletries",
+      "In-room Safe",
+      "Work Desk"
+    ],
+    images: [],
+    availability: true
+  },
+  {
+    id: "upstairs-3",
+    name: "Room 203",
+    description: "Comfortable upstairs room with king-size bed",
+    price: 320,
+    capacity: 2,
+    size: 400,
+    bed: "King",
+    amenities: [
+      "Free High-Speed Wi-Fi",
+      "Air Conditioning",
+      "Premium Toiletries",
+      "In-room Safe",
+      "Work Desk"
+    ],
+    images: [],
+    availability: true
+  },
+  {
+    id: "upstairs-4",
+    name: "Room 204",
+    description: "Comfortable upstairs room with king-size bed",
+    price: 320,
+    capacity: 2,
+    size: 400,
+    bed: "King",
+    amenities: [
+      "Free High-Speed Wi-Fi",
+      "Air Conditioning",
+      "Premium Toiletries",
+      "In-room Safe",
+      "Work Desk"
+    ],
+    images: [],
+    availability: true
+  },
+  {
+    id: "upstairs-suite",
+    name: "Executive Suite 205",
+    description: "Spacious upstairs suite with king and queen-size beds",
     price: 560,
-    capacity: 3,
+    capacity: 4,
     size: 650,
-    bed: "King + Sofa Bed",
+    bed: "King + Queen",
     amenities: [
       "Free High-Speed Wi-Fi",
-      "65\" Smart TV",
-      "Premium Mini Bar",
-      "24/7 Room Service",
-      "Climate Control",
-      "Luxury Nigerian Bath Products",
+      "Premium Air Conditioning",
+      "Luxury Toiletries",
       "Digital Safe",
-      "Business Work Area",
-      "Private Lounge",
-      "Nespresso Coffee Machine",
-      "Bathrobe & Slippers"
+      "Work Area",
+      "Mini Bar",
+      "Extra Seating Area",
+      "Premium Coffee Machine"
     ],
-    images: [
-      "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=1000",
-      "https://images.unsplash.com/photo-1587985064135-0366536eab42?auto=format&fit=crop&w=1000"
-    ],
-    availability: true
-  },
-  {
-    id: "family-room",
-    name: "Nigerian Family Suite",
-    description: "Thoughtfully designed family accommodation with traditional Nigerian touches and amenities for children.",
-    price: 420,
-    capacity: 4,
-    size: 550,
-    bed: "2 Queen",
-    amenities: [
-      "Free High-Speed Wi-Fi",
-      "55\" Smart TV",
-      "Stocked Mini Bar",
-      "24/7 Room Service",
-      "Climate Control",
-      "Nigerian Natural Toiletries",
-      "Digital Safe",
-      "Children's Welcome Pack",
-      "Game Console",
-      "Coffee & Tea Facilities"
-    ],
-    images: [
-      "https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=1000",
-      "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1000"
-    ],
-    availability: true
-  },
-  {
-    id: "penthouse",
-    name: "Lagos Presidential Penthouse",
-    description: "Ultimate Nigerian luxury experience with panoramic views of Lagos, exclusive amenities and personalized service.",
-    price: 1200,
-    capacity: 4,
-    size: 1200,
-    bed: "King + 2 Queen",
-    amenities: [
-      "Dedicated High-Speed Wi-Fi",
-      "75\" Smart TV",
-      "Premium Bar with Nigerian spirits",
-      "24/7 Personal Butler",
-      "Advanced Climate System",
-      "Luxury Nigerian-sourced Toiletries",
-      "Biometric Safe",
-      "Executive Office",
-      "Separate Living Area",
-      "Full Kitchen",
-      "Private Terrace",
-      "Jacuzzi with Lagos views",
-      "Bose Sound System"
-    ],
-    images: [
-      "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&w=1000",
-      "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?auto=format&fit=crop&w=1000"
-    ],
+    images: [],
     availability: true
   }
 ];

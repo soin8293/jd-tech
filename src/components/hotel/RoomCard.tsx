@@ -1,10 +1,9 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Room } from "@/types/hotel.types";
-import { Bed, Users, Maximize, Check, Pencil, TrashIcon, Clock } from "lucide-react";
+import { Bed, Users, Maximize, Check, Pencil, TrashIcon, Clock, ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatNigerianTime } from "@/utils/availabilityUtils";
 
@@ -32,6 +31,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
   nextAvailableTime
 }) => {
   const isSelected = selectedRooms.some(r => r.id === room.id);
+  const hasImages = room.images && room.images.length > 0;
   
   return (
     <Card 
@@ -42,24 +42,38 @@ const RoomCard: React.FC<RoomCardProps> = ({
         className
       )}
     >
-      <div className="hotel-image-container h-48 relative">
-        <img
-          src={room.images[0]}
-          alt={room.name}
-          className="hotel-image w-full h-full object-cover"
-          loading="lazy"
-        />
-        <div className="image-overlay" />
-        
-        {!isAvailable && (
-          <div className="absolute top-0 right-0 left-0 bg-black bg-opacity-70 text-white py-2 px-4 text-center">
-            <p className="text-sm font-medium">Unavailable</p>
-            {nextAvailableTime && (
-              <p className="text-xs">Available after {formatNigerianTime(nextAvailableTime)}</p>
-            )}
-          </div>
-        )}
-      </div>
+      {hasImages ? (
+        <div className="hotel-image-container h-48 relative">
+          <img
+            src={room.images[0]}
+            alt={room.name}
+            className="hotel-image w-full h-full object-cover"
+            loading="lazy"
+          />
+          <div className="image-overlay" />
+          
+          {!isAvailable && (
+            <div className="absolute top-0 right-0 left-0 bg-black bg-opacity-70 text-white py-2 px-4 text-center">
+              <p className="text-sm font-medium">Unavailable</p>
+              {nextAvailableTime && (
+                <p className="text-xs">Available after {formatNigerianTime(nextAvailableTime)}</p>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="h-48 bg-muted flex items-center justify-center relative">
+          <ImageOff className="w-12 h-12 text-muted-foreground/50" />
+          {!isAvailable && (
+            <div className="absolute top-0 right-0 left-0 bg-black bg-opacity-70 text-white py-2 px-4 text-center">
+              <p className="text-sm font-medium">Unavailable</p>
+              {nextAvailableTime && (
+                <p className="text-xs">Available after {formatNigerianTime(nextAvailableTime)}</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
       
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-3">

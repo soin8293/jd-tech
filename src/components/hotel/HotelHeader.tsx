@@ -41,7 +41,7 @@ const HotelHeader: React.FC<HotelHeaderProps> = ({ className }) => {
       {/* Content */}
       <div className="absolute inset-0 flex flex-col justify-end px-6 md:px-8 lg:px-20 pb-10 md:pb-16 lg:pb-20 text-white z-10">
         <div className={cn(
-          "max-w-5xl animate-slide-up opacity-0 space-y-6", // Added space-y-6 for more vertical spacing
+          "max-w-5xl animate-slide-up opacity-0 space-y-6", 
           isMobile ? "mb-32" : ""
         )} style={{ animationDelay: "0.3s", animationFillMode: "forwards" }}>
           <div className="inline-flex items-center mb-4 bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-sm">
@@ -50,7 +50,7 @@ const HotelHeader: React.FC<HotelHeaderProps> = ({ className }) => {
           </div>
           
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight mb-4 text-balance">
-            {hotelDetails.name}
+            Book a Room
           </h1>
           
           <p className="text-lg md:text-xl text-white/90 max-w-3xl mb-8">

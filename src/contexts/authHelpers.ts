@@ -9,7 +9,8 @@ export function isDevelopmentEnvironment() {
     'lovableproject.com',
     'jd-suites-backend.web.app',
     'jd-suites-backend.firebaseapp.com',
-    'c09097ef-16d0-43bf-b1c5-ea78455f9bda.lovableproject.com'
+    'c09097ef-16d0-43bf-b1c5-ea78455f9bda.lovableproject.com',
+    'id-preview--c09097ef-16d0-43bf-b1c5-ea78455f9bda.lovable.app'
   ];
   console.log('Current hostname:', hostname);
   const isDev = validDomains.some(domain => hostname.includes(domain));
@@ -36,4 +37,3 @@ export async function checkAdminStatus(user: User, setIsAdmin: (v: boolean) => v
     return false;
   }
 }
-

@@ -1,6 +1,7 @@
 
 import { BookingDetails } from '@/types/hotel.types';
 
+// Define these as a union of string literals instead of separate types
 export type PaymentStatus = 'idle' | 'loading' | 'processing' | 'error' | 'success';
 export type APIErrorType = 'payment_failed' | 'booking_failed' | 'network_error' | 'unknown' | 'validation_error' | 'system_error';
 export type PaymentMethodType = 'card' | 'google_pay';

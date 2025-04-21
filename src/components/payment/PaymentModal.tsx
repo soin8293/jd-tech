@@ -31,6 +31,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   if (!bookingDetails) return null;
 
   const handleClose = () => {
+    // Fix: Use strict equality and compare to string literals
     if (paymentStatus !== 'loading' && paymentStatus !== 'processing') {
       onClose();
     }

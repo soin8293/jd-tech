@@ -134,4 +134,3 @@ const AdminList: React.FC = () => {
 };
 
 export default AdminList;
-

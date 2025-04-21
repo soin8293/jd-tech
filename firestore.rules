@@ -22,7 +22,7 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.token.admin == true;
     }
     
-    // Config document for admin emails
+    // Config document for admin emails - Allow any authenticated user to read
     match /config/admin {
       allow read: if request.auth != null;
       allow write: if false; // Only cloud functions can modify this

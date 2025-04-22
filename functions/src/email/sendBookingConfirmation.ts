@@ -1,8 +1,8 @@
-
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { stripe } from "../config/stripe";
 import { MailDataRequired } from "@sendgrid/mail";
+import sgMail from '@sendgrid/mail';
 
 /**
  * Cloud Function that sends booking confirmation emails with payment details
@@ -23,8 +23,7 @@ export const sendBookingConfirmation = functions.firestore
         return;
       }
       
-      // Initialize SendGrid if using the SendGrid extension
-      const sgMail = require('@sendgrid/mail');
+      // Initialize SendGrid
       sgMail.setApiKey(functions.config().sendgrid.key);
       
       // Retrieve payment details from Stripe if available

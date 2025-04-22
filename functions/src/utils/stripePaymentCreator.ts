@@ -18,6 +18,18 @@ interface CreatePaymentIntentParams {
 export const createStripePaymentIntent = async (params: CreatePaymentIntentParams) => {
   try {
     console.log("Creating Stripe payment intent with params:", JSON.stringify(params, null, 2));
+    
+    // Verify that Stripe is properly initialized
+    if (!stripe) {
+      console.error("Stripe instance is not properly initialized");
+      throw new functions.https.HttpsError(
+        'internal',
+        'Payment service unavailable',
+        { type: 'stripe_initialization_error' }
+      );
+    }
+    
+    // Create payment intent with detailed error handling
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(params.amount * 100),
       currency: params.currency,

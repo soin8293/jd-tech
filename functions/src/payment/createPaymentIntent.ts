@@ -1,4 +1,3 @@
-
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { calculateNumberOfNights, calculateRoomPrices } from "../utils/roomPriceCalculator";
@@ -132,4 +131,3 @@ export const createPaymentIntent = functions.https.onCall(
     }
   }
 );
-

@@ -1,3 +1,4 @@
+
 module.exports = {
   root: true,
   env: {
@@ -29,5 +30,6 @@ module.exports = {
     "quotes": ["error", "double"],
     "import/no-unresolved": 0,
     "indent": ["error", 2],
+    "@typescript-eslint/no-explicit-any": "off", // Turn off the no-explicit-any rule
   },
 };

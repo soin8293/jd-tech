@@ -1,9 +1,11 @@
+
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { 
   GoogleAuthProvider, 
-  signInWithPopup, 
+  signInWithRedirect,  // Changed from signInWithPopup
   signOut, 
   onAuthStateChanged,
+  getRedirectResult,  // Added to handle redirect result
   User
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -27,30 +29,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         projectId: auth.app.options.projectId
       });
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      console.log('Sign-in successful:', result.user.email);
-      await checkAdminStatus(result.user, setIsAdmin);
-      toast({
-        title: "Success",
-        description: "You have successfully signed in with Google",
-      });
+      
+      // Use signInWithRedirect instead of signInWithPopup
+      await signInWithRedirect(auth, provider);
+      
+      // Note: The actual result handling will be done in useEffect
     } catch (error: any) {
       console.error("Google sign-in error:", {
         code: error?.code,
         message: error?.message,
         details: error
       });
+      
       let errorMessage = "Could not sign in with Google. Please try again.";
+      
       if (error?.code === 'auth/unauthorized-domain') {
         const currentDomain = window.location.hostname;
         errorMessage = `Authentication Error: This domain (${currentDomain}) is not authorized in Firebase.`;
         console.error(`Unauthorized domain error. Domain "${currentDomain}" must be added to Firebase Console.`);
         console.error(`To fix this: Go to Firebase Console > Authentication > Settings > Authorized Domains and add "${currentDomain}"`);
+        
         toast({
           title: "Domain Not Authorized",
           description: errorMessage,
           variant: "destructive",
         });
+        
         setTimeout(() => {
           toast({
             title: "How to Fix",
@@ -59,15 +63,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         }, 1000);
       } else if (error?.code === 'auth/popup-closed-by-user') {
-        errorMessage = "Sign-in popup was closed before completion.";
+        errorMessage = "Sign-in was cancelled.";
       } else if (error?.code === 'auth/network-request-failed') {
         errorMessage = "Network error. Please check your internet connection.";
       }
+      
       toast({
         title: "Sign-in Failed",
         description: errorMessage,
         variant: "destructive",
       });
+      
       throw error;
     }
   };
@@ -112,18 +118,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    console.log('Setting up auth state listener');
+    console.log('Setting up auth state and redirect result listener');
+    
+    // Check for redirect result when the component mounts
+    const checkRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          console.log('Redirect sign-in successful:', result.user.email);
+          await checkAdminStatus(result.user, setIsAdmin);
+          
+          toast({
+            title: "Success",
+            description: "You have successfully signed in with Google",
+          });
+        }
+      } catch (error) {
+        console.error('Error handling redirect result:', error);
+        
+        toast({
+          title: "Sign-in Failed",
+          description: "Could not complete sign-in. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('Auth state changed:', user ? `User: ${user.email}` : 'No user');
       setCurrentUser(user);
+      
       if (user) {
         await checkAdminStatus(user, setIsAdmin);
       } else {
         setIsAdmin(false);
       }
+      
       setIsLoading(false);
     });
-    return unsubscribe;
+
+    // Check redirect result when component mounts
+    checkRedirectResult();
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const value = {
@@ -134,5 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     refreshUserClaims
   };
+  
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+

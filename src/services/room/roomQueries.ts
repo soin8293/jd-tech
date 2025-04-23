@@ -88,4 +88,3 @@ export const getRoom = async (roomId: string): Promise<Room | null> => {
     throw error;
   }
 };
-

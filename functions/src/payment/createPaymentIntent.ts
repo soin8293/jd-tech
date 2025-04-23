@@ -151,4 +151,3 @@ export const createPaymentIntent = functions.https.onCall(
     });
   }
 );
-

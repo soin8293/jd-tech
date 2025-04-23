@@ -144,4 +144,3 @@ export const processBooking = functions.https.onCall(
     });
   }
 );
-

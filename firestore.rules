@@ -7,6 +7,19 @@ service cloud.firestore {
     match /bookings/{bookingId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Allow users to update their own bookings if status is 'pending' 
+      allow update: if request.auth != null && 
+                      resource.data.userId == request.auth.uid && 
+                      resource.data.status == 'pending';
+      // Only admins can delete bookings
+      allow delete: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Anonymous booking access - for guests without accounts
+    // They can access their booking through a secure booking token
+    match /bookings/{bookingId} {
+      allow read: if resource.data.bookingToken == request.query.token && 
+                   request.query.email == resource.data.userEmail;
     }
     
     // Allow users to create support requests when logged in
@@ -22,6 +35,13 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.token.admin == true;
     }
     
+    // User profiles - users can only manage their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Admins can read all user profiles
+      allow read: if request.auth != null && request.auth.token.admin == true;
+    }
+    
     // Config document for admin emails - 
     // Allow any authenticated user to create if not existing, but only cloud functions can update/delete after.
     match /config/admin {
@@ -31,4 +51,3 @@ service cloud.firestore {
     }
   }
 }
-

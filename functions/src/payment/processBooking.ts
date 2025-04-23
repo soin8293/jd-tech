@@ -81,17 +81,15 @@ export const processBooking = functions.https.onCall(
       const bookingId = `booking-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       
       try {
-        // Store booking in Firestore
-        await storeBookingData(bookingId, paymentIntent, data);
+        // Store booking in Firestore with transaction support
+        const bookingRecord = await storeBookingData(bookingId, paymentIntent, data);
         
-        // Update room availability
-        await updateRoomsAfterBooking(bookingId, data.bookingDetails);
-        
-        // Return success response
+        // Return success response with booking token for anonymous access
         console.log(`Booking processed successfully. Booking ID: ${bookingId}`);
         return {
           success: true,
           bookingId: bookingId,
+          bookingToken: bookingRecord.bookingToken || undefined,
           paymentStatus: paymentIntent.status,
           message: "Booking confirmed successfully!"
         };

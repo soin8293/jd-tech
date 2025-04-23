@@ -18,6 +18,7 @@ export const usePaymentProcess = (
   const [paymentIntentId, setPaymentIntentId] = useState<string>('');
   const [transactionId, setTransactionId] = useState<string>('');
   const [bookingId, setBookingId] = useState<string>('');
+  const [bookingToken, setBookingToken] = useState<string>('');
   const [calculatedAmount, setCalculatedAmount] = useState<number | null>(null);
 
   // Reset state when modal is opened
@@ -29,6 +30,7 @@ export const usePaymentProcess = (
       setPaymentIntentId('');
       setTransactionId('');
       setBookingId('');
+      setBookingToken('');
       setCalculatedAmount(null);
     }
   }, [isOpen]);
@@ -119,7 +121,17 @@ export const usePaymentProcess = (
       
       if (response.success) {
         setBookingId(response.bookingId || '');
+        setBookingToken(response.bookingToken || '');
         setPaymentStatus('success');
+        
+        // Store booking info in local storage for later access
+        if (response.bookingId) {
+          localStorage.setItem('lastBookingId', response.bookingId);
+          
+          if (response.bookingToken) {
+            localStorage.setItem('lastBookingToken', response.bookingToken);
+          }
+        }
         
         // Show success toast
         toast({
@@ -130,7 +142,7 @@ export const usePaymentProcess = (
         // Notify parent component after a short delay
         setTimeout(() => {
           onPaymentComplete();
-        }, 2000);
+        }, 500);
       } else {
         setPaymentStatus('error');
         setErrorDetails(response.error || {
@@ -167,6 +179,7 @@ export const usePaymentProcess = (
     errorDetails,
     transactionId,
     bookingId,
+    bookingToken,
     processPayment,
     calculatedAmount,
   };

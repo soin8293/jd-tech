@@ -1,21 +1,20 @@
 
-import { BookingDetails } from '@/types/hotel.types';
+export type PaymentStatus = 'idle' | 'loading' | 'processing' | 'success' | 'error';
 
-// Define these as a union of string literals instead of separate types
-export type PaymentStatus = 'idle' | 'loading' | 'processing' | 'error' | 'success';
-export type APIErrorType = 'payment_failed' | 'booking_failed' | 'network_error' | 'unknown' | 'validation_error' | 'system_error';
-export type PaymentMethodType = 'card' | 'google_pay';
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'failed';
+export type PaymentMethodType = 'card' | 'google_pay' | 'apple_pay' | 'bank_transfer';
 
 export interface APIError {
-  type: APIErrorType;
+  type: string;
   message: string;
+  code?: string;
+  param?: string;
 }
 
 export interface PaymentResponse {
   success: boolean;
-  partial?: boolean; // For cases where payment succeeded but booking storage failed
+  partial?: boolean;
   bookingId?: string;
+  bookingToken?: string;
   paymentStatus?: string;
   message?: string;
   error?: APIError;
@@ -24,26 +23,11 @@ export interface PaymentResponse {
 export interface ProcessBookingData {
   paymentMethodId: string;
   clientSecret: string;
-  paymentIntentId: string; // Added for payment verification
-  bookingDetails: BookingDetails;
+  paymentIntentId: string;
+  bookingDetails: any;
   paymentType: PaymentMethodType;
   timestamp: string;
   transaction_id: string;
-  serverCalculatedAmount?: number;
-}
-
-export interface BookingRecord {
-  id: string;
-  paymentIntentId: string;
-  paymentMethodId: string;
-  paymentType: PaymentMethodType;
-  transaction_id: string;
-  bookingDetails: BookingDetails;
-  amount: number;
-  currency: string;
-  status: BookingStatus;
-  createdAt: Date;
-  userId: string;
-  failureReason?: string;
-  updatedAt?: Date;
+  userEmail?: string;
+  serverCalculatedAmount?: number | null;
 }

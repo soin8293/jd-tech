@@ -1,6 +1,7 @@
 
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
+import { v4 as uuidv4 } from 'uuid';
 
 export const storeBookingData = async (
   bookingId: string,
@@ -24,6 +25,21 @@ export const storeBookingData = async (
       guests: bookingData.bookingDetails?.guests
     }, null, 2));
     
+    // Create a secure booking token for anonymous users
+    const bookingToken = uuidv4();
+    
+    // Extract important data from nested bookingDetails to top level
+    const checkIn = bookingData.bookingDetails?.period?.checkIn;
+    const checkOut = bookingData.bookingDetails?.period?.checkOut;
+    const numberOfNights = bookData.bookingDetails?.numberOfNights ||
+      (checkIn && checkOut ? 
+        Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 3600 * 24)) : 
+        0);
+    const guests = bookingData.bookingDetails?.guests || 1;
+    const userId = bookingData.userId || bookingData.bookingDetails?.userId || 'guest';
+    const userEmail = bookingData.userEmail || bookingData.bookingDetails?.userEmail || null;
+    
+    // Structure the booking record
     const bookingRecord = {
       id: bookingId,
       paymentIntentId: paymentIntent.id,
@@ -31,18 +47,73 @@ export const storeBookingData = async (
       paymentType: bookingData.paymentType,
       transaction_id: bookingData.transaction_id,
       bookingDetails: bookingData.bookingDetails,
+      // Top-level fields for easier querying
+      checkIn,
+      checkOut,
+      numberOfNights,
+      guests,
+      rooms: bookingData.bookingDetails?.rooms || [],
       amount: paymentIntent.amount / 100,
       currency: paymentIntent.currency,
       status: 'confirmed',
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      userId: bookingData.bookingDetails.userId || 'guest',
-      userEmail: bookingData.bookingDetails.userEmail || null
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      userId,
+      userEmail,
+      bookingToken
     };
     
-    await admin.firestore().collection('bookings').doc(bookingId).set(bookingRecord);
+    // Run all operations in a transaction for data consistency
+    await admin.firestore().runTransaction(async (transaction) => {
+      // 1. Store the booking
+      const bookingRef = admin.firestore().collection('bookings').doc(bookingId);
+      transaction.set(bookingRef, bookingRecord);
+      
+      // 2. Update each room's availability
+      if (bookingData.bookingDetails?.rooms && bookingData.bookingDetails.rooms.length > 0) {
+        const bookingPeriod = {
+          checkIn: bookingData.bookingDetails.period.checkIn,
+          checkOut: bookingData.bookingDetails.period.checkOut
+        };
+        
+        bookingData.bookingDetails.rooms.forEach((room) => {
+          if (room.id) {
+            const roomRef = admin.firestore().collection('rooms').doc(room.id);
+            transaction.update(roomRef, {
+              bookings: admin.firestore.FieldValue.arrayUnion(bookingPeriod)
+            });
+          }
+        });
+      }
+      
+      // 3. If user has an account, update their profile with the booking reference
+      if (userId !== 'guest') {
+        const userRef = admin.firestore().collection('users').doc(userId);
+        const userDoc = await transaction.get(userRef);
+        
+        if (userDoc.exists) {
+          transaction.update(userRef, {
+            bookings: admin.firestore.FieldValue.arrayUnion(bookingId),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+        } else {
+          // Create a new user profile if none exists
+          transaction.set(userRef, {
+            email: userEmail,
+            bookings: [bookingId],
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      }
+    });
+    
     console.log(`Booking stored in Firestore with ID: ${bookingId}`);
     
-    return bookingRecord;
+    return {
+      ...bookingRecord,
+      bookingToken // Include the token in the response for sharing with the client
+    };
   } catch (firestoreError: any) {
     console.error("Error storing booking in Firestore:", {
       error: firestoreError,

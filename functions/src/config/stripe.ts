@@ -8,24 +8,42 @@ const STRIPE_SECRET_KEY = "sk_test_51QyqmqPpAASNRvfwC8UXu3gWJZXZux89ypB5gApsS3pQ
 // Try to get the key from environment variables first, then fall back to the hardcoded test key
 const getStripeSecretKey = () => {
   try {
+    console.log("STRIPE_CONFIG: Attempting to get Stripe secret key from Firebase config");
     const configKey = functions.config().stripe?.secret_key;
+    
     if (configKey) {
-      console.log("Using Stripe secret key from Firebase config");
+      console.log("STRIPE_CONFIG: Found Stripe secret key in Firebase config");
       return configKey;
     }
-    console.log("Firebase config Stripe key not found, using fallback test key");
+    
+    console.log("STRIPE_CONFIG: Firebase config Stripe key not found, using fallback test key");
     return STRIPE_SECRET_KEY;
   } catch (error) {
-    console.warn("Error accessing Firebase config, using fallback test key:", error);
+    console.warn("STRIPE_CONFIG: Error accessing Firebase config, using fallback test key:", error);
     return STRIPE_SECRET_KEY;
   }
 };
 
 // Initialize Stripe with Secret Key
-export const stripe = new Stripe(getStripeSecretKey(), {
-  apiVersion: "2023-08-16", // Using specific API version as recommended
-});
+const stripeKey = getStripeSecretKey();
+console.log(`STRIPE_CONFIG: Initializing Stripe with key prefix: ${stripeKey.substring(0, 8)}...`);
 
-// Log Stripe initialization (without exposing the full key)
-const keyPrefix = getStripeSecretKey().substring(0, 8);
-console.log(`Stripe initialized with key prefix: ${keyPrefix}...`);
+try {
+  const stripe = new Stripe(stripeKey, {
+    apiVersion: "2023-08-16", // Using specific API version as recommended
+  });
+  
+  console.log("STRIPE_CONFIG: Stripe initialized successfully with API version 2023-08-16");
+  
+  // Test the Stripe instance by fetching API version
+  const stripeAPIVersion = stripe.getApiField('version');
+  console.log("STRIPE_CONFIG: Verified Stripe connection with API version:", stripeAPIVersion);
+  
+  export { stripe };
+} catch (error) {
+  console.error("STRIPE_CONFIG: Failed to initialize Stripe:", error);
+  // Create a null or dummy Stripe instance to prevent runtime errors
+  // This will be checked in stripePaymentCreator.ts
+  export const stripe = null;
+  throw error; // Re-throw to ensure Firebase knows initialization failed
+}

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { BookingDetails } from "@/types/hotel.types";
 import { usePaymentProcess } from "@/hooks/usePaymentProcess";
@@ -23,6 +23,24 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onPaymentComplete,
 }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && bookingDetails) {
+      console.log("PAYMENT_MODAL: Modal opened with booking details:", {
+        period: {
+          checkIn: bookingDetails.period.checkIn,
+          checkOut: bookingDetails.period.checkOut
+        },
+        rooms: bookingDetails.rooms.map(r => ({
+          id: r.id,
+          name: r.name,
+          price: r.price
+        })),
+        guests: bookingDetails.guests,
+        totalPrice: bookingDetails.totalPrice
+      });
+    }
+  }, [isOpen, bookingDetails]);
   
   const {
     paymentStatus,
@@ -33,26 +51,43 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     processPayment,
     calculatedAmount,
   } = usePaymentProcess(isOpen, bookingDetails, () => {
+    console.log("PAYMENT_MODAL: Payment complete callback triggered");
     setShowConfirmation(true);
     onPaymentComplete();
   });
 
-  if (!bookingDetails) return null;
+  useEffect(() => {
+    console.log("PAYMENT_MODAL: Payment status changed:", paymentStatus);
+    if (errorDetails) {
+      console.error("PAYMENT_MODAL: Error details:", errorDetails);
+    }
+  }, [paymentStatus, errorDetails]);
+
+  if (!bookingDetails) {
+    console.error("PAYMENT_MODAL: No booking details provided");
+    return null;
+  }
 
   const handleClose = () => {
+    console.log("PAYMENT_MODAL: Close button clicked. Payment status:", paymentStatus);
     // Only allow closing if not processing payment or if showing confirmation
     if (paymentStatus !== 'loading' && paymentStatus !== 'processing' || showConfirmation) {
+      console.log("PAYMENT_MODAL: Closing modal");
       onClose();
       // Reset the confirmation view when closing
       setTimeout(() => setShowConfirmation(false), 300);
+    } else {
+      console.log("PAYMENT_MODAL: Cannot close during payment processing");
     }
   };
 
   const handlePayWithCard = async (paymentMethodId: string) => {
+    console.log("PAYMENT_MODAL: Pay with card initiated with payment method ID:", paymentMethodId);
     await processPayment('card', paymentMethodId);
   };
 
   const handleGooglePay = async (paymentMethodId: string) => {
+    console.log("PAYMENT_MODAL: Google Pay initiated with payment method ID:", paymentMethodId);
     await processPayment('google_pay', paymentMethodId);
   };
 

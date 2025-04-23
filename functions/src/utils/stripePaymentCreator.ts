@@ -17,11 +17,11 @@ interface CreatePaymentIntentParams {
 
 export const createStripePaymentIntent = async (params: CreatePaymentIntentParams) => {
   try {
-    console.log("Creating Stripe payment intent with params:", JSON.stringify(params, null, 2));
+    console.log("STRIPE_UTIL: Creating Stripe payment intent with params:", JSON.stringify(params, null, 2));
     
     // Verify that Stripe is properly initialized
     if (!stripe) {
-      console.error("Stripe instance is not properly initialized");
+      console.error("STRIPE_UTIL: Stripe instance is not properly initialized");
       throw new functions.https.HttpsError(
         'internal',
         'Payment service unavailable',
@@ -29,18 +29,37 @@ export const createStripePaymentIntent = async (params: CreatePaymentIntentParam
       );
     }
     
+    // Log Stripe API version and key validity check
+    try {
+      console.log("STRIPE_UTIL: Checking Stripe configuration");
+      const apiVersion = stripe.getApiField('version');
+      console.log("STRIPE_UTIL: Using Stripe API version:", apiVersion);
+    } catch (configError) {
+      console.error("STRIPE_UTIL: Error verifying Stripe configuration:", configError);
+    }
+    
     // Create payment intent with detailed error handling
-    const paymentIntent = await stripe.paymentIntents.create({
+    const intentPayload = {
       amount: Math.round(params.amount * 100),
       currency: params.currency,
       metadata: params.metadata,
       automatic_payment_methods: { enabled: true },
-    });
+    };
+    
+    console.log("STRIPE_UTIL: Calling stripe.paymentIntents.create with payload:", JSON.stringify(intentPayload, null, 2));
+    
+    const paymentIntent = await stripe.paymentIntents.create(intentPayload);
 
-    console.log("Payment intent created successfully:", {
+    console.log("STRIPE_UTIL: Payment intent created successfully. Response:", {
       id: paymentIntent.id,
       status: paymentIntent.status,
       amount: paymentIntent.amount,
+      clientSecret: paymentIntent.client_secret ? "present (masked)" : "missing",
+      object: paymentIntent.object,
+      created: paymentIntent.created,
+      currency: paymentIntent.currency,
+      paymentMethod: paymentIntent.payment_method,
+      metadata: paymentIntent.metadata
     });
 
     return {
@@ -48,7 +67,10 @@ export const createStripePaymentIntent = async (params: CreatePaymentIntentParam
       paymentIntentId: paymentIntent.id,
     };
   } catch (stripeError: any) {
-    console.error('Stripe error creating payment intent:', {
+    console.error('STRIPE_UTIL: Error creating payment intent. Full error object:', 
+      JSON.stringify(stripeError, Object.getOwnPropertyNames(stripeError)));
+    
+    console.error('STRIPE_UTIL: Stripe error creating payment intent:', {
       error: stripeError,
       code: stripeError.code,
       type: stripeError.type,

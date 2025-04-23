@@ -1,3 +1,4 @@
+
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { calculateNumberOfNights, calculateRoomPrices } from "../utils/roomPriceCalculator";
@@ -17,6 +18,14 @@ export const createPaymentIntent = functions.https.onCall(
       // Extract booking details from request
       const { rooms, period, guests, transaction_id, booking_reference } = data;
       const currency = data.currency || "usd";
+      
+      logEvent("Extracted booking details", { 
+        roomCount: rooms?.length, 
+        period, 
+        guests, 
+        transaction_id, 
+        currency 
+      });
 
       // Detailed input validation with extensive logging
       if (!rooms || !Array.isArray(rooms) || rooms.length === 0) {
@@ -37,6 +46,8 @@ export const createPaymentIntent = functions.https.onCall(
         );
       }
 
+      logEvent("Input validation passed");
+      
       // Initialize Firebase Admin if needed
       if (!admin.apps.length) {
         logEvent("Initializing Firebase Admin");
@@ -44,8 +55,9 @@ export const createPaymentIntent = functions.https.onCall(
       }
 
       // Calculate number of nights and room prices with additional logging
-      logEvent("Calculating booking details");
+      logEvent("Calling calculateNumberOfNights...");
       const numberOfNights = calculateNumberOfNights(period);
+      logEvent("Number of nights calculated", { numberOfNights });
       
       if (numberOfNights <= 0) {
         logEvent("VALIDATION ERROR: Invalid booking period - negative or zero nights", { period, numberOfNights });
@@ -57,11 +69,15 @@ export const createPaymentIntent = functions.https.onCall(
       }
       
       // Log rooms and nights before price calculation
-      logEvent("Rooms and Nights Details", { rooms, numberOfNights });
+      logEvent("Rooms and Nights Details", { 
+        rooms: rooms.map(r => ({ id: r.id, name: r.name, price: r.price })), 
+        numberOfNights 
+      });
       
+      logEvent("Calling calculateRoomPrices...");
       const { totalAmount, roomPrices } = await calculateRoomPrices(rooms, numberOfNights);
       
-      logEvent("Booking calculation completed", { 
+      logEvent("Room prices calculation completed", { 
         numberOfNights, 
         totalAmount, 
         roomPrices,
@@ -69,8 +85,8 @@ export const createPaymentIntent = functions.https.onCall(
       });
 
       // Create Stripe Payment Intent with extensive logging
-      logEvent("Attempting to create Stripe payment intent");
-      const stripePaymentIntent = await createStripePaymentIntent({
+      logEvent("Preparing to create Stripe payment intent");
+      const stripeParams = {
         amount: totalAmount,
         currency,
         metadata: {
@@ -81,10 +97,15 @@ export const createPaymentIntent = functions.https.onCall(
           guests: guests || 1,
           roomIds: rooms.map(room => room.id).join(',')
         }
-      });
+      };
+      
+      logEvent("Calling createStripePaymentIntent with params", stripeParams);
+      
+      const stripePaymentIntent = await createStripePaymentIntent(stripeParams);
       
       logEvent("Payment intent created successfully", { 
-        paymentIntentId: stripePaymentIntent.paymentIntentId 
+        paymentIntentId: stripePaymentIntent.paymentIntentId,
+        hasClientSecret: !!stripePaymentIntent.clientSecret 
       });
 
       return {
@@ -103,7 +124,8 @@ export const createPaymentIntent = functions.https.onCall(
         errorMessage: error.message,
         errorCode: error.code,
         errorDetails: error.details,
-        fullError: error
+        errorStack: error.stack,
+        fullError: JSON.stringify(error, Object.getOwnPropertyNames(error))
       });
       
       // If the error is already an HttpsError, pass it through
@@ -124,7 +146,7 @@ export const createPaymentIntent = functions.https.onCall(
           type: 'unknown_error', 
           details: { 
             error: error.message,
-            errorObject: JSON.stringify(error)
+            errorObject: JSON.stringify(error, Object.getOwnPropertyNames(error))
           } 
         }
       );

@@ -24,6 +24,7 @@ export const usePaymentProcess = (
   // Reset state when modal is opened
   useEffect(() => {
     if (isOpen) {
+      console.log("PAYMENT_PROCESS: Modal opened, resetting payment state");
       setPaymentStatus('idle');
       setErrorDetails(null);
       setClientSecret('');
@@ -44,6 +45,7 @@ export const usePaymentProcess = (
       // Generate a unique transaction ID for this booking attempt
       const generatedTransactionId = `txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       setTransactionId(generatedTransactionId);
+      console.log("PAYMENT_PROCESS: Generated transaction ID:", generatedTransactionId);
       
       // Call the Firebase Cloud Function to create a payment intent
       const createPaymentIntent = httpsCallable(functions, 'createPaymentIntent');
@@ -59,29 +61,52 @@ export const usePaymentProcess = (
         currency: 'usd'
       };
       
+      console.log("FRONTEND: Attempting to call createPaymentIntent with data:", paymentData);
+      
       createPaymentIntent(paymentData)
         .then((result: any) => {
           const data = result.data;
-          console.log("Payment intent created:", data);
+          console.log("FRONTEND: Successfully received response from createPaymentIntent:", data);
           
           setClientSecret(data.clientSecret);
           setPaymentIntentId(data.paymentIntentId);
           setCalculatedAmount(data.calculatedAmount);
           setPaymentStatus('idle');
+          
+          console.log("FRONTEND: Payment intent created and state updated:", {
+            clientSecret: data.clientSecret ? "present (masked)" : "missing",
+            paymentIntentId: data.paymentIntentId,
+            calculatedAmount: data.calculatedAmount
+          });
         })
         .catch((error) => {
-          console.error("Error creating payment intent:", error);
+          console.error("FRONTEND: Error calling createPaymentIntent function:", error);
+          console.error("FRONTEND: Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+          
           setErrorDetails({
             type: error.details?.type || 'unknown',
             message: error.message || "Failed to initialize payment"
           });
           setPaymentStatus('error');
+          
+          console.error("FRONTEND: Payment process state set to error:", {
+            errorType: error.details?.type || 'unknown',
+            errorMessage: error.message || "Failed to initialize payment"
+          });
         });
     }
   }, [isOpen, bookingDetails]);
 
   const processPayment = async (paymentType: PaymentMethodType, paymentMethodId: string) => {
+    console.log("PAYMENT_PROCESS: Starting payment processing with method:", paymentType);
+    
     if (!bookingDetails || !clientSecret || !paymentIntentId) {
+      console.error("PAYMENT_PROCESS: Missing required payment information:", {
+        hasBookingDetails: !!bookingDetails,
+        hasClientSecret: !!clientSecret,
+        hasPaymentIntentId: !!paymentIntentId
+      });
+      
       setPaymentStatus('error');
       setErrorDetails({
         type: 'unknown',
@@ -92,6 +117,7 @@ export const usePaymentProcess = (
     
     // Set processing state
     setPaymentStatus('processing');
+    console.log("PAYMENT_PROCESS: Payment status set to 'processing'");
     
     try {
       // Call the Firebase Cloud Function to process the booking
@@ -114,15 +140,29 @@ export const usePaymentProcess = (
         serverCalculatedAmount: calculatedAmount
       };
       
-      console.log("Processing payment with data:", bookingData);
+      console.log("FRONTEND: Calling processBooking with data:", {
+        ...bookingData,
+        clientSecret: "present (masked for security)",
+        bookingDetails: {
+          ...bookingData.bookingDetails,
+          rooms: `${bookingData.bookingDetails.rooms.length} rooms selected`
+        }
+      });
       
       const result = await processBooking(bookingData);
       const response = result.data as PaymentResponse;
+      
+      console.log("FRONTEND: Received processBooking response:", response);
       
       if (response.success) {
         setBookingId(response.bookingId || '');
         setBookingToken(response.bookingToken || '');
         setPaymentStatus('success');
+        
+        console.log("PAYMENT_PROCESS: Payment successful, booking created:", {
+          bookingId: response.bookingId,
+          hasToken: !!response.bookingToken
+        });
         
         // Store booking info in local storage for later access
         if (response.bookingId) {
@@ -141,6 +181,7 @@ export const usePaymentProcess = (
         
         // Notify parent component after a short delay
         setTimeout(() => {
+          console.log("PAYMENT_PROCESS: Triggering onPaymentComplete callback");
           onPaymentComplete();
         }, 500);
       } else {
@@ -150,6 +191,8 @@ export const usePaymentProcess = (
           message: 'Payment failed. Please try again.'
         });
         
+        console.error("PAYMENT_PROCESS: Payment failed with error:", response.error);
+        
         // Show error toast
         toast({
           title: "Payment Failed",
@@ -158,7 +201,9 @@ export const usePaymentProcess = (
         });
       }
     } catch (error: any) {
-      console.error("Error processing payment:", error);
+      console.error("FRONTEND: Error processing payment:", error);
+      console.error("FRONTEND: Full error object:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      
       setPaymentStatus('error');
       setErrorDetails({
         type: error.details?.type || 'unknown',

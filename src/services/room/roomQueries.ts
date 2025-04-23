@@ -2,7 +2,6 @@
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Room } from "@/types/hotel.types";
-import { seedRooms } from "./roomSeed";
 import { hotelRooms } from "@/data/hotel.data";
 
 const ROOMS_COLLECTION = "rooms";
@@ -13,35 +12,8 @@ export const getRooms = async (): Promise<Room[]> => {
     const roomsSnapshot = await getDocs(collection(db, ROOMS_COLLECTION));
     
     if (roomsSnapshot.empty) {
-      console.log("No rooms found in Firestore, seeding with default data");
-      try {
-        // Try to seed the database with default rooms
-        await seedRooms();
-        console.log("Rooms seeded successfully");
-        
-        // After seeding, attempt to fetch the rooms again
-        const seededSnapshot = await getDocs(collection(db, ROOMS_COLLECTION));
-        
-        if (!seededSnapshot.empty) {
-          const rooms: Room[] = [];
-          seededSnapshot.forEach((doc) => {
-            const data = doc.data();
-            rooms.push({ 
-              id: doc.id, 
-              ...data,
-              availability: data.availability !== false,
-              bookings: data.bookings || []
-            } as Room);
-          });
-          console.log("Fetched seeded rooms:", rooms);
-          return rooms;
-        }
-      } catch (error) {
-        console.error("Error seeding rooms:", error);
-      }
-      
-      // If seeding fails or refetching fails, return default rooms
-      console.log("Using default hotel rooms");
+      console.log("No rooms found in Firestore. Using default hotel rooms.");
+      // Simply fall back to static data; don't attempt to write to Firestore from the client
       return hotelRooms.map(room => ({
         ...room,
         availability: room.availability !== false,
@@ -116,3 +88,4 @@ export const getRoom = async (roomId: string): Promise<Room | null> => {
     throw error;
   }
 };
+

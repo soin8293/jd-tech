@@ -1,5 +1,5 @@
 
-import { BookingDetails } from "./booking.types";
+import { BookingDetails } from "../types/booking.types";
 
 export interface ProcessBookingData {
   paymentMethodId: string;

@@ -39,14 +39,14 @@ export const updateRoomAvailability = functions.pubsub
       }
       
       // Process each booking to update room availability
-      const roomUpdatesPromises = [];
+      const roomUpdatesPromises: Promise<void>[] = [];
       
       bookingsSnapshot.forEach(doc => {
         const booking = doc.data();
         const rooms = booking.bookingDetails.rooms || [];
         
         // For each room in the booking
-        rooms.forEach(room => {
+        rooms.forEach((room: { id: string }) => {
           if (!room.id) return;
           
           // Get the room document
@@ -63,7 +63,7 @@ export const updateRoomAvailability = functions.pubsub
             const bookings = roomData?.bookings || [];
             
             // Find bookings that are not today's checkout (we keep future bookings)
-            const updatedBookings = bookings.filter(b => {
+            const updatedBookings = bookings.filter((b: { checkOut: string | Date }) => {
               // Convert to YYYY-MM-DD format for comparison
               const checkoutDate = new Date(b.checkOut).toISOString().split('T')[0];
               return checkoutDate !== today;

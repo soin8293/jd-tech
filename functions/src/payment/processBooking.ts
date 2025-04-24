@@ -97,7 +97,6 @@ export const processBooking = functions.https.onCall(
         return {
           success: true,
           bookingId: bookingId,
-          bookingToken: bookingRecord.bookingToken || undefined,
           paymentStatus: paymentIntent.status,
           message: "Booking confirmed successfully!"
         };

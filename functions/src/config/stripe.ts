@@ -28,22 +28,21 @@ const getStripeSecretKey = () => {
 const stripeKey = getStripeSecretKey();
 console.log(`STRIPE_CONFIG: Initializing Stripe with key prefix: ${stripeKey.substring(0, 8)}...`);
 
+let stripeInstance: Stripe | null = null;
+
 try {
-  const stripe = new Stripe(stripeKey, {
+  stripeInstance = new Stripe(stripeKey, {
     apiVersion: "2023-08-16", // Using specific API version as recommended
   });
   
   console.log("STRIPE_CONFIG: Stripe initialized successfully with API version 2023-08-16");
   
   // Test the Stripe instance by fetching API version
-  const stripeAPIVersion = stripe.getApiField('version');
+  const stripeAPIVersion = stripeInstance.getApiField('version');
   console.log("STRIPE_CONFIG: Verified Stripe connection with API version:", stripeAPIVersion);
-  
-  export { stripe };
 } catch (error) {
   console.error("STRIPE_CONFIG: Failed to initialize Stripe:", error);
-  // Create a null or dummy Stripe instance to prevent runtime errors
-  // This will be checked in stripePaymentCreator.ts
-  export const stripe = null;
-  throw error; // Re-throw to ensure Firebase knows initialization failed
+  // stripeInstance remains null, which will be checked in stripePaymentCreator.ts
 }
+
+export const stripe = stripeInstance;

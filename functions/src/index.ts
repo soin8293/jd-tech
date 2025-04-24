@@ -1,4 +1,6 @@
+
 import * as admin from "firebase-admin";
+import * as functions from "firebase-functions";
 import { createPaymentIntent } from "./payment/createPaymentIntent";
 import { processBooking } from "./payment/processBooking";
 import { sendBookingConfirmation } from "./email/sendBookingConfirmation";

@@ -36,10 +36,6 @@ try {
   });
   
   console.log("STRIPE_CONFIG: Stripe initialized successfully with API version 2023-08-16");
-  
-  // Test the Stripe instance by fetching API version
-  const stripeAPIVersion = stripeInstance.getApiField('version');
-  console.log("STRIPE_CONFIG: Verified Stripe connection with API version:", stripeAPIVersion);
 } catch (error) {
   console.error("STRIPE_CONFIG: Failed to initialize Stripe:", error);
   // stripeInstance remains null, which will be checked in stripePaymentCreator.ts

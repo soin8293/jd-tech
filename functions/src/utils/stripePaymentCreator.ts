@@ -29,13 +29,14 @@ export const createStripePaymentIntent = async (params: CreatePaymentIntentParam
       );
     }
     
-    // Log Stripe API version and key validity check
-    try {
-      console.log("STRIPE_UTIL: Checking Stripe configuration");
-      const apiVersion = stripe.getApiField('version');
-      console.log("STRIPE_UTIL: Using Stripe API version:", apiVersion);
-    } catch (configError) {
-      console.error("STRIPE_UTIL: Error verifying Stripe configuration:", configError);
+    // Double-check before creating payment intent
+    if (!stripe) {
+      console.error("STRIPE_UTIL: Stripe instance is not available");
+      throw new functions.https.HttpsError(
+        'internal',
+        'Payment service unavailable',
+        { type: 'stripe_initialization_error' }
+      );
     }
     
     // Create payment intent with detailed error handling

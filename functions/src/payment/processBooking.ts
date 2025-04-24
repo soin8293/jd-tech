@@ -2,7 +2,6 @@
 import * as functions from "firebase-functions";
 import { stripe } from "../config/stripe";
 import { ProcessBookingData, PaymentResponse } from "../types/booking.process.types";
-import { updateRoomsAfterBooking } from "../utils/bookingRoomUpdater";
 import { storeBookingData } from "../utils/bookingDataStore";
 
 export const processBooking = functions.https.onCall(
@@ -25,6 +24,15 @@ export const processBooking = functions.https.onCall(
           "invalid-argument", 
           "Payment Intent ID is required to verify payment status",
           { type: 'validation_error' }
+        );
+      }
+      
+      if (!stripe) {
+        console.error("Stripe instance not available in processBooking");
+        throw new functions.https.HttpsError(
+          'internal',
+          'Payment service unavailable',
+          { type: 'configuration_error' }
         );
       }
       

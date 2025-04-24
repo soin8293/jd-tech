@@ -31,7 +31,7 @@ export const storeBookingData = async (
     // Extract important data from nested bookingDetails to top level
     const checkIn = bookingData.bookingDetails?.period?.checkIn;
     const checkOut = bookingData.bookingDetails?.period?.checkOut;
-    const numberOfNights = bookData.bookingDetails?.numberOfNights ||
+    const numberOfNights = bookingData.bookingDetails?.numberOfNights ||
       (checkIn && checkOut ? 
         Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 3600 * 24)) : 
         0);
@@ -76,7 +76,7 @@ export const storeBookingData = async (
           checkOut: bookingData.bookingDetails.period.checkOut
         };
         
-        bookingData.bookingDetails.rooms.forEach((room) => {
+        bookingData.bookingDetails.rooms.forEach((room: any) => {
           if (room.id) {
             const roomRef = admin.firestore().collection('rooms').doc(room.id);
             transaction.update(roomRef, {

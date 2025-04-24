@@ -63,7 +63,7 @@ export const createPaymentIntent = functions.https.onCall(
       }
 
       logEvent("Rooms and Nights Details", { 
-        rooms: rooms.map(r => ({ id: r.id, name: r.name, price: r.price })), 
+        rooms: rooms.map(r => ({ id: r.id, name: r.name || 'Room', price: r.price || 0 })), 
         numberOfNights 
       });
 

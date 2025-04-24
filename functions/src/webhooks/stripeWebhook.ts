@@ -11,6 +11,12 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
   const webhookSecret = functions.config().stripe.webhook_secret;
   const signature = req.headers['stripe-signature'];
   
+  if (!stripe) {
+    console.error("Stripe instance not available in stripeWebhook.");
+    res.status(500).send("Webhook Error: Payment service configuration error.");
+    return; // Exit the function
+  }
+  
   let event;
   
   try {

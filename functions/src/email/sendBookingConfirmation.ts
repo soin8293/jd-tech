@@ -1,3 +1,4 @@
+
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { stripe } from "../config/stripe";
@@ -31,30 +32,35 @@ export const sendBookingConfirmation = functions.firestore
       let paymentDetails = "";
       
       if (booking.paymentIntentId) {
-        try {
-          console.log(`Retrieving payment intent: ${booking.paymentIntentId}`);
-          paymentIntent = await stripe.paymentIntents.retrieve(booking.paymentIntentId);
-          
-          // Format payment information for the email
-          const amount = (paymentIntent.amount / 100).toFixed(2);
-          const currency = paymentIntent.currency.toUpperCase();
-          const paymentMethod = paymentIntent.payment_method_types.join(", ");
-          const paymentDate = new Date(paymentIntent.created * 1000).toLocaleDateString();
-          
-          paymentDetails = `
-            <h3>Payment Details:</h3>
-            <ul>
-              <li>Amount: ${currency} ${amount}</li>
-              <li>Payment Method: ${paymentMethod}</li>
-              <li>Transaction Date: ${paymentDate}</li>
-              ${paymentIntent.receipt_url ? 
-                `<li><a href="${paymentIntent.receipt_url}" style="color: #3366CC;">View Payment Receipt</a></li>` 
-                : ""}
-            </ul>
-          `;
-        } catch (error) {
-          console.error("Error retrieving payment intent:", error);
-          paymentDetails = "<p>Payment information is not available at this time.</p>";
+        if (!stripe) {
+          console.error("Stripe instance not available in sendBookingConfirmation.");
+          paymentDetails = "<p>Payment service unavailable.</p>";
+        } else {
+          try {
+            console.log(`Retrieving payment intent: ${booking.paymentIntentId}`);
+            paymentIntent = await stripe.paymentIntents.retrieve(booking.paymentIntentId);
+            
+            // Format payment information for the email
+            const amount = (paymentIntent.amount / 100).toFixed(2);
+            const currency = paymentIntent.currency.toUpperCase();
+            const paymentMethod = paymentIntent.payment_method_types.join(", ");
+            const paymentDate = new Date(paymentIntent.created * 1000).toLocaleDateString();
+            
+            paymentDetails = `
+              <h3>Payment Details:</h3>
+              <ul>
+                <li>Amount: ${currency} ${amount}</li>
+                <li>Payment Method: ${paymentMethod}</li>
+                <li>Transaction Date: ${paymentDate}</li>
+                ${paymentIntent.receipt_url ? 
+                  `<li><a href="${paymentIntent.receipt_url}" style="color: #3366CC;">View Payment Receipt</a></li>` 
+                  : ""}
+              </ul>
+            `;
+          } catch (error) {
+            console.error("Error retrieving payment intent:", error);
+            paymentDetails = "<p>Payment information is not available at this time.</p>";
+          }
         }
       } else {
         console.log("No payment intent ID available for this booking");
@@ -63,7 +69,7 @@ export const sendBookingConfirmation = functions.firestore
       
       // Format booking details for the email
       const roomsBooked = booking.bookingDetails?.rooms.map((room: any) => 
-        `${room.name} (${room.bed})`).join(", ") || "Not specified";
+        `${room.name || 'Room'} (${room.bed || 'Standard'})`).join(", ") || "Not specified";
         
       const checkInDate = booking.period?.startDate ? 
         new Date(booking.period.startDate.seconds * 1000).toLocaleDateString() : 

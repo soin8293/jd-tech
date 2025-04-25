@@ -90,7 +90,8 @@ export const processBooking = functions.https.onCall(
       
       try {
         // Store booking in Firestore with transaction support
-        const bookingRecord = await storeBookingData(bookingId, paymentIntent, data);
+        // MODIFIED: Removed bookingRecord variable assignment
+        await storeBookingData(bookingId, paymentIntent, data);
         
         // Return success response with booking token for anonymous access
         console.log(`Booking processed successfully. Booking ID: ${bookingId}`);

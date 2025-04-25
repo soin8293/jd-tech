@@ -1,3 +1,4 @@
+
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
@@ -71,8 +72,8 @@ export const updateRoomAvailability = functions.pubsub
             
             console.log(`Updating room ${room.id} - removing today's checkout bookings`);
             
-            // Update the room with filtered bookings
-            return roomRef.update({
+            // Update the room with filtered bookings - MODIFIED: removed return keyword
+            await roomRef.update({
               bookings: updatedBookings
             });
           });

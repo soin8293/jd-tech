@@ -1,5 +1,8 @@
-// Firebase Cloud Function URLs
+
+// Define any API endpoints or configurations here
 export const API_ENDPOINTS = {
-  CREATE_PAYMENT_INTENT: 'https://us-central1-jd-suites-backend.cloudfunctions.net/createPaymentIntent',
-  PROCESS_BOOKING: 'https://us-central1-jd-suites-backend.cloudfunctions.net/processBooking',
+  // We're now using Firebase Functions SDK with httpsCallable
+  // These URLs are kept for reference only
+  CREATE_PAYMENT_INTENT: 'createPaymentIntent',
+  PROCESS_BOOKING: 'processBooking',
 };

@@ -18,6 +18,13 @@ export interface PaymentResponse {
   paymentStatus?: string;
   message?: string;
   error?: APIError;
+  clientSecret?: string;
+  paymentIntentId?: string;
+  calculatedAmount?: number;
+  details?: {
+    nights?: number;
+    roomCount?: number;
+  };
 }
 
 export interface ProcessBookingData {

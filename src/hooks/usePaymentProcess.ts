@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { BookingDetails } from "@/types/hotel.types";
 import { PaymentStatus, APIError, PaymentResponse, ProcessBookingData, PaymentMethodType } from "@/components/payment/payment.types";

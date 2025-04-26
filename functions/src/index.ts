@@ -62,7 +62,7 @@ export const updateRoomAvailability = functions.pubsub
           const roomRef = admin.firestore().collection('rooms').doc(room.id);
           
           // Create a promise for this room update
-          const roomUpdatePromise = roomRef.get().then(roomDoc => {
+          const roomUpdatePromise = roomRef.get().then(async roomDoc => {
             if (!roomDoc.exists) {
               console.log(`Room ${room.id} not found, skipping`);
               return;
@@ -80,7 +80,7 @@ export const updateRoomAvailability = functions.pubsub
             
             console.log(`Updating room ${room.id} - removing today's checkout bookings`);
             
-            // Update the room with filtered bookings - MODIFIED: removed return keyword
+            // Update the room with filtered bookings - MODIFIED: added async
             await roomRef.update({
               bookings: updatedBookings
             });

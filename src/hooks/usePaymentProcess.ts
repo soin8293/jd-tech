@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { BookingDetails } from "@/types/hotel.types";
+import { BookingData } from "@/types/hotel.types";
 import { PaymentStatus, APIError, PaymentResponse, ProcessBookingData, PaymentMethodType } from "@/components/payment/payment.types";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/lib/firebase";
@@ -8,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 
 export const usePaymentProcess = (
   isOpen: boolean,
-  bookingDetails: BookingDetails | null,
+  bookingDetails: BookingData | null,
   onPaymentComplete: () => void
 ) => {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');

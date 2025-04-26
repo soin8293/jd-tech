@@ -1,5 +1,5 @@
 
-import { BookingDetails } from "../types/booking.types";
+import { BookingData } from "../types/booking.types";
 
 export interface ProcessBookingData {
   paymentMethodId: string;
@@ -7,7 +7,7 @@ export interface ProcessBookingData {
   paymentType: string;
   transaction_id: string;
   paymentIntentId: string;
-  bookingDetails: BookingDetails;
+  bookingDetails: BookingData;
   serverCalculatedAmount?: number;
   timestamp?: string;
   userEmail?: string;

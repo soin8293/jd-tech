@@ -1,5 +1,16 @@
 
-import { BookingData } from "../types/booking.types";
+import { BookingPeriod, Room } from "../types/booking.types";
+
+// Define our own BookingData type since it's not exported from booking.types
+export interface BookingData {
+  period: BookingPeriod;
+  guests: number;
+  rooms: Room[];
+  totalPrice: number;
+  userEmail?: string;
+  contactPhone?: string;
+  specialRequests?: string;
+}
 
 export interface ProcessBookingData {
   paymentMethodId: string;
@@ -18,6 +29,7 @@ export interface PaymentResponse {
   success: boolean;
   partial?: boolean;
   bookingId?: string;
+  bookingToken?: string;
   paymentStatus?: string;
   message?: string;
   error?: {

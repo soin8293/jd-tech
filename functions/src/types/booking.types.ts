@@ -1,6 +1,7 @@
 
 export interface Room {
   id?: string;
+  name?: string; // Adding optional name property
   price: number;
 }
 

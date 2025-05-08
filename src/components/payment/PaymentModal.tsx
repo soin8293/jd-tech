@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { BookingDetails } from "@/types/hotel.types";
-import { usePaymentProcess } from "@/hooks/usePaymentProcess";
+import { usePaymentProcess } from "@/hooks/payment";
 import PaymentContent from "./PaymentContent";
 import BookingConfirmationContent from "./BookingConfirmationContent";
 import StripeWrapper from "./StripeWrapper";

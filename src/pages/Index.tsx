@@ -81,6 +81,16 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* AmirahCo Footer */}
+      <footer className="bg-muted/50 py-8 mt-16">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            Powered by <span className="font-semibold text-primary">AmirahCo</span> - 
+            Empowering people, organisations, and communities for an AI-dominated world through open, human-centred technology.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };

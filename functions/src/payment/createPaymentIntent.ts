@@ -1,5 +1,5 @@
 
-import * as functions from "firebase-functions";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { calculateNumberOfNights, calculateRoomPrices } from "../utils/roomPriceCalculator";
 import { createStripePaymentIntent } from "../utils/stripePaymentCreator";
@@ -9,12 +9,12 @@ const logEvent = (event: string, data?: any) => {
   console.log(`[CREATE-PAYMENT-INTENT] ${event}${data ? ': ' + JSON.stringify(data, null, 2) : ''}`);
 };
 
-export const createPaymentIntent = functions.https.onCall(
-  async (data: CreatePaymentIntentData, context: functions.https.CallableContext): Promise<CreatePaymentIntentResponse> => {
+export const createPaymentIntent = onCall(
+  async (request): Promise<CreatePaymentIntentResponse> => {
     try {
-      logEvent("Function started with full input data", data);
-      const { rooms, period, guests, transaction_id, booking_reference } = data;
-      const currency = data.currency || "usd";
+      logEvent("Function started with full input data", request.data);
+      const { rooms, period, guests, transaction_id, booking_reference } = request.data as CreatePaymentIntentData;
+      const currency = request.data.currency || "usd";
   
       logEvent("Extracted booking details", { 
         roomCount: rooms?.length, 
@@ -26,7 +26,7 @@ export const createPaymentIntent = functions.https.onCall(
 
       if (!rooms || !Array.isArray(rooms) || rooms.length === 0) {
         logEvent("VALIDATION ERROR: Invalid rooms data", { rooms });
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
           "invalid-argument", 
           "No rooms provided for booking.",
           { type: "validation_error", field: "rooms" }
@@ -35,7 +35,7 @@ export const createPaymentIntent = functions.https.onCall(
 
       if (!period || !period.checkIn || !period.checkOut) {
         logEvent("VALIDATION ERROR: Invalid period data", { period });
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
           "invalid-argument", 
           "Invalid booking period.",
           { type: "validation_error", field: "period" }
@@ -55,7 +55,7 @@ export const createPaymentIntent = functions.https.onCall(
 
       if (numberOfNights <= 0) {
         logEvent("VALIDATION ERROR: Invalid booking period - negative or zero nights", { period, numberOfNights });
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
           "invalid-argument", 
           "Check-in must be before check-out date.",
           { type: "validation_error", field: "period" }
@@ -117,7 +117,7 @@ export const createPaymentIntent = functions.https.onCall(
         fullError: JSON.stringify(error, Object.getOwnPropertyNames(error))
       });
 
-      if (error instanceof functions.https.HttpsError) {
+      if (error instanceof HttpsError) {
         console.error('Forwarding HttpsError:', {
           code: error.code,
           message: error.message,
@@ -126,7 +126,7 @@ export const createPaymentIntent = functions.https.onCall(
         throw error;
       }
 
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'internal',
         error.message || 'Failed to create payment intent',
         { 

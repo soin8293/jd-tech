@@ -1,26 +1,26 @@
 
-import * as functions from "firebase-functions";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { stripe } from "../config/stripe";
 import { ProcessBookingData, PaymentResponse } from "../types/booking.process.types";
 import { storeBookingData } from "../utils/bookingDataStore";
 
-export const processBooking = functions.https.onCall(
-  async (data: ProcessBookingData, context: functions.https.CallableContext): Promise<PaymentResponse> => {
+export const processBooking = onCall(
+  async (request): Promise<PaymentResponse> => {
     try {
       console.log("Processing booking with data:", JSON.stringify({
-        paymentIntentId: data.paymentIntentId,
-        paymentType: data.paymentType,
-        transaction_id: data.transaction_id,
-        userEmail: data.userEmail || 'not provided',
-        timestamp: data.timestamp,
-        rooms: data.bookingDetails?.rooms?.length || 0,
+        paymentIntentId: request.data.paymentIntentId,
+        paymentType: request.data.paymentType,
+        transaction_id: request.data.transaction_id,
+        userEmail: request.data.userEmail || 'not provided',
+        timestamp: request.data.timestamp,
+        rooms: request.data.bookingDetails?.rooms?.length || 0,
       }, null, 2));
       
-      const { paymentIntentId } = data;
+      const { paymentIntentId } = request.data as ProcessBookingData;
       
       if (!paymentIntentId) {
         console.error("Missing paymentIntentId in processBooking request");
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
           "invalid-argument", 
           "Payment Intent ID is required to verify payment status",
           { type: 'validation_error' }
@@ -29,7 +29,7 @@ export const processBooking = functions.https.onCall(
       
       if (!stripe) {
         console.error("Stripe instance not available in processBooking");
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
           'internal',
           'Payment service unavailable',
           { type: 'configuration_error' }
@@ -62,7 +62,7 @@ export const processBooking = functions.https.onCall(
         });
         console.error("Stripe error details:", JSON.stringify(stripeError, null, 2));
         
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
           "unavailable",
           "Could not verify payment status with Stripe. Please try again later.",
           { type: 'network_error' }
@@ -74,9 +74,9 @@ export const processBooking = functions.https.onCall(
         console.error(`Payment verification failed. Status: ${paymentIntent.status}`, {
           paymentIntentId,
           currentStatus: paymentIntent.status,
-          transaction_id: data.transaction_id
+          transaction_id: request.data.transaction_id
         });
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
           "failed-precondition", 
           `Payment not completed successfully. Current status: ${paymentIntent.status}`,
           { type: 'payment_failed' }
@@ -90,8 +90,7 @@ export const processBooking = functions.https.onCall(
       
       try {
         // Store booking in Firestore with transaction support
-        // MODIFIED: Removed bookingRecord variable assignment
-        await storeBookingData(bookingId, paymentIntent, data);
+        await storeBookingData(bookingId, paymentIntent, request.data as ProcessBookingData);
         
         // Return success response with booking token for anonymous access
         console.log(`Booking processed successfully. Booking ID: ${bookingId}`);
@@ -111,7 +110,7 @@ export const processBooking = functions.https.onCall(
           stack: error.stack,
           bookingId,
           paymentIntentId,
-          transaction_id: data.transaction_id
+          transaction_id: request.data.transaction_id
         });
         
         return {
@@ -130,8 +129,8 @@ export const processBooking = functions.https.onCall(
         code: error.code,
         type: error.details?.type || 'unknown',
         stack: error.stack,
-        transaction_id: data?.transaction_id || 'unknown',
-        paymentIntentId: data?.paymentIntentId || 'unknown'
+        transaction_id: request.data?.transaction_id || 'unknown',
+        paymentIntentId: request.data?.paymentIntentId || 'unknown'
       });
       
       return {

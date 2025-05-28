@@ -1,55 +1,55 @@
 
 import * as admin from "firebase-admin";
-import * as functions from "firebase-functions";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 
 /**
  * Grants or revokes admin custom claims for a user based on email.
  * Must be called by an existing admin.
  */
-export const manageAdminRole = functions.https.onCall(async (data, context) => {
-  console.log("manageAdminRole function called with data:", data);
-  console.log("Auth context:", context.auth);
+export const manageAdminRole = onCall(async (request) => {
+  console.log("manageAdminRole function called with data:", request.data);
+  console.log("Auth context:", request.auth);
   
   // 1. Check if the caller is an admin
-  if (!context.auth) {
+  if (!request.auth) {
     console.error("Authentication required: No auth context provided");
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       "unauthenticated",
       "Authentication required to manage roles."
     );
   }
   
   // Check if token exists before accessing admin property
-  if (!context.auth.token) {
-    console.error("Token missing in auth context:", context.auth);
-    throw new functions.https.HttpsError(
+  if (!request.auth.token) {
+    console.error("Token missing in auth context:", request.auth);
+    throw new HttpsError(
       "permission-denied",
       "Authentication token is missing or invalid."
     );
   }
   
   // Check the admin claim specifically
-  if (context.auth.token.admin !== true) {
+  if (request.auth.token.admin !== true) {
     console.error("Permission denied: Caller is not an admin", {
-      uid: context.auth.uid,
-      email: context.auth.token.email,
-      claims: context.auth.token
+      uid: request.auth.uid,
+      email: request.auth.token.email,
+      claims: request.auth.token
     });
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       "permission-denied",
       "Caller must be an admin to manage roles."
     );
   }
   
   // 2. Validate input data
-  const email = data.email;
-  const makeAdmin = !!data.makeAdmin; // Ensure boolean
+  const email = request.data.email;
+  const makeAdmin = !!request.data.makeAdmin; // Ensure boolean
   
   console.log(`Managing admin role for email: ${email}, makeAdmin: ${makeAdmin}`);
   
   if (!email || typeof email !== "string") {
     console.error("Invalid argument: Email not provided or not a string", { email });
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       "invalid-argument",
       "Email must be provided and be a string."
     );
@@ -71,12 +71,12 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
       });
       
       if (getUserError.code === 'auth/user-not-found') {
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
           "not-found", 
           `User with email ${email} not found.`
         );
       }
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         "internal",
         `Failed to retrieve user: ${getUserError.message}`,
         { originalError: getUserError.code }
@@ -99,7 +99,7 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
         stack: setClaimsError.stack
       });
       
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         "internal", 
         "Failed to set custom claims",
         { error: setClaimsError.message }
@@ -164,7 +164,7 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
     };
     console.error("Detailed error information:", errorDetails);
     
-    if (error instanceof functions.https.HttpsError) {
+    if (error instanceof HttpsError) {
       // If it's already an HttpsError, just rethrow it
       throw error;
     }
@@ -175,14 +175,14 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
       // Check for Auth-specific errors
       if ('code' in error) {
         if (error.code === 'auth/user-not-found') {
-          throw new functions.https.HttpsError(
+          throw new HttpsError(
             "not-found", 
             `User with email ${email} not found.`
           );
         }
         
         if (error.code === 'auth/invalid-email') {
-          throw new functions.https.HttpsError(
+          throw new HttpsError(
             "invalid-argument", 
             `The email address ${email} is not valid.`
           );
@@ -191,7 +191,7 @@ export const manageAdminRole = functions.https.onCall(async (data, context) => {
     }
     
     // Handle other potential errors
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       "internal", 
       "An unexpected error occurred while managing admin role.",
       { 

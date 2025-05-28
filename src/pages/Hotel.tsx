@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { BookingPeriod, Room, BookingDetails, RoomAvailabilityCheck } from "@/types/hotel.types";
@@ -6,7 +5,6 @@ import HotelHeader from "@/components/hotel/HotelHeader";
 import BookingForm from "@/components/hotel/BookingForm";
 import InitializeAdmin from "@/components/admin/InitializeAdmin";
 import { useAuth } from "@/contexts/AuthContext";
-import { getRooms, getAvailableRooms } from "@/services/room/roomService";
 import { checkRoomAvailability } from "@/utils/availabilityUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -14,6 +12,7 @@ import { addDays, differenceInDays, format } from "date-fns";
 import PaymentModal from "@/components/payment/PaymentModal";
 import RoomList from "@/components/hotel/RoomList";
 import FloatingBookButton from "@/components/hotel/FloatingBookButton";
+import { fetchRoomData } from "@/utils/roomDataOperations";
 
 const Hotel = () => {
   const { toast } = useToast();
@@ -31,6 +30,30 @@ const Hotel = () => {
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [allRooms, setAllRooms] = useState<Room[]>([]);
+  const [usingLocalData, setUsingLocalData] = useState(false);
+
+  // Load all rooms on component mount
+  useEffect(() => {
+    const loadRooms = async () => {
+      setIsLoading(true);
+      try {
+        await fetchRoomData(
+          setAllRooms,
+          () => {}, // error setter - we'll handle this locally
+          setUsingLocalData,
+          false, // hasShownLocalDataToast
+          () => {} // setHasShownLocalDataToast
+        );
+      } catch (error) {
+        console.error("Error loading rooms:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadRooms();
+  }, []);
 
   const handleSearchRooms = async (period: BookingPeriod, guestCount: number) => {
     setIsLoading(true);
@@ -39,8 +62,8 @@ const Hotel = () => {
     setHasSearched(true);
     
     try {
-      const roomsData = await getAvailableRooms(period.checkIn, period.checkOut);
-      const filteredRooms = roomsData.filter(room => room.capacity >= guestCount);
+      // Filter rooms based on capacity and availability
+      const filteredRooms = allRooms.filter(room => room.capacity >= guestCount);
       setAvailableRooms(filteredRooms);
       
       const availabilityChecks: Record<string, RoomAvailabilityCheck> = {};
@@ -50,11 +73,11 @@ const Hotel = () => {
       
       setRoomAvailability(availabilityChecks);
     } catch (error) {
-      console.error("Error fetching rooms:", error);
+      console.error("Error filtering rooms:", error);
       
       toast({
-        title: "Error fetching rooms",
-        description: "Unable to load room data. Please check your connection and try again.",
+        title: "Error filtering rooms",
+        description: "Unable to filter room data. Please try again.",
         variant: "destructive",
       });
       
@@ -155,6 +178,14 @@ const Hotel = () => {
             </div>
           )}
         </div>
+
+        {usingLocalData && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-700">
+              Currently showing demo room data. Connect to Firestore to see live data.
+            </p>
+          </div>
+        )}
         
         {hasSearched && (
           <div className="mt-6">

@@ -1,4 +1,3 @@
-
 import { Room } from "@/types/hotel.types";
 import { getRooms as fetchRoomsDirectly } from "@/services/room/roomQueries";
 import { getRooms as fetchRoomsFromService } from "@/services/room/roomService";
@@ -15,7 +14,7 @@ const fallbackRooms: Room[] = [
     size: 550,
     bed: "King",
     amenities: ["WiFi", "Smart TV", "Nespresso Machine", "Mini Bar", "Work Desk", "Rain Shower", "City View"],
-    images: ["/images/rooms/denver_king_suite_01.jpg", "/images/rooms/denver_king_suite_02.jpg"],
+    images: ["https://images.unsplash.com/photo-1466442929976-97f336a657be?w=800&h=600&fit=crop"],
     availability: true,
     bookings: []
   },
@@ -28,7 +27,7 @@ const fallbackRooms: Room[] = [
     size: 520,
     bed: "King",
     amenities: ["WiFi", "Smart TV", "Coffee Maker", "Mini Fridge", "Seating Area", "Mountain View"],
-    images: ["/images/rooms/colorado_springs_peak_view_01.jpg"],
+    images: ["https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=800&h=600&fit=crop"],
     availability: true,
     bookings: []
   },
@@ -41,7 +40,7 @@ const fallbackRooms: Room[] = [
     size: 380,
     bed: "Queen",
     amenities: ["WiFi", "HDTV", "Coffee Maker", "Eco-Friendly Toiletries"],
-    images: ["/images/rooms/boulder_flatirons_retreat_01.jpg"],
+    images: ["https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=800&h=600&fit=crop"],
     availability: true,
     bookings: []
   },
@@ -54,7 +53,7 @@ const fallbackRooms: Room[] = [
     size: 360,
     bed: "Queen",
     amenities: ["WiFi", "HDTV", "Local Coffee Selection", "Mini Fridge"],
-    images: ["/images/rooms/fort_collins_craft_corner_01.jpg"],
+    images: ["https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&h=600&fit=crop"],
     availability: true,
     bookings: []
   },
@@ -67,7 +66,7 @@ const fallbackRooms: Room[] = [
     size: 350,
     bed: "Queen",
     amenities: ["WiFi", "HDTV", "Work Desk", "Tea Kettle"],
-    images: ["/images/rooms/aurora_gateway_room_01.jpg"],
+    images: ["https://images.unsplash.com/photo-1485833077593-4278bba3f11f?w=800&h=600&fit=crop"],
     availability: true,
     bookings: []
   },
@@ -80,7 +79,7 @@ const fallbackRooms: Room[] = [
     size: 340,
     bed: "Queen",
     amenities: ["WiFi", "HDTV", "Iron & Board", "Hair Dryer"],
-    images: ["/images/rooms/pueblo_historic_charm_01.jpg"],
+    images: ["https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=800&h=600&fit=crop"],
     availability: true,
     bookings: []
   },
@@ -93,7 +92,7 @@ const fallbackRooms: Room[] = [
     size: 400,
     bed: "Queen",
     amenities: ["WiFi", "Smart TV", "Plush Robes", "Fireplace (Electric)"],
-    images: ["/images/rooms/vail_alpine_escape_01.jpg"],
+    images: ["https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&h=600&fit=crop"],
     availability: true,
     bookings: []
   },
@@ -106,7 +105,7 @@ const fallbackRooms: Room[] = [
     size: 420,
     bed: "Queen",
     amenities: ["WiFi", "Smart TV", "Premium Linens", "Mini Bar", "Designer Toiletries"],
-    images: ["/images/rooms/aspen_luxury_haven_01.jpg"],
+    images: ["https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=800&h=600&fit=crop"],
     availability: true,
     bookings: []
   },
@@ -119,7 +118,7 @@ const fallbackRooms: Room[] = [
     size: 370,
     bed: "Queen",
     amenities: ["WiFi", "HDTV", "Spa-Inspired Bath Products", "Yoga Mat"],
-    images: ["/images/rooms/glenwood_springs_sojourn_01.jpg"],
+    images: ["https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=800&h=600&fit=crop"],
     availability: true,
     bookings: []
   },
@@ -132,7 +131,7 @@ const fallbackRooms: Room[] = [
     size: 355,
     bed: "Queen",
     amenities: ["WiFi", "HDTV", "Art Supplies (Sketchpad & Pencils)", "Reading Lamp"],
-    images: ["/images/rooms/loveland_art_nook_01.jpg"],
+    images: ["https://images.unsplash.com/photo-1485833077593-4278bba3f11f?w=800&h=600&fit=crop"],
     availability: true,
     bookings: []
   },
@@ -145,7 +144,7 @@ const fallbackRooms: Room[] = [
     size: 365,
     bed: "Queen",
     amenities: ["WiFi", "HDTV", "Vintage Alarm Clock", "Local Guidebooks"],
-    images: ["/images/rooms/durango_railway_rest_01.jpg"],
+    images: ["https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&h=600&fit=crop"],
     availability: true,
     bookings: []
   }

@@ -1,7 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { BookingPeriod, Room, BookingDetails, RoomAvailabilityCheck } from "@/types/hotel.types";
-import { hotelRooms } from "@/data/hotel.data";
 import HotelHeader from "@/components/hotel/HotelHeader";
 import BookingForm from "@/components/hotel/BookingForm";
 import InitializeAdmin from "@/components/admin/InitializeAdmin";
@@ -25,7 +25,7 @@ const Hotel = () => {
     checkOut: addDays(new Date(), 3),
   });
   const [guests, setGuests] = useState<number>(2);
-  const [availableRooms, setAvailableRooms] = useState<Room[]>(hotelRooms);
+  const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
   const [roomAvailability, setRoomAvailability] = useState<Record<string, RoomAvailabilityCheck>>({});
   const [hasSearched, setHasSearched] = useState(false);
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -52,14 +52,13 @@ const Hotel = () => {
     } catch (error) {
       console.error("Error fetching rooms:", error);
       
-      const filteredRooms = hotelRooms.filter(room => room.capacity >= guestCount);
-      setAvailableRooms(filteredRooms);
-      
       toast({
         title: "Error fetching rooms",
-        description: "Using local data instead. Some availability information may not be accurate.",
+        description: "Unable to load room data. Please check your connection and try again.",
         variant: "destructive",
       });
+      
+      setAvailableRooms([]);
     } finally {
       setIsLoading(false);
       setSelectedRooms([]);
@@ -103,7 +102,6 @@ const Hotel = () => {
       totalPrice
     };
     
-    // Store user email in localStorage for booking confirmation
     if (currentUser?.email) {
       localStorage.setItem('userEmail', currentUser.email);
     }

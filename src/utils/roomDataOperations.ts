@@ -2,8 +2,7 @@
 import { Room } from "@/types/hotel.types";
 import { getRooms as fetchRoomsDirectly } from "@/services/room/roomQueries";
 import { getRooms as fetchRoomsFromService } from "@/services/room/roomService";
-import { hotelRooms } from "@/data/hotel.data";
-import { notifyLocalDataUse, notifyError } from "./roomNotifications";
+import { notifyError } from "./roomNotifications";
 
 export const fetchRoomData = async (
   setRooms: (rooms: Room[]) => void,
@@ -39,29 +38,18 @@ export const fetchRoomData = async (
       return serviceFetchedRooms;
     }
     
-    // Use default rooms if both methods return empty
-    console.log("Both fetch methods returned empty, using default rooms");
-    setRooms(hotelRooms);
-    setUsingLocalData(true);
-    setError("No rooms found in database. Using default rooms.");
-    notifyLocalDataUse(hasShownLocalDataToast, setHasShownLocalDataToast);
-    return hotelRooms;
+    // No fallback to default rooms - return empty array
+    console.log("No rooms found in Firestore");
+    setRooms([]);
+    setUsingLocalData(false);
+    setError("No rooms found in database. Please ensure the rooms collection is properly populated.");
+    notifyError("No rooms found in database. Please contact administration.");
+    return [];
   } catch (err) {
     console.error("Error loading rooms:", err);
-    const isPermissionError = (err as any)?.code === 'permission-denied';
-    
-    if (isPermissionError) {
-      console.log("Permission error detected, using local data instead");
-      setRooms(hotelRooms);
-      setUsingLocalData(true);
-      setError("Database permission error. Using local data until permissions are fixed.");
-      notifyLocalDataUse(hasShownLocalDataToast, setHasShownLocalDataToast);
-      return hotelRooms;
-    }
-    
     setError("Failed to load rooms. Please try again.");
     notifyError("Failed to load rooms. Please try again.");
-    setRooms(hotelRooms);
-    return hotelRooms;
+    setRooms([]);
+    return [];
   }
 };

@@ -9,7 +9,6 @@ import InitializeAdmin from "@/components/admin/InitializeAdmin";
 import AdminManageDialog from "@/components/admin/AdminManageDialog";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
-import { hotelRooms } from "@/data/hotel.data";
 import { getRooms } from "@/services/room/roomQueries";
 
 const RoomManagement = () => {
@@ -29,9 +28,7 @@ const RoomManagement = () => {
         console.log('Directly fetched rooms:', fetchedRooms);
         
         if (fetchedRooms.length === 0) {
-          console.log('No rooms found, initializing with default rooms');
-          // Try to save default rooms via the hook
-          await handleSaveRooms(hotelRooms);
+          console.log('No rooms found in Firestore');
         } else if (rooms.length === 0) {
           // If fetchedRooms has data but our state doesn't, update our state
           console.log('Updating local room state with fetched rooms');
@@ -41,13 +38,6 @@ const RoomManagement = () => {
         setInitialized(true);
       } catch (error) {
         console.error('Error initializing rooms:', error);
-        
-        // If there's an error and we have no rooms, initialize with default rooms
-        if (rooms.length === 0) {
-          console.log('Error encountered, falling back to default rooms');
-          await handleSaveRooms(hotelRooms);
-        }
-        
         setInitialized(true);
       }
     };
@@ -101,7 +91,7 @@ const RoomManagement = () => {
             </div>
           ) : (
             <RoomManager
-              initialRooms={rooms.length > 0 ? rooms : hotelRooms}
+              initialRooms={rooms}
               onSaveRooms={handleSaveRooms}
               onDeleteRoom={handleDeleteRoom}
               isLoading={loading}

@@ -18,7 +18,7 @@ export const updateRoomAvailability = onSchedule({
     // Check if it's past 11:00 AM Nigerian time (function runs in the specified timezone)
     if (now.getHours() < 11) {
       console.log('It is before 11:00 AM Nigerian time, skipping room availability update');
-      return null;
+      return;
     }
     
     // Format date as YYYY-MM-DD for comparison
@@ -35,7 +35,7 @@ export const updateRoomAvailability = onSchedule({
     console.log(`Found ${bookingsSnapshot.size} bookings with checkout today`);
     
     if (bookingsSnapshot.empty) {
-      return null;
+      return;
     }
     
     // Process each booking to update room availability
@@ -83,9 +83,7 @@ export const updateRoomAvailability = onSchedule({
     
     await Promise.all(roomUpdatesPromises);
     console.log('Room availability updates completed successfully');
-    return null;
   } catch (error) {
     console.error('Error updating room availability:', error);
-    return null;
   }
 });

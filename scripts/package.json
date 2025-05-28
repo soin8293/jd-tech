@@ -1,0 +1,13 @@
+
+{
+  "name": "jd-suites-room-setup",
+  "version": "1.0.0",
+  "description": "Setup script for populating JD Suites room data",
+  "main": "populateRooms.js",
+  "scripts": {
+    "populate": "node populateRooms.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.10.1"
+  }
+}

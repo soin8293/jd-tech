@@ -157,47 +157,72 @@ export const fetchRoomData = async (
   hasShownLocalDataToast: boolean,
   setHasShownLocalDataToast: (value: boolean) => void
 ) => {
+  console.log("🏨 ROOM DATA DEBUG: Starting fetchRoomData operation");
+  console.log("🏨 ROOM DATA DEBUG: Function parameters received");
+  console.log("🏨 ROOM DATA DEBUG: hasShownLocalDataToast:", hasShownLocalDataToast);
+  
   try {
-    console.log("Fetching rooms in useRoomManagement...");
+    console.log("🏨 ROOM DATA DEBUG: Attempting to fetch rooms...");
     
     // First try direct query
+    console.log("🏨 ROOM DATA DEBUG: Step 1 - Trying direct Firestore query...");
     const roomsData = await fetchRoomsDirectly();
-    console.log("Direct query results:", roomsData);
+    console.log("🏨 ROOM DATA DEBUG: Direct query completed");
+    console.log("🏨 ROOM DATA DEBUG: Direct query results:", roomsData);
+    console.log("🏨 ROOM DATA DEBUG: Direct query results count:", roomsData?.length || 0);
     
     if (roomsData && roomsData.length > 0) {
-      console.log("Setting rooms from direct query:", roomsData);
+      console.log("✅ ROOM DATA DEBUG: Direct query successful - setting rooms from direct query");
+      console.log("✅ ROOM DATA DEBUG: Rooms being set:", roomsData);
       setRooms(roomsData);
       setError(null);
       setUsingLocalData(false);
+      console.log("✅ ROOM DATA DEBUG: State updated successfully with direct query results");
       return roomsData;
     }
     
     // Try through service if direct query returns empty
-    console.log("Direct query returned empty, trying through service...");
+    console.log("🏨 ROOM DATA DEBUG: Step 2 - Direct query returned empty, trying through service...");
     const serviceFetchedRooms = await fetchRoomsFromService();
-    console.log("Service fetched rooms:", serviceFetchedRooms);
+    console.log("🏨 ROOM DATA DEBUG: Service query completed");
+    console.log("🏨 ROOM DATA DEBUG: Service fetched rooms:", serviceFetchedRooms);
+    console.log("🏨 ROOM DATA DEBUG: Service fetched rooms count:", serviceFetchedRooms?.length || 0);
     
     if (serviceFetchedRooms && serviceFetchedRooms.length > 0) {
+      console.log("✅ ROOM DATA DEBUG: Service query successful - setting rooms from service");
       setRooms(serviceFetchedRooms);
       setError(null);
       setUsingLocalData(false);
+      console.log("✅ ROOM DATA DEBUG: State updated successfully with service results");
       return serviceFetchedRooms;
     }
     
     // Fallback to the 11 themed rooms if Firestore is empty
-    console.log("Using fallback room data - the 11 Colorado-themed rooms");
+    console.log("🏨 ROOM DATA DEBUG: Step 3 - Both queries returned empty, using fallback data");
+    console.log("🏨 ROOM DATA DEBUG: Using fallback room data - the 11 Colorado-themed rooms");
+    console.log("🏨 ROOM DATA DEBUG: Fallback rooms count:", fallbackRooms.length);
     setRooms(fallbackRooms);
     setUsingLocalData(true);
     setError(null);
+    console.log("✅ ROOM DATA DEBUG: State updated with fallback rooms (local data)");
     return fallbackRooms;
   } catch (err) {
-    console.error("Error loading rooms:", err);
+    console.error("❌ ROOM DATA ERROR: Error loading rooms from any source");
+    console.error("❌ ROOM DATA ERROR: Error type:", typeof err);
+    console.error("❌ ROOM DATA ERROR: Error constructor:", err?.constructor?.name);
+    console.error("❌ ROOM DATA ERROR: Error message:", (err as any)?.message);
+    console.error("❌ ROOM DATA ERROR: Error code:", (err as any)?.code);
+    console.error("❌ ROOM DATA ERROR: Error details:", (err as any)?.details);
+    console.error("❌ ROOM DATA ERROR: Full error object:", err);
+    console.error("❌ ROOM DATA ERROR: Error stack:", (err as any)?.stack);
     
     // Even on error, show the fallback rooms so users can see the interface
-    console.log("Error occurred, using fallback room data");
+    console.log("🏨 ROOM DATA DEBUG: Error occurred, using fallback room data as safety net");
+    console.log("🏨 ROOM DATA DEBUG: Fallback rooms being set:", fallbackRooms.length);
     setRooms(fallbackRooms);
     setUsingLocalData(true);
     setError("Using demo room data. Connect to Firestore to see live data.");
+    console.log("✅ ROOM DATA DEBUG: State updated with fallback rooms after error");
     return fallbackRooms;
   }
 };

@@ -6,7 +6,19 @@ import { StripeElementsOptions } from "@stripe/stripe-js";
 
 // Use the default Stripe test publishable key - replace with your own when ready for production
 // This is a test key - safe to be in client-side code
-const stripePromise = loadStripe('pk_test_51QyqmqPpAASNRvfwCEGudrz2PKWIZL2QFZomDQtGIRR4orWge75Sk7oCNLnUmmJJ86AJUAi6vgBmh6FEhDMRaiXH00L7cKRv7H');
+const stripePromise = loadStripe('pk_test_51QyqmqPpAASNRvfwCEGudrz2PKWIZL2QFZomDQtGIRR4orWge75Sk7oCNLnUmmJJ86AJUAi6vgBmh6FEhDMRaiXH00L7cKRv7H')
+  .then(stripe => {
+    // Suppress common r.stripe.com beacon errors in console (safe to ignore)
+    const originalError = console.error;
+    console.error = (...args) => {
+      if (args[0]?.includes?.('r.stripe.com') || args[0]?.message?.includes?.('r.stripe.com')) {
+        console.info('Stripe beacon blocked; checkout still works.');
+        return;
+      }
+      originalError.apply(console, args);
+    };
+    return stripe;
+  });
 
 interface StripeWrapperProps {
   children: React.ReactNode;

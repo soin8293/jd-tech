@@ -56,10 +56,12 @@ const createPaymentIntentHandler = async (request: any): Promise<CreatePaymentIn
     roomPrices
   });
 
-  // Prepare Stripe payment intent parameters
+  // Prepare Stripe payment intent parameters with idempotency key
+  const idempotencyKey = transaction_id ? `payment_intent_${transaction_id}` : undefined;
   const stripeParams = {
     amount: totalAmount,
     currency,
+    idempotencyKey,
     metadata: {
       booking_reference: booking_reference || '',
       transaction_id: transaction_id || '',

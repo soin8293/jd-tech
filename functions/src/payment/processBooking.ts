@@ -6,6 +6,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { validateRequest, schemas } from "../utils/validation";
 import { logger } from "../utils/logger";
 import { transactionManager } from "../utils/transactionManager";
+import { handleStripeError } from "../utils/stripeHelpers";
 
 const processBookingHandler = async (request: any): Promise<PaymentResponse> => {
   // Validate request data
@@ -48,13 +49,7 @@ const processBookingHandler = async (request: any): Promise<PaymentResponse> => 
       created: new Date(paymentIntent.created * 1000).toISOString()
     });
   } catch (stripeError: any) {
-    logger.error("Failed to retrieve payment intent from Stripe", stripeError);
-    
-    throw new HttpsError(
-      "unavailable",
-      "Could not verify payment status with Stripe. Please try again later.",
-      { type: 'network_error' }
-    );
+    handleStripeError(stripeError, 'Payment intent retrieval');
   }
   
   // Check if payment is successful

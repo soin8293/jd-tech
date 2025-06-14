@@ -2,10 +2,12 @@
 import * as functions from "firebase-functions";
 import { stripe } from "../config/stripe";
 import { logger } from "./logger";
+import { handleStripeError, validateStripeAmount } from "./stripeHelpers";
 
 interface CreatePaymentIntentParams {
   amount: number;
   currency: string;
+  idempotencyKey?: string;
   metadata: {
     booking_reference?: string;
     transaction_id?: string;
@@ -34,7 +36,10 @@ export const createStripePaymentIntent = async (params: CreatePaymentIntentParam
       );
     }
     
-    // Create payment intent with detailed error handling
+    // Validate amount is within Stripe limits
+    validateStripeAmount(params.amount, params.currency);
+    
+    // Create payment intent with detailed error handling and idempotency
     const intentPayload = {
       amount: Math.round(params.amount * 100),
       currency: params.currency,
@@ -42,9 +47,15 @@ export const createStripePaymentIntent = async (params: CreatePaymentIntentParam
       automatic_payment_methods: { enabled: true },
     };
     
+    const requestOptions: any = {};
+    if (params.idempotencyKey) {
+      requestOptions.idempotencyKey = params.idempotencyKey;
+      logger.debug("Using idempotency key for payment intent", { idempotencyKey: params.idempotencyKey });
+    }
+    
     logger.debug("Stripe payment intent payload", intentPayload);
     
-    const paymentIntent = await stripe.paymentIntents.create(intentPayload);
+    const paymentIntent = await stripe.paymentIntents.create(intentPayload, requestOptions);
 
     logger.info("Payment intent created successfully", {
       id: paymentIntent.id,
@@ -59,69 +70,7 @@ export const createStripePaymentIntent = async (params: CreatePaymentIntentParam
       paymentIntentId: paymentIntent.id,
     };
   } catch (stripeError: any) {
-    logger.error('Failed to create Stripe payment intent', stripeError);
-
-    if (stripeError.type === 'StripeCardError') {
-      throw new functions.https.HttpsError(
-        'failed-precondition',
-        stripeError.message,
-        { 
-          type: 'payment_failed', 
-          details: { 
-            stripeError: stripeError.message,
-            code: stripeError.code,
-            decline_code: stripeError.decline_code 
-          } 
-        }
-      );
-    } else if (stripeError.type === 'StripeAPIError') {
-      throw new functions.https.HttpsError(
-        'internal',
-        'Payment processing error',
-        { 
-          type: 'stripe_api_error', 
-          details: { 
-            stripeError: stripeError.message,
-            requestId: stripeError.requestId
-          } 
-        }
-      );
-    } else if (stripeError.type === 'StripeInvalidRequestError') {
-      throw new functions.https.HttpsError(
-        'invalid-argument',
-        'Invalid payment request',
-        { 
-          type: 'invalid_request', 
-          details: { 
-            stripeError: stripeError.message,
-            param: stripeError.param
-          } 
-        }
-      );
-    } else if (stripeError.type === 'StripeRateLimitError') {
-      throw new functions.https.HttpsError(
-        'resource-exhausted',
-        'Too many payment requests',
-        { 
-          type: 'rate_limit_error', 
-          details: { 
-            stripeError: stripeError.message 
-          } 
-        }
-      );
-    }
-    
-    // Handle any other Stripe error types
-    throw new functions.https.HttpsError(
-      'internal',
-      stripeError.message || 'Unexpected payment processing error',
-      { 
-        type: 'stripe_unknown_error', 
-        details: { 
-          stripeError: stripeError.message,
-          errorType: stripeError.type
-        } 
-      }
-    );
+    // Use centralized Stripe error handling
+    handleStripeError(stripeError, 'Payment intent creation');
   }
 };

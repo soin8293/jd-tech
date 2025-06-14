@@ -18,30 +18,9 @@ const HotelHeader: React.FC<HotelHeaderProps> = ({ className }) => {
       isMobile ? "h-[85vh] pb-32" : "h-[60vh] mb-0", 
       className
     )}>
-      {/* Enhanced Hotel Background */}
+      {/* Background matching landing page */}
       <div className="absolute inset-0 w-full h-full">
-        <div className="relative w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700">
-          {/* Luxury Pattern Overlay */}
-          <div 
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage: `
-                radial-gradient(circle at 25% 25%, hsl(var(--primary)) 2px, transparent 2px),
-                radial-gradient(circle at 75% 75%, hsl(var(--accent)) 1px, transparent 1px)
-              `,
-              backgroundSize: '60px 60px, 40px 40px'
-            }}
-          />
-          {/* Elegant Light Rays */}
-          <div 
-            className="absolute inset-0 opacity-20"
-            style={{
-              background: `
-                linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%),
-                linear-gradient(-45deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%)
-              `
-            }}
-          />
+        <div className="relative w-full h-full bg-gradient-to-r from-cyan-500 to-blue-500">
           {/* Bottom Gradient for Text Readability */}
           <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
         </div>

@@ -1,142 +1,92 @@
-
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { calculateNumberOfNights, calculateRoomPrices } from "../utils/roomPriceCalculator";
 import { createStripePaymentIntent } from "../utils/stripePaymentCreator";
 import { CreatePaymentIntentData, CreatePaymentIntentResponse } from "../types/booking.types";
+import { asyncHandler } from "../utils/asyncHandler";
+import { validateRequest, schemas } from "../utils/validation";
+import { logger } from "../utils/logger";
 
-const logEvent = (event: string, data?: any) => {
-  console.log(`[CREATE-PAYMENT-INTENT] ${event}${data ? ': ' + JSON.stringify(data, null, 2) : ''}`);
+const createPaymentIntentHandler = async (request: any): Promise<CreatePaymentIntentResponse> => {
+  // Validate request data
+  const validatedData = validateRequest(schemas.createPaymentIntent, request.data);
+  const { rooms, period, guests, transaction_id, booking_reference, currency } = validatedData;
+  
+  logger.setContext({ 
+    transactionId: transaction_id,
+    bookingReference: booking_reference,
+    roomCount: rooms.length,
+    guests 
+  });
+  
+  logger.info("Processing payment intent creation", { 
+    roomCount: rooms.length, 
+    period, 
+    guests, 
+    currency 
+  });
+
+  // Initialize Firebase Admin if needed
+  if (!admin.apps.length) {
+    logger.info("Initializing Firebase Admin");
+    admin.initializeApp();
+  }
+
+  // Calculate booking duration
+  logger.info("Calculating number of nights");
+  const numberOfNights = calculateNumberOfNights(period);
+  
+  if (numberOfNights <= 0) {
+    throw new HttpsError(
+      "invalid-argument", 
+      "Check-in must be before check-out date.",
+      { type: "validation_error", field: "period" }
+    );
+  }
+
+  logger.info("Booking duration calculated", { numberOfNights });
+
+  // Calculate pricing
+  logger.info("Calculating room prices");
+  const { totalAmount, roomPrices } = await calculateRoomPrices(rooms, numberOfNights);
+  
+  logger.info("Pricing calculation completed", { 
+    numberOfNights, 
+    totalAmount, 
+    roomPrices
+  });
+
+  // Prepare Stripe payment intent parameters
+  const stripeParams = {
+    amount: totalAmount,
+    currency,
+    metadata: {
+      booking_reference: booking_reference || '',
+      transaction_id: transaction_id || '',
+      nights: numberOfNights,
+      rooms: rooms.length,
+      guests: guests || 1,
+      roomIds: rooms.map(room => room.id).join(',')
+    }
+  };
+  
+  logger.info("Creating Stripe payment intent", { amount: totalAmount, currency });
+  const stripePaymentIntent = await createStripePaymentIntent(stripeParams);
+
+  logger.setContext({ paymentIntentId: stripePaymentIntent.paymentIntentId });
+  logger.info("Payment intent created successfully");
+
+  return {
+    clientSecret: stripePaymentIntent.clientSecret,
+    paymentIntentId: stripePaymentIntent.paymentIntentId,
+    calculatedAmount: totalAmount,
+    details: {
+      nights: numberOfNights,
+      roomCount: rooms.length
+    }
+  };
 };
 
 export const createPaymentIntent = onCall(
-  async (request): Promise<CreatePaymentIntentResponse> => {
-    try {
-      logEvent("Function started with full input data", request.data);
-      const { rooms, period, guests, transaction_id, booking_reference } = request.data as CreatePaymentIntentData;
-      const currency = request.data.currency || "usd";
-  
-      logEvent("Extracted booking details", { 
-        roomCount: rooms?.length, 
-        period, 
-        guests, 
-        transaction_id, 
-        currency 
-      });
-
-      if (!rooms || !Array.isArray(rooms) || rooms.length === 0) {
-        logEvent("VALIDATION ERROR: Invalid rooms data", { rooms });
-        throw new HttpsError(
-          "invalid-argument", 
-          "No rooms provided for booking.",
-          { type: "validation_error", field: "rooms" }
-        );
-      }
-
-      if (!period || !period.checkIn || !period.checkOut) {
-        logEvent("VALIDATION ERROR: Invalid period data", { period });
-        throw new HttpsError(
-          "invalid-argument", 
-          "Invalid booking period.",
-          { type: "validation_error", field: "period" }
-        );
-      }
-
-      logEvent("Input validation passed");
-      
-      if (!admin.apps.length) {
-        logEvent("Initializing Firebase Admin");
-        admin.initializeApp();
-      }
-
-      logEvent("Calling calculateNumberOfNights...");
-      const numberOfNights = calculateNumberOfNights(period);
-      logEvent("Number of nights calculated", { numberOfNights });
-
-      if (numberOfNights <= 0) {
-        logEvent("VALIDATION ERROR: Invalid booking period - negative or zero nights", { period, numberOfNights });
-        throw new HttpsError(
-          "invalid-argument", 
-          "Check-in must be before check-out date.",
-          { type: "validation_error", field: "period" }
-        );
-      }
-
-      logEvent("Rooms and Nights Details", { 
-        rooms: rooms.map(r => ({ id: r.id, name: r.name || 'Room', price: r.price || 0 })), 
-        numberOfNights 
-      });
-
-      logEvent("Calling calculateRoomPrices...");
-      const { totalAmount, roomPrices } = await calculateRoomPrices(rooms, numberOfNights);
-      logEvent("Room prices calculation completed", { 
-        numberOfNights, 
-        totalAmount, 
-        roomPrices,
-        calculationMethod: 'multiplying room prices by nights' 
-      });
-
-      const stripeParams = {
-        amount: totalAmount,
-        currency,
-        metadata: {
-          booking_reference: booking_reference || '',
-          transaction_id: transaction_id || '',
-          nights: numberOfNights,
-          rooms: rooms.length,
-          guests: guests || 1,
-          roomIds: rooms.map(room => room.id).join(',')
-        }
-      };
-      
-      logEvent("Calling createStripePaymentIntent with params", stripeParams);
-      const stripePaymentIntent = await createStripePaymentIntent(stripeParams);
-
-      logEvent("Payment intent created successfully", { 
-        paymentIntentId: stripePaymentIntent.paymentIntentId,
-        hasClientSecret: !!stripePaymentIntent.clientSecret 
-      });
-
-      return {
-        clientSecret: stripePaymentIntent.clientSecret,
-        paymentIntentId: stripePaymentIntent.paymentIntentId,
-        calculatedAmount: totalAmount,
-        details: {
-          nights: numberOfNights,
-          roomCount: rooms.length
-        }
-      };
-    } catch (error: any) {
-      // Enhanced error logging
-      console.error('FULL ERROR in createPaymentIntent:', {
-        errorName: error.name,
-        errorMessage: error.message,
-        errorCode: error.code,
-        errorDetails: error.details,
-        errorStack: error.stack,
-        fullError: JSON.stringify(error, Object.getOwnPropertyNames(error))
-      });
-
-      if (error instanceof HttpsError) {
-        console.error('Forwarding HttpsError:', {
-          code: error.code,
-          message: error.message,
-          details: error.details
-        });
-        throw error;
-      }
-
-      throw new HttpsError(
-        'internal',
-        error.message || 'Failed to create payment intent',
-        { 
-          type: 'unknown_error', 
-          details: { 
-            error: error.message,
-            errorObject: JSON.stringify(error, Object.getOwnPropertyNames(error))
-          } 
-        }
-      );
-    }
-  }
+  asyncHandler(createPaymentIntentHandler, 'createPaymentIntent')
 );

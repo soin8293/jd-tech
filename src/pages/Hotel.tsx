@@ -16,7 +16,7 @@ const Hotel: React.FC = () => {
         
         {/* Micro-stars using CSS */}
         <div className="absolute inset-0 opacity-60">
-          {Array.from({ length: 50 }).map((_, i) => (
+          {Array.from({ length: 200 }).map((_, i) => (
             <div
               key={i}
               className="absolute w-1 h-1 bg-cyan-400 rounded-full animate-[pulse_3s_ease-in-out_infinite] shadow-[0_0_4px_rgba(0,204,255,0.8)]"

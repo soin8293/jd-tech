@@ -1,20 +1,20 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 const MicroStars: React.FC = () => {
-  const pointsRef = useRef<THREE.Points>(null);
-  const materialRef = useRef<THREE.PointsMaterial>(null);
+  const groupRef = useRef<THREE.Group>(null);
   
-  const particleCount = 1000; // Reduced for better performance
-  
-  const geometry = useMemo(() => {
-    const geo = new THREE.BufferGeometry();
+  useEffect(() => {
+    if (!groupRef.current) return;
+    
+    const particleCount = 800;
+    const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
     
+    // Create particles in spherical distribution
     for (let i = 0; i < particleCount; i++) {
-      // Start particles near center and spread them out
-      const radius = Math.random() * 8;
+      const radius = Math.random() * 10 + 2;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.random() * Math.PI;
       
@@ -23,72 +23,39 @@ const MicroStars: React.FC = () => {
       positions[i * 3 + 2] = radius * Math.cos(phi);
     }
     
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    return geo;
-  }, []);
-  
-  const velocities = useMemo(() => {
-    const vels = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      const speed = 0.005 + Math.random() * 0.01;
-      vels[i * 3] = (Math.random() - 0.5) * speed;
-      vels[i * 3 + 1] = (Math.random() - 0.5) * speed;
-      vels[i * 3 + 2] = (Math.random() - 0.5) * speed;
-    }
-    return vels;
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    
+    const material = new THREE.PointsMaterial({
+      color: 0x00ccff,
+      size: 2,
+      transparent: true,
+      opacity: 0.6,
+      blending: THREE.AdditiveBlending
+    });
+    
+    const points = new THREE.Points(geometry, material);
+    groupRef.current.add(points);
+    
+    return () => {
+      geometry.dispose();
+      material.dispose();
+    };
   }, []);
   
   useFrame((state) => {
-    if (!pointsRef.current || !materialRef.current) return;
+    if (!groupRef.current) return;
     
     const time = state.clock.getElapsedTime();
-    const positionAttribute = pointsRef.current.geometry.getAttribute('position') as THREE.BufferAttribute;
-    const positions = positionAttribute.array as Float32Array;
     
-    // Breathing effect with sine wave (5-second cycle)
+    // Breathing effect
     const breathingCycle = Math.sin(time * Math.PI * 2 / 5) * 0.5 + 0.5;
-    const sizeMultiplier = 1 + breathingCycle * 0.03;
-    const opacityMultiplier = 0.3 + breathingCycle * 0.4;
+    const scale = 1 + breathingCycle * 0.03;
     
-    materialRef.current.size = 1.5 * sizeMultiplier;
-    materialRef.current.opacity = opacityMultiplier;
-    
-    // Drift particles
-    for (let i = 0; i < particleCount; i++) {
-      positions[i * 3] += velocities[i * 3];
-      positions[i * 3 + 1] += velocities[i * 3 + 1];
-      positions[i * 3 + 2] += velocities[i * 3 + 2];
-      
-      // Reset particles that drift too far
-      const distance = Math.sqrt(
-        positions[i * 3] ** 2 + 
-        positions[i * 3 + 1] ** 2 + 
-        positions[i * 3 + 2] ** 2
-      );
-      
-      if (distance > 20) {
-        positions[i * 3] = (Math.random() - 0.5) * 2;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 2;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 2;
-      }
-    }
-    
-    positionAttribute.needsUpdate = true;
+    groupRef.current.scale.setScalar(scale);
+    groupRef.current.rotation.y = time * 0.1;
   });
   
-  return (
-    <points ref={pointsRef} geometry={geometry}>
-      <pointsMaterial
-        ref={materialRef}
-        color="#00ccff"
-        size={1.5}
-        transparent
-        opacity={0.6}
-        blending={THREE.AdditiveBlending}
-        sizeAttenuation={false}
-      />
-    </points>
-  );
+  return <group ref={groupRef} />;
 };
 
 const NebulaBackground: React.FC = () => {

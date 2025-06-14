@@ -8,7 +8,7 @@ const MicroStars: React.FC = () => {
   
   const particleCount = 2000;
   
-  const { positions, velocities } = useMemo(() => {
+  const particlesData = useMemo(() => {
     const positions = new Float32Array(particleCount * 3);
     const velocities = new Float32Array(particleCount * 3);
     
@@ -36,7 +36,8 @@ const MicroStars: React.FC = () => {
     if (!pointsRef.current || !materialRef.current) return;
     
     const time = state.clock.getElapsedTime();
-    const positions = pointsRef.current.geometry.attributes.position.array as Float32Array;
+    const positionAttribute = pointsRef.current.geometry.getAttribute('position');
+    const positions = positionAttribute.array as Float32Array;
     
     // Breathing effect with sine wave (5-second cycle)
     const breathingCycle = Math.sin(time * Math.PI * 2 / 5) * 0.5 + 0.5;
@@ -48,9 +49,9 @@ const MicroStars: React.FC = () => {
     
     // Drift particles outward
     for (let i = 0; i < particleCount; i++) {
-      positions[i * 3] += velocities[i * 3];
-      positions[i * 3 + 1] += velocities[i * 3 + 1];
-      positions[i * 3 + 2] += velocities[i * 3 + 2];
+      positions[i * 3] += particlesData.velocities[i * 3];
+      positions[i * 3 + 1] += particlesData.velocities[i * 3 + 1];
+      positions[i * 3 + 2] += particlesData.velocities[i * 3 + 2];
       
       // Reset particles that drift too far
       const distance = Math.sqrt(
@@ -71,7 +72,7 @@ const MicroStars: React.FC = () => {
       }
     }
     
-    pointsRef.current.geometry.attributes.position.needsUpdate = true;
+    positionAttribute.needsUpdate = true;
   });
   
   return (
@@ -80,7 +81,7 @@ const MicroStars: React.FC = () => {
         <bufferAttribute
           attach="attributes-position"
           count={particleCount}
-          array={positions}
+          array={particlesData.positions}
           itemSize={3}
         />
       </bufferGeometry>
@@ -88,7 +89,7 @@ const MicroStars: React.FC = () => {
         ref={materialRef}
         color="#00ffff"
         size={2}
-        transparent
+        transparent={true}
         opacity={0.6}
         blending={THREE.AdditiveBlending}
         sizeAttenuation={false}
@@ -100,18 +101,13 @@ const MicroStars: React.FC = () => {
 const NebulaScene: React.FC = () => {
   return (
     <>
-      {/* Ambient lighting */}
       <ambientLight intensity={0.2} />
-      
-      {/* Micro stars */}
       <MicroStars />
-      
-      {/* Background nebula gradient sphere */}
       <mesh>
         <sphereGeometry args={[50, 32, 32]} />
         <meshBasicMaterial
           color="#1a237e"
-          transparent
+          transparent={true}
           opacity={0.1}
           side={THREE.BackSide}
         />
@@ -125,7 +121,12 @@ const NebulaBackground: React.FC = () => {
     <div className="fixed inset-0 -z-10">
       <Canvas
         camera={{ position: [0, 0, 10], fov: 75 }}
-        style={{ background: 'linear-gradient(135deg, #0a0e27 0%, #1a237e 50%, #283593 100%)' }}
+        style={{ 
+          background: 'linear-gradient(135deg, #0a0e27 0%, #1a237e 50%, #283593 100%)',
+          width: '100%',
+          height: '100%'
+        }}
+        gl={{ antialias: true, alpha: false }}
       >
         <NebulaScene />
       </Canvas>

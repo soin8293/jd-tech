@@ -72,5 +72,37 @@ export const schemas = {
       }),
       guests: z.number().int().min(1)
     }).optional()
+  }),
+
+  manageAdmin: z.object({
+    email: z.string().email("Valid email is required"),
+    makeAdmin: z.boolean()
+  }),
+
+  setInitialAdmin: z.object({}).optional(),
+
+  sendBookingConfirmation: z.object({
+    bookingId: z.string().min(1, "Booking ID is required"),
+    userEmail: z.string().email("Valid email is required"),
+    paymentIntentId: z.string().optional(),
+    bookingDetails: z.object({
+      rooms: z.array(z.object({
+        id: z.string(),
+        name: z.string().optional(),
+        bed: z.string().optional()
+      })),
+      period: z.object({
+        startDate: z.object({
+          seconds: z.number()
+        }).optional(),
+        endDate: z.object({
+          seconds: z.number()
+        }).optional(),
+        checkIn: z.string().optional(),
+        checkOut: z.string().optional()
+      })
+    }).optional(),
+    guests: z.number().optional(),
+    userName: z.string().optional()
   })
 };

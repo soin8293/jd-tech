@@ -3,81 +3,160 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, ArrowRight } from "lucide-react";
+import { Building2, ArrowRight, Star, MapPin, Wifi, Car } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
 
   return (
-    <div className="min-h-screen pt-16">
-      {/* Hero Section with rounded corners */}
-      <div className="bg-gradient-to-r from-cyan-500 to-blue-500 py-20 mb-12 rounded-lg">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl">
-            <div className="flex items-center gap-3 mb-6">
-              <Building2 className="h-12 w-12 text-white" />
-              <h1 className="text-5xl md:text-7xl font-extralight text-white">
-                JD Suites
-              </h1>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-600 pt-16">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-indigo-600/20 opacity-20" />
+        <div className="absolute inset-0" style={{
+          backgroundImage: `url("data:image/svg+xml,%3csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3e%3cdefs%3e%3cpattern id='a' patternUnits='userSpaceOnUse' width='60' height='60'%3e%3ccircle cx='30' cy='30' r='1' fill='%23ffffff' fill-opacity='0.1'/%3e%3c/pattern%3e%3c/defs%3e%3crect width='100%25' height='100%25' fill='url(%23a)'/%3e%3c/svg%3e")`,
+          opacity: 0.3
+        }} />
+        
+        <div className="relative container mx-auto px-4 py-20 lg:py-32">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-white mb-8 animate-fade-in">
+              <Star className="h-4 w-4 text-yellow-300" />
+              <span className="text-sm font-medium">Premium Nigerian Hospitality</span>
             </div>
-            <p className="text-xl text-white/90 mb-8">
-              Experience luxury and comfort in our carefully curated selection of rooms and suites.
+
+            {/* Main Heading */}
+            <div className="mb-8 animate-slide-up" style={{ animationDelay: "0.2s", animationFillMode: "forwards", opacity: "0" }}>
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <Building2 className="h-16 w-16 text-white/90" />
+                <h1 className="text-6xl md:text-8xl font-light text-white tracking-tight">
+                  JD Suites
+                </h1>
+              </div>
+              <div className="w-24 h-1 bg-gradient-to-r from-yellow-300 to-orange-300 mx-auto rounded-full" />
+            </div>
+
+            {/* Subtitle */}
+            <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: "0.4s", animationFillMode: "forwards", opacity: "0" }}>
+              Where Nigerian elegance meets modern luxury. Experience exceptional hospitality in the heart of Port Harcourt.
             </p>
-            <Link to="/hotel">
-              <Button size="lg" className="gap-2">
-                Browse Rooms <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+
+            {/* CTA Button */}
+            <div className="animate-slide-up" style={{ animationDelay: "0.6s", animationFillMode: "forwards", opacity: "0" }}>
+              <Link to="/hotel">
+                <Button size="lg" className="bg-white text-primary hover:bg-white/90 px-8 py-3 text-lg font-medium shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                  Explore Our Suites <ArrowRight className="h-5 w-5 ml-2" />
+                </Button>
+              </Link>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-3 gap-8 mt-16 text-white/80 animate-fade-in" style={{ animationDelay: "0.8s", animationFillMode: "forwards", opacity: "0" }}>
+              <div className="text-center">
+                <div className="text-2xl font-light mb-1">4.8</div>
+                <div className="text-sm">Guest Rating</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-light mb-1">24/7</div>
+                <div className="text-sm">Concierge</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-light mb-1">Premium</div>
+                <div className="text-sm">Location</div>
+              </div>
+            </div>
           </div>
+        </div>
+        
+        {/* Bottom curve */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 120" className="w-full h-auto">
+            <path fill="hsl(var(--background))" d="M0,120 C240,0 480,0 720,40 C960,80 1200,40 1440,0 L1440,120 Z"/>
+          </svg>
         </div>
       </div>
 
-      {/* Features Section with Image Background */}
-      <div className="relative container mx-auto px-4 mb-16">
-        {/* Image Background with subtle rounded corners */}
-        <div className="absolute inset-0 w-full h-full -z-10 overflow-hidden">
-          <img 
-            src="/lovable-uploads/4abd0589-5c26-4b24-a377-de00e13215f9.png"
-            alt="JD Suites Building"
-            className="w-full h-full object-cover rounded-lg shadow-lg"
-          />
-        </div>
-        
-        {/* Feature Cards */}
-        <div className="py-16">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="bg-white/95 backdrop-blur-sm shadow-md border-0">
-              <CardHeader>
-                <CardTitle>Nigerian Elegance</CardTitle>
+      {/* Features Section */}
+      <div className="py-20 bg-secondary/30">
+        <div className="container mx-auto px-4">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-light text-foreground mb-4">
+              Why Choose JD Suites
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Experience the perfect blend of Nigerian hospitality and modern luxury
+            </p>
+          </div>
+
+          {/* Feature Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <Card className="group bg-card border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+              <CardHeader className="text-center pb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Building2 className="h-8 w-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">Nigerian Elegance</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Our suites blend contemporary design with authentic Nigerian elements for a unique stay experience.
+              <CardContent className="text-center">
+                <p className="text-muted-foreground leading-relaxed">
+                  Our suites blend contemporary design with authentic Nigerian elements for a unique cultural experience.
                 </p>
               </CardContent>
             </Card>
             
-            <Card className="bg-white/95 backdrop-blur-sm shadow-md border-0">
-              <CardHeader>
-                <CardTitle>Local Cuisine</CardTitle>
+            <Card className="group bg-card border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+              <CardHeader className="text-center pb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <Star className="h-8 w-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">Premium Service</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Enjoy our signature Nigerian dishes prepared by local chefs, alongside international favorites.
+              <CardContent className="text-center">
+                <p className="text-muted-foreground leading-relaxed">
+                  24/7 concierge service and locally-inspired cuisine prepared by renowned Nigerian chefs.
                 </p>
               </CardContent>
             </Card>
             
-            <Card className="bg-white/95 backdrop-blur-sm shadow-md border-0">
-              <CardHeader>
-                <CardTitle>Prime Location</CardTitle>
+            <Card className="group bg-card border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+              <CardHeader className="text-center pb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <MapPin className="h-8 w-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">Prime Location</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Conveniently located in Rumukparali, Port Harcourt, with easy access to business districts and local attractions.
+              <CardContent className="text-center">
+                <p className="text-muted-foreground leading-relaxed">
+                  Strategically located in Rumukparali with easy access to business districts and cultural attractions.
                 </p>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Amenities Banner */}
+          <div className="mt-20 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-600/10 rounded-2xl p-8 text-center">
+            <h3 className="text-2xl font-light mb-6">Premium Amenities</h3>
+            <div className="flex flex-wrap justify-center gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <Wifi className="h-4 w-4 text-primary" />
+                <span>High-Speed WiFi</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Car className="h-4 w-4 text-primary" />
+                <span>Valet Parking</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-primary" />
+                <span>Business Center</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-primary" />
+                <span>Spa Services</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

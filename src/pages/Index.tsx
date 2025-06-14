@@ -19,27 +19,27 @@ const Index = () => {
           opacity: 0.3
         }} />
         
-        <div className="relative container mx-auto px-4 py-20 lg:py-32">
+        <div className="relative container mx-auto px-4 py-16 lg:py-24">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-white mb-8 animate-fade-in">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-white mb-6 animate-fade-in">
               <Star className="h-4 w-4 text-yellow-300" />
               <span className="text-sm font-medium">Premium Nigerian Hospitality</span>
             </div>
 
             {/* Main Heading */}
-            <div className="mb-8 animate-slide-up" style={{ animationDelay: "0.2s", animationFillMode: "forwards", opacity: "0" }}>
-              <div className="flex items-center justify-center gap-4 mb-4">
-                <Building2 className="h-16 w-16 text-white/90" />
-                <h1 className="text-6xl md:text-8xl font-light text-white tracking-tight">
+            <div className="mb-6 animate-slide-up" style={{ animationDelay: "0.2s", animationFillMode: "forwards", opacity: "0" }}>
+              <div className="flex items-center justify-center gap-4 mb-3">
+                <Building2 className="h-14 w-14 text-white/90" />
+                <h1 className="text-5xl md:text-7xl font-light text-white tracking-tight">
                   JD Suites
                 </h1>
               </div>
-              <div className="w-24 h-1 bg-gradient-to-r from-yellow-300 to-orange-300 mx-auto rounded-full" />
+              <div className="w-20 h-1 bg-gradient-to-r from-yellow-300 to-orange-300 mx-auto rounded-full" />
             </div>
 
             {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: "0.4s", animationFillMode: "forwards", opacity: "0" }}>
+            <p className="text-lg md:text-xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: "0.4s", animationFillMode: "forwards", opacity: "0" }}>
               Where Nigerian elegance meets modern luxury. Experience exceptional hospitality in the heart of Port Harcourt.
             </p>
 
@@ -53,7 +53,7 @@ const Index = () => {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-8 mt-16 text-white/80 animate-fade-in" style={{ animationDelay: "0.8s", animationFillMode: "forwards", opacity: "0" }}>
+            <div className="grid grid-cols-3 gap-6 mt-12 text-white/80 animate-fade-in" style={{ animationDelay: "0.8s", animationFillMode: "forwards", opacity: "0" }}>
               <div className="text-center">
                 <div className="text-2xl font-light mb-1">4.8</div>
                 <div className="text-sm">Guest Rating</div>
@@ -79,11 +79,11 @@ const Index = () => {
       </div>
 
       {/* Features Section */}
-      <div className="py-20 bg-secondary/30">
+      <div className="py-14 bg-secondary/30">
         <div className="container mx-auto px-4">
           {/* Section Header */}
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-light text-foreground mb-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-light text-foreground mb-3">
               Why Choose JD Suites
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -92,44 +92,44 @@ const Index = () => {
           </div>
 
           {/* Feature Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             <Card className="group bg-card border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-              <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <Building2 className="h-8 w-8 text-white" />
+              <CardHeader className="text-center pb-3">
+                <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+                  <Building2 className="h-7 w-7 text-white" />
                 </div>
-                <CardTitle className="text-xl">Nigerian Elegance</CardTitle>
+                <CardTitle className="text-lg">Nigerian Elegance</CardTitle>
               </CardHeader>
-              <CardContent className="text-center">
-                <p className="text-muted-foreground leading-relaxed">
+              <CardContent className="text-center pt-0">
+                <p className="text-muted-foreground leading-relaxed text-sm">
                   Our suites blend contemporary design with authentic Nigerian elements for a unique cultural experience.
                 </p>
               </CardContent>
             </Card>
             
             <Card className="group bg-card border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-              <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <Star className="h-8 w-8 text-white" />
+              <CardHeader className="text-center pb-3">
+                <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+                  <Star className="h-7 w-7 text-white" />
                 </div>
-                <CardTitle className="text-xl">Premium Service</CardTitle>
+                <CardTitle className="text-lg">Premium Service</CardTitle>
               </CardHeader>
-              <CardContent className="text-center">
-                <p className="text-muted-foreground leading-relaxed">
+              <CardContent className="text-center pt-0">
+                <p className="text-muted-foreground leading-relaxed text-sm">
                   24/7 concierge service and locally-inspired cuisine prepared by renowned Nigerian chefs.
                 </p>
               </CardContent>
             </Card>
             
             <Card className="group bg-card border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-              <CardHeader className="text-center pb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <MapPin className="h-8 w-8 text-white" />
+              <CardHeader className="text-center pb-3">
+                <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+                  <MapPin className="h-7 w-7 text-white" />
                 </div>
-                <CardTitle className="text-xl">Prime Location</CardTitle>
+                <CardTitle className="text-lg">Prime Location</CardTitle>
               </CardHeader>
-              <CardContent className="text-center">
-                <p className="text-muted-foreground leading-relaxed">
+              <CardContent className="text-center pt-0">
+                <p className="text-muted-foreground leading-relaxed text-sm">
                   Strategically located in Rumukparali with easy access to business districts and cultural attractions.
                 </p>
               </CardContent>
@@ -137,9 +137,9 @@ const Index = () => {
           </div>
 
           {/* Amenities Banner */}
-          <div className="mt-20 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-600/10 rounded-2xl p-8 text-center">
-            <h3 className="text-2xl font-light mb-6">Premium Amenities</h3>
-            <div className="flex flex-wrap justify-center gap-6 text-sm">
+          <div className="mt-14 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-600/10 rounded-2xl p-6 text-center">
+            <h3 className="text-xl font-light mb-4">Premium Amenities</h3>
+            <div className="flex flex-wrap justify-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <Wifi className="h-4 w-4 text-primary" />
                 <span>High-Speed WiFi</span>
@@ -162,7 +162,7 @@ const Index = () => {
       </div>
 
       {/* AmirahCo Footer */}
-      <footer className="bg-muted/50 py-8 mt-16">
+      <footer className="bg-muted/50 py-6 mt-12">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm text-muted-foreground">
             Powered by <span className="font-semibold text-primary">AmirahCo</span> - 

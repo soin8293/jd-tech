@@ -31,7 +31,7 @@ const Index = () => {
             <div className="mb-6 animate-slide-up" style={{ animationDelay: "0.2s", animationFillMode: "forwards", opacity: "0" }}>
               <div className="flex items-center justify-center gap-4 mb-3">
                 <Building2 className="h-14 w-14 text-white/90" />
-                <h1 className="text-5xl md:text-7xl font-light text-white tracking-tight">
+                <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight">
                   JD Suites
                 </h1>
               </div>

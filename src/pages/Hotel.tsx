@@ -158,7 +158,7 @@ const Hotel = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col pt-16">
+    <div className="min-h-screen flex flex-col pt-16 bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-600">
       <HotelHeader />
       
       <div className={cn(

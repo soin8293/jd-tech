@@ -45,9 +45,20 @@ const HotelBookingContent: React.FC = () => {
       </div>
 
       {usingLocalData && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-700">
-            Currently showing demo room data. Connect to Firestore to see live data.
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-300 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <p className="text-sm text-amber-700 font-medium">
+              ⚠️ Currently showing demo room data
+            </p>
+          </div>
+          <p className="text-xs text-amber-600">
+            Your Firestore database appears to be empty or unreachable. 
+            <button 
+              onClick={() => window.open('https://console.firebase.google.com/project/jd-suites-backend/firestore', '_blank')}
+              className="underline ml-1 hover:text-amber-800"
+            >
+              Check your Firestore console →
+            </button>
           </p>
         </div>
       )}

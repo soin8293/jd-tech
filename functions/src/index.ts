@@ -9,6 +9,7 @@ import { setupDynamicAdmin } from "./admin/dynamicAdminSetup";
 import { inviteAdmin } from "./admin/inviteAdmin";
 import { acceptInvitation } from "./admin/acceptInvitation";
 import { updateRoomAvailability } from "./rooms/updateRoomAvailability";
+import { seedDatabase } from "./admin/seedDatabase";
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -23,5 +24,6 @@ export {
   setupDynamicAdmin,
   inviteAdmin,
   acceptInvitation,
-  updateRoomAvailability
+  updateRoomAvailability,
+  seedDatabase
 };

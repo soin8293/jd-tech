@@ -1,15 +1,7 @@
-const admin = require('firebase-admin');
+import { Room } from "@/types/hotel.types";
 
-// Initialize Firebase Admin SDK using default credentials or environment variables
-// This works with Firebase CLI authentication
-admin.initializeApp({
-  projectId: 'jd-suites-backend'
-});
-
-const db = admin.firestore();
-
-// Room data with Unsplash images (same as your fallback data)
-const rooms = [
+// Fallback room data matching the 11 Colorado-themed rooms
+export const fallbackRooms: Room[] = [
   {
     id: "denver_king_suite",
     name: "Denver King Suite",
@@ -154,60 +146,3 @@ const rooms = [
     bookings: []
   }
 ];
-
-async function populateRooms() {
-  console.log('🏨 Starting to populate rooms collection...');
-  console.log(`📊 Project ID: jd-suites-backend`);
-  console.log(`📊 Total rooms to add: ${rooms.length}`);
-  
-  try {
-    // Check if collection already exists
-    const existingRooms = await db.collection('rooms').get();
-    if (!existingRooms.empty) {
-      console.log(`⚠️  Found ${existingRooms.size} existing rooms in the database.`);
-      console.log(`🛑 STOPPING: Database already has room data. This script is for initial setup only.`);
-      console.log(`💡 To avoid data loss, this script will not overwrite existing rooms.`);
-      console.log(`💡 If you need to update rooms, use the admin interface or create a separate update script.`);
-      return;
-    }
-
-    const batch = db.batch();
-    
-    rooms.forEach((room, index) => {
-      const roomRef = db.collection('rooms').doc(room.id);
-      // Remove the id field from the document data since it's used as the document ID
-      const { id, ...roomData } = room;
-      batch.set(roomRef, roomData);
-      console.log(`📝 Queued: ${index + 1}/${rooms.length} - ${room.name}`);
-    });
-    
-    console.log('💾 Committing batch write to Firestore...');
-    await batch.commit();
-    console.log(`✅ Successfully added ${rooms.length} rooms to Firestore!`);
-    
-    // Verify the data was added correctly
-    console.log('\n🔍 Verifying room data...');
-    const roomsSnapshot = await db.collection('rooms').get();
-    console.log(`✅ Found ${roomsSnapshot.size} rooms in the collection.`);
-    
-    console.log('\n📋 Room Summary:');
-    roomsSnapshot.forEach(doc => {
-      const data = doc.data();
-      console.log(`  • ${doc.id}: ${data.name} ($${data.price}/night, ${data.capacity} guests)`);
-    });
-    
-    console.log('\n🎉 Room population completed successfully!');
-    console.log('🔄 Your app should now show live data instead of demo data.');
-    
-  } catch (error) {
-    console.error('❌ Error populating rooms:', error);
-    console.error('💡 Make sure you are authenticated with Firebase CLI');
-    console.error('💡 Run: firebase login');
-  } finally {
-    console.log('\n🔌 Disconnecting from Firebase...');
-    admin.app().delete();
-  }
-}
-
-// Run the script
-populateRooms();

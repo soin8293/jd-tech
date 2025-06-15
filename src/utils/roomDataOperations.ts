@@ -205,8 +205,16 @@ export const fetchRoomData = async (
     try {
       const seedFunction = httpsCallable(functions, 'seedDatabase');
       console.log("🏨 ROOM DATA DEBUG: Calling seedDatabase function...");
-      const result = await seedFunction();
-      console.log("🏨 ROOM DATA DEBUG: SeedDatabase result:", result.data);
+      
+      // Set a timeout for the function call
+      const result = await Promise.race([
+        seedFunction(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Function call timeout')), 10000)
+        )
+      ]);
+      
+      console.log("🏨 ROOM DATA DEBUG: SeedDatabase result:", (result as any)?.data);
       
       // After seeding, try to fetch again
       console.log("🏨 ROOM DATA DEBUG: Attempting to fetch rooms after seeding...");
@@ -221,6 +229,12 @@ export const fetchRoomData = async (
       }
     } catch (seedError) {
       console.error("❌ ROOM DATA ERROR: Auto-seeding failed:", seedError);
+      console.error("❌ ROOM DATA ERROR: This could be due to:");
+      console.error("  - Cloud Function not deployed");
+      console.error("  - CORS issues");
+      console.error("  - Network connectivity");
+      console.error("  - Function timeout");
+      console.log("🏨 ROOM DATA DEBUG: Continuing with fallback data...");
     }
     
     // Fallback to the 11 themed rooms if Firestore is empty

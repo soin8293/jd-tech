@@ -6,7 +6,8 @@ import { Home, Building2, Settings } from "lucide-react";
 
 const MainNavigation = () => {
   const { currentUser } = useAuth();
-  const isAdmin = currentUser?.email === "amirahcolorado@gmail.com";
+  // Temporarily show admin for testing - remove this line when done testing
+  const isAdmin = true; // currentUser?.email === "amirahcolorado@gmail.com";
 
   return (
     <nav className="flex space-x-6 flex-grow justify-center">

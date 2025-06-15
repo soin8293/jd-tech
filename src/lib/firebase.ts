@@ -65,9 +65,7 @@ console.log("🚀 FIREBASE DEBUG: Functions initialized:", {
   app: functions.app.name,
   region: functions.region,
   customDomain: functions.customDomain,
-  constructor: functions.constructor.name,
-  emulatorOrigin: (functions as any)._delegate?._emulatorOrigin,
-  url: (functions as any)._delegate?._url
+  constructor: functions.constructor.name
 });
 
 // Additional Functions debugging
@@ -77,6 +75,29 @@ console.log("🚀 FIREBASE DEBUG: Functions detailed analysis:", {
   functionsPrototype: Object.getPrototypeOf(functions),
   functionsDescriptors: Object.getOwnPropertyDescriptors(functions),
   functionsStringified: functions.toString()
+});
+
+// Test function availability
+console.log("🚀 FIREBASE DEBUG: Testing function URLs...");
+const testUrls = [
+  "https://us-central1-jd-suites-backend.cloudfunctions.net/createPaymentIntent",
+  "https://us-central1-jd-suites-backend.cloudfunctions.net/processBooking",
+  "https://us-central1-jd-suites-backend.cloudfunctions.net/sanityCheck"
+];
+
+testUrls.forEach(async (url, index) => {
+  try {
+    console.log(`🚀 FIREBASE DEBUG: Testing URL ${index + 1}:`, url);
+    const response = await fetch(url, { method: 'GET' });
+    console.log(`🚀 FIREBASE DEBUG: URL ${index + 1} response:`, {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      headers: Object.fromEntries(response.headers.entries())
+    });
+  } catch (error) {
+    console.error(`🚀 FIREBASE DEBUG: URL ${index + 1} failed:`, error);
+  }
 });
 
 // Connect to Functions emulator in development

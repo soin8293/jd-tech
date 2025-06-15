@@ -193,11 +193,11 @@ export const handlePaymentError = (error: any): APIError => {
     console.error("💳 PAYMENT ERROR:   6. Check Stripe configuration");
   }
   
-  // Additional debugging: Check auth token
+  // Additional debugging: Check auth token (safer access)
   console.error("💳 PAYMENT ERROR: Authentication debugging:", {
     hasAuthHeader: !!localStorage.getItem('firebase:authUser:AIzaSyBEOMvNQtNC4GCoffyr0LR_v1b78093HAM:[DEFAULT]'),
     authKeys: Object.keys(localStorage).filter(key => key.includes('firebase')),
-    currentUser: functions.app.auth?.()?.currentUser?.uid || 'No current user'
+    currentUser: 'Cannot access auth safely from here'
   });
   
   const apiError: APIError = {

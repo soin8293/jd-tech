@@ -5,6 +5,10 @@ import { PaymentResponse } from "@/components/payment/payment.types";
 import { toast } from "@/hooks/use-toast";
 import { createPaymentIntentFunction, generateTransactionId, handlePaymentError } from "./paymentUtils";
 
+interface FirebaseFunctionResult {
+  data: PaymentResponse;
+}
+
 export const usePaymentIntent = (isOpen: boolean, bookingDetails: BookingDetails | null) => {
   const [clientSecret, setClientSecret] = useState<string>('');
   const [paymentIntentId, setPaymentIntentId] = useState<string>('');
@@ -119,20 +123,21 @@ export const usePaymentIntent = (isOpen: boolean, bookingDetails: BookingDetails
       });
       
       Promise.race([functionCallPromise, timeoutPromise])
-        .then((result) => {
+        .then((result: unknown) => {
           console.log("✅ PAYMENT_INTENT: ================ FUNCTION CALL SUCCESSFUL ================");
           console.log("✅ PAYMENT_INTENT: Success timestamp:", new Date().toISOString());
           console.log("✅ PAYMENT_INTENT: Raw result type:", typeof result);
-          console.log("✅ PAYMENT_INTENT: Raw result constructor:", result?.constructor?.name);
+          console.log("✅ PAYMENT_INTENT: Raw result constructor:", (result as any)?.constructor?.name);
           console.log("✅ PAYMENT_INTENT: Raw result keys:", Object.keys(result || {}));
           console.log("✅ PAYMENT_INTENT: Raw result:", JSON.stringify(result, null, 2));
           
-          console.log("✅ PAYMENT_INTENT: Result.data type:", typeof result?.data);
-          console.log("✅ PAYMENT_INTENT: Result.data constructor:", result?.data?.constructor?.name);
-          console.log("✅ PAYMENT_INTENT: Result.data keys:", Object.keys(result?.data || {}));
-          console.log("✅ PAYMENT_INTENT: Result.data:", JSON.stringify(result.data, null, 2));
+          const typedResult = result as FirebaseFunctionResult;
+          console.log("✅ PAYMENT_INTENT: Result.data type:", typeof typedResult?.data);
+          console.log("✅ PAYMENT_INTENT: Result.data constructor:", typedResult?.data?.constructor?.name);
+          console.log("✅ PAYMENT_INTENT: Result.data keys:", Object.keys(typedResult?.data || {}));
+          console.log("✅ PAYMENT_INTENT: Result.data:", JSON.stringify(typedResult.data, null, 2));
           
-          const responseData = result.data as PaymentResponse;
+          const responseData = typedResult.data as PaymentResponse;
           console.log("✅ PAYMENT_INTENT: Parsed response data:", JSON.stringify(responseData, null, 2));
           
           if (responseData?.clientSecret) {
@@ -172,8 +177,8 @@ export const usePaymentIntent = (isOpen: boolean, bookingDetails: BookingDetails
           } else {
             console.error("❌ PAYMENT_INTENT: No client secret in response");
             console.error("❌ PAYMENT_INTENT: Response structure analysis:", {
-              hasData: !!result?.data,
-              dataKeys: Object.keys(result?.data || {}),
+              hasData: !!typedResult?.data,
+              dataKeys: Object.keys(typedResult?.data || {}),
               clientSecretValue: responseData?.clientSecret,
               clientSecretType: typeof responseData?.clientSecret
             });

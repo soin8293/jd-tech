@@ -1,11 +1,14 @@
 
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App.tsx";
+import "./index.css";
 
-console.log("🔥 MAIN: Starting main.tsx at:", new Date().toISOString());
-console.log("🔥 MAIN: About to render App component");
+// Import Firebase Functions debugger to run diagnostics
+import "./utils/firebaseFunctionsDebugger.ts";
 
-createRoot(document.getElementById("root")!).render(<App />);
-
-console.log("🔥 MAIN: App component render call completed");
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);

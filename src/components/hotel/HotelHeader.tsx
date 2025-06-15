@@ -33,11 +33,11 @@ const HotelHeader: React.FC<HotelHeaderProps> = ({ className }) => {
       </div>
 
       {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end px-6 md:px-8 lg:px-20 pb-10 md:pb-16 lg:pb-20 text-white z-10">
-        <div className={cn(
-          "max-w-5xl animate-slide-up opacity-0 space-y-6 bg-black/20 backdrop-blur-sm rounded-2xl p-8 border border-white/10", 
-          isMobile ? "mb-32" : ""
-        )} style={{ animationDelay: "0.3s", animationFillMode: "forwards" }}>
+      <div className={cn(
+        "absolute inset-0 flex flex-col justify-end px-6 md:px-8 lg:px-20 text-white z-10",
+        isMobile ? "pb-6" : "pb-10 md:pb-16 lg:pb-20"
+      )}>
+        <div className="max-w-5xl animate-slide-up opacity-0 space-y-6 bg-black/20 backdrop-blur-sm rounded-2xl p-8 border border-white/10" style={{ animationDelay: "0.3s", animationFillMode: "forwards" }}>
           <div className="inline-flex items-center mb-4 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm">
             <Star className="w-4 h-4 mr-1 text-yellow-400" />
             <span>{hotelDetails.rating}/5 — Premier Destination</span>

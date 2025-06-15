@@ -4,6 +4,8 @@ import { Home, Building2 } from "lucide-react";
 import { NavigationLink, AdminNavigationLink } from "./navigation";
 
 const MainNavigation = () => {
+  console.log('📊 MainNavigation rendering');
+  
   return (
     <nav className="flex space-x-6 flex-grow justify-center relative">
       <NavigationLink 

@@ -29,7 +29,7 @@ const HotelBookingContent: React.FC = () => {
   } = useHotelBooking();
 
   return (
-    <div className="container mx-auto px-4 md:px-6 relative z-10 mt-16">
+    <div className="container mx-auto px-4 md:px-6 relative z-10 mt-16 pb-20">
       <div className="flex justify-between items-center">
         <BookingForm 
           onSearch={handleSearchRooms} 

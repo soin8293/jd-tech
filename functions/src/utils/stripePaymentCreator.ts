@@ -1,5 +1,4 @@
 
-import * as functions from "firebase-functions";
 import { getStripeClient } from "../config/stripe";
 import { logger } from "./logger";
 import { handleStripeError, validateStripeAmount } from "./stripeHelpers";

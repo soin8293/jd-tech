@@ -34,14 +34,14 @@ export const getStripeClient = (): Stripe => {
       console.log(`STRIPE_CONFIG: Initializing Stripe with key prefix: ${secretKey.substring(0, 8)}...`);
       
       stripeSingleton = new Stripe(secretKey, {
-        apiVersion: "2024-04-10", // Use a specific, current API version
+        apiVersion: "2023-08-16", // Use the supported API version
       });
       
-      console.log("STRIPE_CONFIG: Stripe initialized successfully with API version 2024-04-10");
+      console.log("STRIPE_CONFIG: Stripe initialized successfully with API version 2023-08-16");
     } catch (error) {
       console.error("STRIPE_CONFIG: Error accessing Firebase config, using fallback test key:", error);
       stripeSingleton = new Stripe(STRIPE_SECRET_KEY, {
-        apiVersion: "2024-04-10",
+        apiVersion: "2023-08-16",
       });
     }
   }

@@ -23,7 +23,7 @@ const HotelHeader: React.FC<HotelHeaderProps> = ({ className }) => {
         "flex flex-col justify-end px-6 md:px-8 lg:px-20 text-white h-full relative z-10",
         isMobile ? "pb-4" : "pb-6 md:pb-8 lg:pb-10"
       )}>
-        <div className="max-w-5xl animate-slide-up opacity-0 space-y-6 bg-black/20 backdrop-blur-sm rounded-3xl p-8 border border-white/10 relative" style={{ animationDelay: "0.3s", animationFillMode: "forwards" }}>
+        <div className="max-w-5xl animate-slide-up opacity-0 space-y-6 bg-black/20 backdrop-blur-sm rounded-3xl p-8 border border-white/10 relative overflow-hidden" style={{ animationDelay: "0.3s", animationFillMode: "forwards" }}>
           <GradientHero className="absolute inset-0 rounded-3xl" />
           <div className="inline-flex items-center mb-4 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm relative z-10">
             <Star className="w-4 h-4 mr-1 text-yellow-400" />

@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, ReactNode, useRef } from "react";
 import { 
   GoogleAuthProvider, 
@@ -15,20 +14,30 @@ import { isDevelopmentEnvironment, checkAdminStatus } from "./authHelpers";
 import { authLogger, withAuthPerformanceMarker } from "@/utils/authLogger";
 export { useAuth } from "./useAuth";
 
+console.log("🔥 AUTH CONTEXT: File loaded at:", new Date().toISOString());
+
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  console.log("🔥 AUTH PROVIDER: AuthProvider function called at:", new Date().toISOString());
+  
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [authInitialized, setAuthInitialized] = useState(false);
+  
+  console.log("🔥 AUTH PROVIDER: State initialized");
   
   // Add state tracking for debugging
   const redirectCheckCompleted = useRef(false);
   const authStateListenerSetup = useRef(false);
   const componentMountTime = useRef(Date.now());
 
+  console.log("🔥 AUTH PROVIDER: About to define signInWithGoogle function");
+
   const signInWithGoogle = withAuthPerformanceMarker(async () => {
+    console.log("🔥 SIGN IN: signInWithGoogle function called at:", new Date().toISOString());
+    
     const endTimer = authLogger.startTimer('signInWithGoogle');
     
     try {
@@ -239,10 +248,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, 'refreshUserClaims');
 
   useEffect(() => {
-    console.log("🔥 MOUNT: AuthContext useEffect triggered at:", new Date().toISOString());
-    console.log("🔥 MOUNT: URL at mount:", window.location.href);
-    console.log("🔥 MOUNT: URL params:", window.location.search);
-    console.log("🔥 MOUNT: URL hash:", window.location.hash);
+    console.log("🔥 USE EFFECT: AuthContext useEffect triggered at:", new Date().toISOString());
+    console.log("🔥 USE EFFECT: URL at mount:", window.location.href);
+    console.log("🔥 USE EFFECT: URL params:", window.location.search);
+    console.log("🔥 USE EFFECT: URL hash:", window.location.hash);
     
     // Check for pre-redirect state
     const preRedirectState = sessionStorage.getItem('preRedirectState');
@@ -450,6 +459,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []); // Empty dependency array ensures this only runs once
 
+  console.log("🔥 AUTH PROVIDER: About to create context value");
+  
   const value = {
     currentUser,
     isLoading,
@@ -460,7 +471,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUserClaims
   };
   
-  console.log("🔥 PROVIDER: Rendering AuthProvider with values:", {
+  console.log("🔥 AUTH PROVIDER: Rendering AuthProvider with values:", {
     hasCurrentUser: !!currentUser,
     currentUserEmail: currentUser?.email,
     isLoading,

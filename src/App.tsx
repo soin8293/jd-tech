@@ -18,6 +18,8 @@ import "./App.css";
 const queryClient = new QueryClient();
 
 function App() {
+  console.log("🔥 APP: App component rendering at:", new Date().toISOString());
+  
   return (
     <QueryClientProvider client={queryClient}>
       <AuthDebugProvider>

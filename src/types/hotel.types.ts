@@ -11,6 +11,8 @@ export interface Room {
   images: string[];
   availability: boolean;
   bookings?: BookingPeriod[]; // New field to track booked periods
+  version?: number; // For optimistic concurrency control
+  updatedAt?: Date; // Timestamp for last update
 }
 
 // Adding RoomFormData type for form handling

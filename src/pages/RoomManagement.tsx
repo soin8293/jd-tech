@@ -9,6 +9,7 @@ import AdminStatusIndicator from "@/components/admin/AdminStatusIndicator";
 import InitializeAdmin from "@/components/admin/InitializeAdmin";
 import AdminManageDialog from "@/components/admin/AdminManageDialog";
 import AdminRoleManager from "@/components/admin/AdminRoleManager";
+import ConnectionStatusIndicator from "@/components/admin/ConnectionStatusIndicator";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Settings } from "lucide-react";
 import { getRooms } from "@/services/room/roomQueries";
@@ -87,6 +88,9 @@ const RoomManagement = () => {
 
         {/* Admin Role Management */}
         <AdminRoleManager className="mb-6" />
+
+        {/* Connection Status */}
+        <ConnectionStatusIndicator showDetails className="mb-6" />
 
         {/* Admin Management Dialog */}
         {showAdminManagement && (

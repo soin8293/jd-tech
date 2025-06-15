@@ -20,7 +20,11 @@ const MainNavigation = () => {
         <span className="hidden sm:inline">Rooms</span>
       </Link>
       {isAdmin && (
-        <Link to="/room-management" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2">
+        <Link 
+          to="/room-management" 
+          className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
+          onClick={() => console.log('Admin link clicked, navigating to /room-management')}
+        >
           <Settings className="h-5 w-5" />
           <span className="hidden sm:inline">Admin</span>
         </Link>

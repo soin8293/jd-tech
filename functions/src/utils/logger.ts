@@ -63,7 +63,14 @@ class Logger {
   }
 
   debug(message: string, data?: any) {
-    if (functions.config().env?.debug === 'true') {
+    // Lazy load config to prevent global initialization issues
+    try {
+      const debugEnabled = functions.config().env?.debug === 'true';
+      if (debugEnabled) {
+        console.log(this.formatMessage(LogLevel.DEBUG, message, data));
+      }
+    } catch (error) {
+      // If config access fails, just skip debug logging
       console.log(this.formatMessage(LogLevel.DEBUG, message, data));
     }
   }

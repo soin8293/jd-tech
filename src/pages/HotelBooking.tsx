@@ -20,6 +20,7 @@ import FloatingBookButton from "@/components/hotel/FloatingBookButton";
 import PaymentModal from "@/components/payment/PaymentModal";
 import LocalDataBanner from "@/components/hotel/LocalDataBanner";
 import InitializeAdmin from "@/components/admin/InitializeAdmin";
+import { ReservationHoldDisplay } from "@/components/booking/ReservationHoldDisplay";
 
 // Types
 import { BookingPeriod } from "@/types/hotel.types";
@@ -39,6 +40,7 @@ const HotelBooking: React.FC = () => {
 
   // Payment modal state
   const [isPaymentModalOpen, setPaymentModalOpen] = React.useState(false);
+  const [showReservationHold, setShowReservationHold] = React.useState(false);
 
   /**
    * Handle room search when user submits booking form
@@ -114,6 +116,15 @@ const HotelBooking: React.FC = () => {
         {/* Local Data Banner - Will be shown by RoomList component if needed */}
         <LocalDataBanner />
         
+        {/* Reservation Hold Display */}
+        {showReservationHold && (
+          <ReservationHoldDisplay 
+            className="mb-6"
+            onExpiry={() => setShowReservationHold(false)}
+            onRelease={() => setShowReservationHold(false)}
+          />
+        )}
+
         {/* Room Search Results */}
         {roomSearch.isSearched && (
           <div className="mt-6">

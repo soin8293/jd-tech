@@ -11,7 +11,10 @@ import AdminManageDialog from "@/components/admin/AdminManageDialog";
 import AdminRoleManager from "@/components/admin/AdminRoleManager";
 import ConnectionStatusIndicator from "@/components/admin/ConnectionStatusIndicator";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Settings } from "lucide-react";
+import { UserPlus, Settings, BarChart3, Wrench } from "lucide-react";
+import { RevenueAnalytics } from "@/components/analytics/RevenueAnalytics";
+import { MaintenanceScheduler } from "@/components/maintenance/MaintenanceScheduler";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getRooms } from "@/services/room/roomQueries";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -105,23 +108,62 @@ const RoomManagement = () => {
           <CardHeader>
             <CardTitle>Room Management</CardTitle>
             <CardDescription>
-              Add, edit, or remove rooms from your hotel inventory. 
-              All changes are saved directly to the database with proper permission validation.
+              Comprehensive room management with analytics, maintenance scheduling, and inventory control.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {loading && !initialized ? (
-              <div className="text-center py-6">
-                <p>Loading rooms...</p>
-              </div>
-            ) : (
-              <RoomManager
-                initialRooms={rooms}
-                onSaveRooms={handleSaveRooms}
-                onDeleteRoom={handleDeleteRoom}
-                isLoading={loading}
-              />
-            )}
+            <Tabs defaultValue="rooms" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="rooms">Rooms</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+                <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+                <TabsTrigger value="availability">Availability</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="rooms" className="mt-6">
+                {loading && !initialized ? (
+                  <div className="text-center py-6">
+                    <p>Loading rooms...</p>
+                  </div>
+                ) : (
+                  <RoomManager
+                    initialRooms={rooms}
+                    onSaveRooms={handleSaveRooms}
+                    onDeleteRoom={handleDeleteRoom}
+                    isLoading={loading}
+                  />
+                )}
+              </TabsContent>
+              
+              <TabsContent value="analytics" className="mt-6">
+                <RevenueAnalytics />
+              </TabsContent>
+              
+              <TabsContent value="maintenance" className="mt-6">
+                <div className="space-y-6">
+                  {rooms.map(room => (
+                    <MaintenanceScheduler 
+                      key={room.id} 
+                      roomId={room.id}
+                      className="border rounded-lg p-4"
+                    />
+                  ))}
+                  {rooms.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">
+                      No rooms available for maintenance scheduling
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="availability" className="mt-6">
+                <div className="text-center py-8 text-muted-foreground">
+                  <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Advanced availability management coming soon</p>
+                  <p className="text-sm">This will include real-time availability tracking and conflict resolution</p>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>

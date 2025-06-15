@@ -21,7 +21,7 @@ const HotelHeader: React.FC<HotelHeaderProps> = ({ className }) => {
     )}>
       <div className={cn(
         "flex flex-col justify-end px-6 md:px-8 lg:px-20 text-white h-full relative z-10",
-        isMobile ? "pb-6" : "pb-10 md:pb-16 lg:pb-20"
+        isMobile ? "pb-16" : "pb-20 md:pb-24 lg:pb-32"
       )}>
         <div className="max-w-5xl animate-slide-up opacity-0 space-y-6 bg-black/20 backdrop-blur-sm rounded-2xl p-8 border border-white/10 relative" style={{ animationDelay: "0.3s", animationFillMode: "forwards" }}>
           <GradientHero className="absolute inset-0 rounded-2xl" />

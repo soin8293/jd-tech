@@ -1,3 +1,4 @@
+
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Room } from "@/types/hotel.types";
@@ -9,39 +10,50 @@ export const getRooms = async (): Promise<Room[]> => {
   console.log("🔍 FIRESTORE QUERY: Starting getRooms() at:", new Date().toISOString());
   console.log("🔍 FIRESTORE QUERY: Database instance:", db);
   console.log("🔍 FIRESTORE QUERY: Database app:", db?.app);
+  console.log("🔍 FIRESTORE QUERY: Database app name:", db?.app?.name);
   console.log("🔍 FIRESTORE QUERY: Database app options:", db?.app?.options);
+  console.log("🔍 FIRESTORE QUERY: Database app options projectId:", db?.app?.options?.projectId);
   console.log("🔍 FIRESTORE QUERY: Collection name:", ROOMS_COLLECTION);
   
   try {
-    console.log("🔍 FIRESTORE QUERY: Creating collection reference...");
+    console.log("🔍 FIRESTORE QUERY: ================== CREATING COLLECTION REFERENCE ==================");
+    console.log("🔍 FIRESTORE QUERY: About to create collection reference...");
     const roomsCollection = collection(db, ROOMS_COLLECTION);
-    console.log("🔍 FIRESTORE QUERY: Collection reference created:", roomsCollection);
+    console.log("🔍 FIRESTORE QUERY: ✅ Collection reference created successfully:", roomsCollection);
     console.log("🔍 FIRESTORE QUERY: Collection path:", roomsCollection.path);
     console.log("🔍 FIRESTORE QUERY: Collection id:", roomsCollection.id);
-    console.log("🔍 FIRESTORE QUERY: Collection firestore:", roomsCollection.firestore);
+    console.log("🔍 FIRESTORE QUERY: Collection firestore instance:", roomsCollection.firestore);
+    console.log("🔍 FIRESTORE QUERY: Collection firestore app:", roomsCollection.firestore.app);
+    console.log("🔍 FIRESTORE QUERY: Collection firestore app name:", roomsCollection.firestore.app.name);
     
+    console.log("🔍 FIRESTORE QUERY: ================== EXECUTING GETDOCS QUERY ==================");
     console.log("🔍 FIRESTORE QUERY: About to call getDocs()...");
     const startTime = Date.now();
-    const roomsSnapshot = await getDocs(roomsCollection);
-    const endTime = Date.now();
     
-    console.log("🔍 FIRESTORE QUERY: ✅ getDocs() completed successfully");
-    console.log("🔍 FIRESTORE QUERY: Query execution time:", (endTime - startTime), "ms");
+    const roomsSnapshot = await getDocs(roomsCollection);
+    
+    const endTime = Date.now();
+    console.log("🔍 FIRESTORE QUERY: ✅ getDocs() completed successfully in:", (endTime - startTime), "ms");
+    console.log("🔍 FIRESTORE QUERY: ================== ANALYZING SNAPSHOT ==================");
     console.log("🔍 FIRESTORE QUERY: Snapshot received:", roomsSnapshot);
     console.log("🔍 FIRESTORE QUERY: Snapshot size:", roomsSnapshot.size);
     console.log("🔍 FIRESTORE QUERY: Snapshot empty:", roomsSnapshot.empty);
     console.log("🔍 FIRESTORE QUERY: Snapshot metadata:", roomsSnapshot.metadata);
     console.log("🔍 FIRESTORE QUERY: Snapshot metadata fromCache:", roomsSnapshot.metadata?.fromCache);
     console.log("🔍 FIRESTORE QUERY: Snapshot metadata hasPendingWrites:", roomsSnapshot.metadata?.hasPendingWrites);
+    console.log("🔍 FIRESTORE QUERY: Snapshot query:", roomsSnapshot.query);
+    console.log("🔍 FIRESTORE QUERY: Snapshot docs array length:", roomsSnapshot.docs?.length);
     
     if (roomsSnapshot.empty) {
       console.warn("🔍 FIRESTORE QUERY: ⚠️ ================== SNAPSHOT IS EMPTY ==================");
       console.warn("🔍 FIRESTORE QUERY: No rooms found in Firestore collection");
       console.log("🔍 FIRESTORE QUERY: This could mean:");
-      console.log("🔍 FIRESTORE QUERY:   - Collection doesn't exist");
-      console.log("🔍 FIRESTORE QUERY:   - Collection is empty");
+      console.log("🔍 FIRESTORE QUERY:   - Collection '", ROOMS_COLLECTION, "' doesn't exist");
+      console.log("🔍 FIRESTORE QUERY:   - Collection is empty (no documents)");
       console.log("🔍 FIRESTORE QUERY:   - Permission denied (check Firestore rules)");
       console.log("🔍 FIRESTORE QUERY:   - Network connectivity issues");
+      console.log("🔍 FIRESTORE QUERY:   - Wrong project ID or database");
+      console.log("🔍 FIRESTORE QUERY: Project ID from config:", db?.app?.options?.projectId);
       console.log("🔍 FIRESTORE QUERY: ================== RETURNING EMPTY ARRAY ==================");
       return [];
     }
@@ -53,16 +65,27 @@ export const getRooms = async (): Promise<Room[]> => {
     let docIndex = 0;
     roomsSnapshot.forEach((doc) => {
       docIndex++;
+      console.log(`🔍 FIRESTORE QUERY: ================== DOCUMENT ${docIndex}/${roomsSnapshot.size} ==================`);
       console.log(`🔍 FIRESTORE QUERY: Processing document ${docIndex}/${roomsSnapshot.size}`);
       console.log(`🔍 FIRESTORE QUERY: Document ID: ${doc.id}`);
       console.log(`🔍 FIRESTORE QUERY: Document exists: ${doc.exists()}`);
       console.log(`🔍 FIRESTORE QUERY: Document ref:`, doc.ref);
+      console.log(`🔍 FIRESTORE QUERY: Document ref path:`, doc.ref.path);
       console.log(`🔍 FIRESTORE QUERY: Document metadata:`, doc.metadata);
       
       const data = doc.data();
       console.log(`🔍 FIRESTORE QUERY: Document data for ${doc.id}:`, data);
       console.log(`🔍 FIRESTORE QUERY: Data keys:`, Object.keys(data || {}));
       console.log(`🔍 FIRESTORE QUERY: Data types:`, Object.entries(data || {}).map(([key, value]) => [key, typeof value]));
+      
+      // Log specific fields we expect
+      console.log(`🔍 FIRESTORE QUERY: Document ${doc.id} fields:`, {
+        name: data?.name,
+        price: data?.price,
+        capacity: data?.capacity,
+        availability: data?.availability,
+        bookings: data?.bookings
+      });
       
       const room = { 
         id: doc.id, 
@@ -77,14 +100,16 @@ export const getRooms = async (): Promise<Room[]> => {
         price: room.price,
         capacity: room.capacity,
         availability: room.availability,
-        bookingsCount: room.bookings?.length || 0
+        bookingsCount: room.bookings?.length || 0,
+        allFields: Object.keys(room)
       });
       rooms.push(room);
     });
     
     console.log("🔍 FIRESTORE QUERY: ================== PROCESSING COMPLETE ==================");
     console.log("🔍 FIRESTORE QUERY: ✅ Successfully fetched rooms from Firestore:", rooms.length);
-    console.log("🔍 FIRESTORE QUERY: Final rooms array:", rooms.map(r => ({ id: r.id, name: r.name, price: r.price })));
+    console.log("🔍 FIRESTORE QUERY: Final rooms array length:", rooms.length);
+    console.log("🔍 FIRESTORE QUERY: Final rooms summary:", rooms.map(r => ({ id: r.id, name: r.name, price: r.price })));
     console.log("🔍 FIRESTORE QUERY: ================== RETURNING ROOMS ==================");
     return rooms;
   } catch (error) {
@@ -100,11 +125,13 @@ export const getRooms = async (): Promise<Room[]> => {
     
     // Additional Firebase-specific error analysis
     if ((error as any)?.code) {
-      console.error("🔍 FIRESTORE QUERY: Firebase error code analysis:");
+      console.error("🔍 FIRESTORE QUERY: ================== FIREBASE ERROR CODE ANALYSIS ==================");
       const errorCode = (error as any).code;
+      console.error("🔍 FIRESTORE QUERY: Firebase error code:", errorCode);
       switch (errorCode) {
         case 'permission-denied':
           console.error("🔍 FIRESTORE QUERY:   - PERMISSION DENIED: Check your Firestore security rules");
+          console.error("🔍 FIRESTORE QUERY:   - Make sure rules allow reading from 'rooms' collection");
           break;
         case 'unavailable':
           console.error("🔍 FIRESTORE QUERY:   - SERVICE UNAVAILABLE: Firestore service is down");
@@ -114,6 +141,12 @@ export const getRooms = async (): Promise<Room[]> => {
           break;
         case 'not-found':
           console.error("🔍 FIRESTORE QUERY:   - NOT FOUND: Collection or document doesn't exist");
+          break;
+        case 'failed-precondition':
+          console.error("🔍 FIRESTORE QUERY:   - FAILED PRECONDITION: Database may not be initialized");
+          break;
+        case 'invalid-argument':
+          console.error("🔍 FIRESTORE QUERY:   - INVALID ARGUMENT: Collection name or query is invalid");
           break;
         default:
           console.error("🔍 FIRESTORE QUERY:   - UNKNOWN ERROR CODE:", errorCode);

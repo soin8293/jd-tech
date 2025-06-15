@@ -19,18 +19,18 @@ const createPaymentIntentHandler = async (request: any): Promise<CreatePaymentIn
     guests 
   });
   
+  // Initialize Firebase Admin if needed (must be done before any admin operations)
+  if (!admin.apps.length) {
+    logger.info("Initializing Firebase Admin");
+    admin.initializeApp();
+  }
+
   logger.info("Processing payment intent creation", { 
     roomCount: rooms.length, 
     period, 
     guests, 
     currency 
   });
-
-  // Initialize Firebase Admin if needed
-  if (!admin.apps.length) {
-    logger.info("Initializing Firebase Admin");
-    admin.initializeApp();
-  }
 
   // Calculate booking duration
   logger.info("Calculating number of nights");

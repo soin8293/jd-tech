@@ -10,6 +10,7 @@ const NebulaBackground: React.FC<NebulaBackgroundProps> = ({
   starCount = 200 
 }) => {
   return (
+    // MAIN BACKGROUND COLOR - Controls the overall background color of the "Book a Room" page
     <div className={`fixed inset-0 -z-10 bg-gradient-to-br from-blue-200 via-blue-300 to-blue-400 overflow-hidden ${className}`}>
       {/* Main breathing nebula */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,204,255,0.3)_0%,rgba(0,150,255,0.1)_40%,transparent_70%)] animate-[pulse_5s_ease-in-out_infinite]"></div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { BookingPeriod, Room, BookingDetails, RoomAvailabilityCheck } from "@/types/hotel.types";
@@ -8,8 +7,13 @@ import { addDays, differenceInDays, format } from "date-fns";
 import { fetchRoomData } from "@/utils/roomDataOperations";
 
 export const useHotelBooking = () => {
+  console.log("🏨 HOTEL BOOKING: ================== USHOTELBOOKING HOOK STARTING ==================");
+  
   const { toast } = useToast();
   const { currentUser } = useAuth();
+  
+  console.log("🏨 HOTEL BOOKING: useAuth hook called successfully, currentUser:", currentUser?.email || 'Not logged in');
+  
   const [selectedRooms, setSelectedRooms] = useState<Room[]>([]);
   const [bookingPeriod, setBookingPeriod] = useState<BookingPeriod>({
     checkIn: new Date(),
@@ -169,6 +173,8 @@ export const useHotelBooking = () => {
     
     setSelectedRooms([]);
   };
+
+  console.log("🏨 HOTEL BOOKING: useHotelBooking hook returning values successfully");
 
   return {
     selectedRooms,

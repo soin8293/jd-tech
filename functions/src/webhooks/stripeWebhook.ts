@@ -18,7 +18,8 @@ export const stripeWebhook = functions.https.onRequest(async (req, res): Promise
       return;
     }
     
-    if (!stripe) {
+    const stripeInstance = stripe();
+    if (!stripeInstance) {
       console.error("Stripe instance not available in stripeWebhook.");
       res.status(500).send("Webhook Error: Payment service configuration error.");
       return;
@@ -27,7 +28,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res): Promise
     let event;
     
     try {
-      event = stripe.webhooks.constructEvent(
+      event = stripeInstance.webhooks.constructEvent(
         req.rawBody,
         signature,
         webhookSecret

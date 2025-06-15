@@ -35,13 +35,14 @@ export const sendBookingConfirmation = onDocumentCreated("bookings/{bookingId}",
     let paymentDetails = "";
     
     if (booking.paymentIntentId) {
-      if (!stripe) {
+      const stripeInstance = stripe();
+      if (!stripeInstance) {
         console.error("Stripe instance not available in sendBookingConfirmation.");
         paymentDetails = "<p>Payment service unavailable.</p>";
       } else {
         try {
           console.log(`Retrieving payment intent: ${booking.paymentIntentId}`);
-          paymentIntent = await stripe.paymentIntents.retrieve(booking.paymentIntentId);
+          paymentIntent = await stripeInstance.paymentIntents.retrieve(booking.paymentIntentId);
           
           // Format payment information for the email
           const amount = (paymentIntent.amount / 100).toFixed(2);

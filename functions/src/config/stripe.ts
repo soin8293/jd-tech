@@ -49,5 +49,13 @@ const initializeStripe = () => {
   }
 };
 
-// Export getter function instead of instance
-export const stripe = (() => initializeStripe());
+// Export the Stripe instance with proper lazy initialization
+export const stripe = (() => {
+  let instance: Stripe | null = null;
+  return () => {
+    if (!instance) {
+      instance = initializeStripe();
+    }
+    return instance;
+  };
+})();

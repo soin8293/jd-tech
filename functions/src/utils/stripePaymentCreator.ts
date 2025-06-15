@@ -30,7 +30,8 @@ export const createStripePaymentIntent = async (params: CreatePaymentIntentParam
     });
     
     // Verify that Stripe is properly initialized
-    if (!stripe) {
+    const stripeInstance = stripe();
+    if (!stripeInstance) {
       logger.error("Stripe instance is not properly initialized");
       throw new functions.https.HttpsError(
         'internal',
@@ -58,7 +59,7 @@ export const createStripePaymentIntent = async (params: CreatePaymentIntentParam
     
     logger.debug("Stripe payment intent payload", intentPayload);
     
-    const paymentIntent = await stripe.paymentIntents.create(intentPayload, requestOptions);
+    const paymentIntent = await stripeInstance.paymentIntents.create(intentPayload, requestOptions);
 
     logger.info("Payment intent created successfully", {
       id: paymentIntent.id,

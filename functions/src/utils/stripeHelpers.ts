@@ -105,7 +105,8 @@ export const validateStripeAmount = (amount: number, currency: string = 'usd'): 
  * Safely retrieve and validate Stripe customer
  */
 export const getOrCreateStripeCustomer = async (email: string, name?: string): Promise<string> => {
-  if (!stripe) {
+  const stripeInstance = stripe();
+  if (!stripeInstance) {
     throw new functions.https.HttpsError('internal', 'Stripe not initialized');
   }
 
@@ -113,7 +114,7 @@ export const getOrCreateStripeCustomer = async (email: string, name?: string): P
     logger.info("Searching for existing Stripe customer", { email });
     
     // Search for existing customer
-    const existingCustomers = await stripe.customers.list({
+    const existingCustomers = await stripeInstance.customers.list({
       email,
       limit: 1
     });
@@ -126,7 +127,7 @@ export const getOrCreateStripeCustomer = async (email: string, name?: string): P
 
     // Create new customer
     logger.info("Creating new Stripe customer", { email, name });
-    const customer = await stripe.customers.create({
+    const customer = await stripeInstance.customers.create({
       email,
       name,
       metadata: {

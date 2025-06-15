@@ -28,7 +28,8 @@ const processBookingHandler = async (request: any): Promise<PaymentResponse> => 
   });
 
   // Verify Stripe is available
-  if (!stripe) {
+  const stripeInstance = stripe();
+  if (!stripeInstance) {
     throw new HttpsError(
       'internal',
       'Payment service unavailable',
@@ -40,7 +41,7 @@ const processBookingHandler = async (request: any): Promise<PaymentResponse> => 
   logger.info("Retrieving payment intent from Stripe");
   let paymentIntent: Stripe.PaymentIntent | null = null;
   try {
-    paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    paymentIntent = await stripeInstance.paymentIntents.retrieve(paymentIntentId);
     
     logger.info("Payment intent retrieved successfully", {
       id: paymentIntent.id,

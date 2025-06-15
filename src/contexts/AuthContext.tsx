@@ -20,6 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   const signInWithGoogle = async () => {
     try {
@@ -80,8 +81,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await signOut(auth);
+      // Clear admin state immediately
       setIsAdmin(false);
+      
+      // Clear any cached data or local storage if needed
+      localStorage.removeItem('adminStatus');
+      sessionStorage.clear();
+      
+      // Sign out from Firebase
+      await signOut(auth);
+      
+      // Redirect to home page after logout
+      if (window.location.pathname === '/room-management') {
+        window.location.href = '/';
+      }
+      
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out",
@@ -149,11 +163,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCurrentUser(user);
       
       if (user) {
+        // Persist user session
+        localStorage.setItem('lastAuthCheck', Date.now().toString());
         await checkAdminStatus(user, setIsAdmin);
+        
+        // Cache admin status for faster loading
+        if (isAdmin) {
+          localStorage.setItem('adminStatus', 'true');
+        } else {
+          localStorage.removeItem('adminStatus');
+        }
       } else {
         setIsAdmin(false);
+        localStorage.removeItem('adminStatus');
+        localStorage.removeItem('lastAuthCheck');
       }
       
+      if (!authInitialized) {
+        setAuthInitialized(true);
+      }
       setIsLoading(false);
     });
 
@@ -169,6 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     currentUser,
     isLoading,
     isAdmin,
+    authInitialized,
     signInWithGoogle,
     logout,
     refreshUserClaims

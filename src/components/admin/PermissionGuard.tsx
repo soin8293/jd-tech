@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Shield, AlertTriangle, RefreshCw, LogIn } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 interface PermissionGuardProps {
   children: React.ReactNode;
@@ -16,22 +17,11 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   requiredRole = 'admin',
   fallbackComponent
 }) => {
-  const { currentUser, isAdmin, isLoading, signInWithGoogle, refreshUserClaims } = useAuth();
+  const { currentUser, isAdmin, isLoading, authInitialized, signInWithGoogle, refreshUserClaims } = useAuth();
 
   // Show loading state while checking authentication
-  if (isLoading) {
-    return (
-      <div className="min-h-screen pt-16 container mx-auto px-4 py-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center space-x-2">
-              <RefreshCw className="h-4 w-4 animate-spin" />
-              <span>Checking permissions...</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  if (isLoading || !authInitialized) {
+    return <LoadingScreen message="Checking permissions..." fullScreen />;
   }
 
   // User not authenticated

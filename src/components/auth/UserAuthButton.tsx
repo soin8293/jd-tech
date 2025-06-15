@@ -8,9 +8,14 @@ interface UserAuthButtonProps {
 }
 
 const UserAuthButton = ({ onClick }: UserAuthButtonProps) => {
+  const handleClick = () => {
+    console.log("🔥 BUTTON: Login button clicked!");
+    onClick();
+  };
+
   return (
     <Button 
-      onClick={onClick} 
+      onClick={handleClick} 
       variant="outline" 
       className="flex items-center gap-2 h-10 px-4"
     >

@@ -32,6 +32,7 @@ const UserProfileDropdown = () => {
 
   // Handle sign-in with comprehensive debugging
   const handleSignIn = async () => {
+    console.log("🔥 UI: handleSignIn function called!");
     console.log("🔥 UI: Sign-in button clicked");
     console.log("🔥 UI: Pre-sign-in state:", {
       currentUser,
@@ -41,6 +42,7 @@ const UserProfileDropdown = () => {
     });
     
     try {
+      console.log("🔥 UI: About to call signInWithGoogle()");
       await signInWithGoogle();
       console.log("🔥 UI: Sign-in function completed");
     } catch (error) {

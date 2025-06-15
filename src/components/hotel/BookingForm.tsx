@@ -192,7 +192,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch, isLoadin
       
       {isMobile && (
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <DrawerContent className="px-4 pb-6 pt-2">
+          <DrawerContent className="px-4 pb-12 pt-2">
             <div className="mb-4">
               <h3 className="font-semibold text-lg text-center mb-4">Select Dates</h3>
               <Calendar

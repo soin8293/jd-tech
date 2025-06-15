@@ -289,10 +289,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           lastAuthCheck,
         });
         
-        await checkAdminStatus(user, setIsAdmin);
+        const isUserAdmin = await checkAdminStatus(user, setIsAdmin);
         
-        // Cache admin status for faster loading
-        if (isAdmin) {
+        // Cache admin status for faster loading using the actual returned value
+        if (isUserAdmin) {
           localStorage.setItem('adminStatus', 'true');
           authLogger.debug('AuthContext.onAuthStateChanged', 'Admin status cached');
         } else {

@@ -2,6 +2,9 @@ import { Room } from "@/types/hotel.types";
 import { getRooms as fetchRoomsDirectly } from "@/services/room/roomQueries";
 import { getRooms as fetchRoomsFromService } from "@/services/room/roomService";
 import { notifyError } from "./roomNotifications";
+import { getFunctions, httpsCallable } from "firebase/functions";
+
+const functions = getFunctions();
 
 // Fallback room data matching the 11 Colorado-themed rooms
 const fallbackRooms: Room[] = [
@@ -195,6 +198,29 @@ export const fetchRoomData = async (
       setUsingLocalData(false);
       console.log("✅ ROOM DATA DEBUG: State updated successfully with service results");
       return serviceFetchedRooms;
+    }
+    
+    // Database is empty - automatically seed it
+    console.log("🏨 ROOM DATA DEBUG: Step 3 - Database is empty, auto-seeding with initial room data...");
+    try {
+      const seedFunction = httpsCallable(functions, 'seedDatabase');
+      console.log("🏨 ROOM DATA DEBUG: Calling seedDatabase function...");
+      const result = await seedFunction();
+      console.log("🏨 ROOM DATA DEBUG: SeedDatabase result:", result.data);
+      
+      // After seeding, try to fetch again
+      console.log("🏨 ROOM DATA DEBUG: Attempting to fetch rooms after seeding...");
+      const freshRooms = await fetchRoomsDirectly();
+      
+      if (freshRooms && freshRooms.length > 0) {
+        console.log("✅ ROOM DATA DEBUG: Successfully fetched seeded rooms");
+        setRooms(freshRooms);
+        setError(null);
+        setUsingLocalData(false);
+        return freshRooms;
+      }
+    } catch (seedError) {
+      console.error("❌ ROOM DATA ERROR: Auto-seeding failed:", seedError);
     }
     
     // Fallback to the 11 themed rooms if Firestore is empty

@@ -47,10 +47,10 @@ const RoomManagement = () => {
     }
   }, [initialized, handleSaveRooms, rooms.length]);
 
-  // Redirect non-admin users silently without showing the error message
-  if (!isAdmin) {
-    return <Navigate to="/" replace />;
-  }
+  // TEMPORARILY DISABLED: Redirect non-admin users silently without showing the error message
+  // if (!isAdmin) {
+  //   return <Navigate to="/" replace />;
+  // }
 
   return (
     <div className="min-h-screen pt-16 container mx-auto px-4 py-8">

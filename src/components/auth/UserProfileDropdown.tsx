@@ -13,6 +13,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const UserProfileDropdown = () => {
   const { currentUser, logout, signInWithGoogle } = useAuth();
+  console.log("UI Component: Rendering with user:", currentUser);
   const { isAdmin, showAdminMenu, toggleAdminMenu, closeAdminMenu } = useAdminMenu();
   const [supportModalOpen, setSupportModalOpen] = React.useState(false);
 

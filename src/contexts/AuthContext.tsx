@@ -210,6 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, 'refreshUserClaims');
 
   useEffect(() => {
+    console.log("AuthContext: useEffect triggered. Setting up listener...");
     authLogger.info('AuthContext.useEffect', 'Setting up auth state and redirect result listener', {
       traceId: authLogger.getTraceId(),
       requestId: authLogger.getRequestId(),
@@ -259,6 +260,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, 'checkRedirectResult');
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("AuthContext: onAuthStateChanged fired!", { user });
       const authStateTimer = authLogger.startTimer('onAuthStateChanged');
       
       authLogger.info('AuthContext.onAuthStateChanged', 'Auth state changed', {

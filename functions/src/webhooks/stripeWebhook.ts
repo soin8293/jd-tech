@@ -1,7 +1,7 @@
 
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { stripe } from "../config/stripe";
+import { getStripeClient } from "../config/stripe";
 
 /**
  * Firebase Cloud Function for handling Stripe webhooks.
@@ -18,17 +18,11 @@ export const stripeWebhook = functions.https.onRequest(async (req, res): Promise
       return;
     }
     
-    const stripeInstance = stripe();
-    if (!stripeInstance) {
-      console.error("Stripe instance not available in stripeWebhook.");
-      res.status(500).send("Webhook Error: Payment service configuration error.");
-      return;
-    }
-    
+    const stripe = getStripeClient();
     let event;
     
     try {
-      event = stripeInstance.webhooks.constructEvent(
+      event = stripe.webhooks.constructEvent(
         req.rawBody,
         signature,
         webhookSecret

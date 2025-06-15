@@ -1,7 +1,7 @@
 
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
-import { stripe } from "../config/stripe";
+import { getStripeClient } from "../config/stripe";
 import { MailDataRequired } from "@sendgrid/mail";
 import sgMail from '@sendgrid/mail';
 
@@ -35,14 +35,10 @@ export const sendBookingConfirmation = onDocumentCreated("bookings/{bookingId}",
     let paymentDetails = "";
     
     if (booking.paymentIntentId) {
-      const stripeInstance = stripe();
-      if (!stripeInstance) {
-        console.error("Stripe instance not available in sendBookingConfirmation.");
-        paymentDetails = "<p>Payment service unavailable.</p>";
-      } else {
-        try {
-          console.log(`Retrieving payment intent: ${booking.paymentIntentId}`);
-          paymentIntent = await stripeInstance.paymentIntents.retrieve(booking.paymentIntentId);
+      try {
+        console.log(`Retrieving payment intent: ${booking.paymentIntentId}`);
+        const stripe = getStripeClient();
+        paymentIntent = await stripe.paymentIntents.retrieve(booking.paymentIntentId);
           
           // Format payment information for the email
           const amount = (paymentIntent.amount / 100).toFixed(2);
@@ -61,10 +57,9 @@ export const sendBookingConfirmation = onDocumentCreated("bookings/{bookingId}",
                 : ""}
             </ul>
           `;
-        } catch (error) {
-          console.error("Error retrieving payment intent:", error);
-          paymentDetails = "<p>Payment information is not available at this time.</p>";
-        }
+      } catch (error) {
+        console.error("Error retrieving payment intent:", error);
+        paymentDetails = "<p>Payment information is not available at this time.</p>";
       }
     } else {
       console.log("No payment intent ID available for this booking");

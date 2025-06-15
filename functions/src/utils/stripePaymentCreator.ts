@@ -1,6 +1,6 @@
 
 import * as functions from "firebase-functions";
-import { stripe } from "../config/stripe";
+import { getStripeClient } from "../config/stripe";
 import { logger } from "./logger";
 import { handleStripeError, validateStripeAmount } from "./stripeHelpers";
 
@@ -29,19 +29,11 @@ export const createStripePaymentIntent = async (params: CreatePaymentIntentParam
       metadata: params.metadata 
     });
     
-    // Verify that Stripe is properly initialized
-    const stripeInstance = stripe();
-    if (!stripeInstance) {
-      logger.error("Stripe instance is not properly initialized");
-      throw new functions.https.HttpsError(
-        'internal',
-        'Payment service unavailable',
-        { type: 'stripe_initialization_error' }
-      );
-    }
-    
     // Validate amount is within Stripe limits
     validateStripeAmount(params.amount, params.currency);
+    
+    // Get Stripe instance
+    const stripe = getStripeClient();
     
     // Create payment intent with detailed error handling and idempotency
     const intentPayload = {
@@ -59,7 +51,7 @@ export const createStripePaymentIntent = async (params: CreatePaymentIntentParam
     
     logger.debug("Stripe payment intent payload", intentPayload);
     
-    const paymentIntent = await stripeInstance.paymentIntents.create(intentPayload, requestOptions);
+    const paymentIntent = await stripe.paymentIntents.create(intentPayload, requestOptions);
 
     logger.info("Payment intent created successfully", {
       id: paymentIntent.id,

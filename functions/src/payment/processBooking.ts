@@ -1,5 +1,5 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { stripe } from "../config/stripe";
+import { getStripeClient } from "../config/stripe";
 import type { PaymentResponse } from "../types/booking.process.types";
 import { storeBookingData } from "../utils/bookingDataStore";
 import { asyncHandler } from "../utils/asyncHandler";
@@ -27,21 +27,12 @@ const processBookingHandler = async (request: any): Promise<PaymentResponse> => 
     roomCount: validatedData.bookingDetails?.rooms?.length || 0,
   });
 
-  // Verify Stripe is available
-  const stripeInstance = stripe();
-  if (!stripeInstance) {
-    throw new HttpsError(
-      'internal',
-      'Payment service unavailable',
-      { type: 'configuration_error' }
-    );
-  }
-  
   // Verify payment status with Stripe
   logger.info("Retrieving payment intent from Stripe");
   let paymentIntent: Stripe.PaymentIntent | null = null;
   try {
-    paymentIntent = await stripeInstance.paymentIntents.retrieve(paymentIntentId);
+    const stripe = getStripeClient();
+    paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
     
     logger.info("Payment intent retrieved successfully", {
       id: paymentIntent.id,

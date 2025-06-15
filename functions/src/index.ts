@@ -7,7 +7,6 @@
  * the commented-out files.
  * =================================================================
  */
-import * as admin from "firebase-admin";
 
 // COMMENTED OUT FOR DEBUGGING
 // import { processBooking } from "./payment/processBooking";

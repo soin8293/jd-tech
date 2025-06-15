@@ -15,9 +15,22 @@ export const usePaymentIntent = (isOpen: boolean, bookingDetails: BookingDetails
 
   useEffect(() => {
     if (isOpen && bookingDetails) {
+      console.log("🚀 PAYMENT_INTENT: Starting payment intent creation");
+      console.log("🚀 PAYMENT_INTENT: Modal opened:", isOpen);
+      console.log("🚀 PAYMENT_INTENT: Booking details:", {
+        period: {
+          checkIn: bookingDetails.period.checkIn,
+          checkOut: bookingDetails.period.checkOut
+        },
+        guests: bookingDetails.guests,
+        roomCount: bookingDetails.rooms.length,
+        totalPrice: bookingDetails.totalPrice
+      });
+      
       setIsLoading(true);
       
       const generatedTransactionId = generateTransactionId();
+      console.log("🚀 PAYMENT_INTENT: Generated transaction ID:", generatedTransactionId);
       setTransactionId(generatedTransactionId);
       
       const paymentData = {
@@ -31,26 +44,37 @@ export const usePaymentIntent = (isOpen: boolean, bookingDetails: BookingDetails
         currency: 'usd'
       };
       
-      console.log("FRONTEND: Calling createPaymentIntent via httpsCallable with data:", paymentData);
+      console.log("🚀 PAYMENT_INTENT: Calling createPaymentIntent with data:", paymentData);
+      console.log("🚀 PAYMENT_INTENT: Function reference:", createPaymentIntentFunction);
       
       createPaymentIntentFunction(paymentData)
         .then((result) => {
+          console.log("✅ PAYMENT_INTENT: Successfully received response from createPaymentIntent");
+          console.log("✅ PAYMENT_INTENT: Raw result:", result);
+          console.log("✅ PAYMENT_INTENT: Result data:", result.data);
+          
           const responseData = result.data as PaymentResponse;
-          console.log("FRONTEND: Successfully received response from createPaymentIntent:", responseData);
+          console.log("✅ PAYMENT_INTENT: Parsed response data:", responseData);
           
           if (responseData.clientSecret) {
+            console.log("✅ PAYMENT_INTENT: Client secret received, length:", responseData.clientSecret.length);
             setClientSecret(responseData.clientSecret);
             setPaymentIntentId(responseData.paymentIntentId || '');
             if (responseData.calculatedAmount) {
+              console.log("✅ PAYMENT_INTENT: Server calculated amount:", responseData.calculatedAmount);
               setCalculatedAmount(responseData.calculatedAmount);
             }
             setIsLoading(false);
             setError(null);
+            console.log("✅ PAYMENT_INTENT: Payment intent setup completed successfully");
           } else {
+            console.error("❌ PAYMENT_INTENT: No client secret in response");
             throw new Error("Invalid response received from createPaymentIntent");
           }
         })
         .catch((error: any) => {
+          console.error("❌ PAYMENT_INTENT: Error calling createPaymentIntent function");
+          console.error("❌ PAYMENT_INTENT: Error occurred at:", new Date().toISOString());
           setIsLoading(false);
           setError(error);
           handlePaymentError(error);

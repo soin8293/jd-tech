@@ -12,7 +12,8 @@ export const generateTransactionId = (): string => {
 };
 
 export const handlePaymentError = (error: any): APIError => {
-  console.error("💳 PAYMENT ERROR: Error in payment process");
+  console.error("💳 PAYMENT ERROR: ============= DETAILED ERROR ANALYSIS =============");
+  console.error("💳 PAYMENT ERROR: Error timestamp:", new Date().toISOString());
   console.error("💳 PAYMENT ERROR: Error type:", typeof error);
   console.error("💳 PAYMENT ERROR: Error constructor:", error?.constructor?.name);
   console.error("💳 PAYMENT ERROR: Error message:", error?.message);
@@ -31,12 +32,26 @@ export const handlePaymentError = (error: any): APIError => {
     console.error("💳 PAYMENT ERROR: Firebase error code:", error.code);
   }
   
+  // Check if this is a functions deployment issue
+  if (error?.code === 'functions/internal') {
+    console.error("💳 PAYMENT ERROR: This is likely a Firebase Functions deployment issue!");
+    console.error("💳 PAYMENT ERROR: Check if functions are deployed and accessible");
+  }
+  
+  // Log network-related info
+  console.error("💳 PAYMENT ERROR: Current URL:", window.location.href);
+  console.error("💳 PAYMENT ERROR: Firebase project config:", {
+    projectId: functions.app.options.projectId,
+    authDomain: functions.app.options.authDomain
+  });
+  
   const apiError: APIError = {
     type: error.details?.type || error.code || 'unknown',
     message: error.message || "Failed to process payment"
   };
   
   console.error("💳 PAYMENT ERROR: Processed API error:", apiError);
+  console.error("💳 PAYMENT ERROR: ============= END ERROR ANALYSIS =============");
   
   toast({
     title: "Payment Error",
@@ -48,6 +63,7 @@ export const handlePaymentError = (error: any): APIError => {
 };
 
 export const saveBookingToLocalStorage = (bookingId: string, bookingToken: string | undefined): void => {
+  console.log("💾 STORAGE: Saving booking to localStorage", { bookingId, hasToken: !!bookingToken });
   if (bookingId) {
     localStorage.setItem('lastBookingId', bookingId);
     if (bookingToken) {

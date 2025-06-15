@@ -1,28 +1,24 @@
-import { onCall, HttpsError } from "firebase-functions/v2/https";
+import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { asyncHandler } from "../utils/asyncHandler";
-import { logger } from "../utils/logger";
+import * as cors from "cors";
 
-const seedDatabaseHandler = async (request: any) => {
-  logger.info("Starting database seeding operation");
+// Initialize cors middleware
+const corsHandler = cors({ origin: true });
 
-  const db = admin.firestore();
-  
-  try {
-    // Check if rooms collection already has data
-    const existingRooms = await db.collection('rooms').get();
-    if (!existingRooms.empty) {
-      logger.info(`Found ${existingRooms.size} existing rooms, skipping seed`);
-      return {
-        success: false,
-        message: `Database already contains ${existingRooms.size} rooms. Seeding skipped to prevent data loss.`,
-        roomCount: existingRooms.size
-      };
+export const seedDatabase = functions.https.onRequest((request, response) => {
+  // Wrap the function logic with the cors handler
+  corsHandler(request, response, async () => {
+    const db = admin.firestore();
+    const roomsCollection = db.collection("rooms");
+
+    const snapshot = await roomsCollection.limit(1).get();
+    if (!snapshot.empty) {
+      console.log("Database already seeded. Aborting.");
+      // Use a specific status code for "conflict"
+      response.status(409).send({ message: "Database already seeded." });
+      return;
     }
 
-    const batch = db.batch();
-    const roomsCollection = db.collection("rooms");
-    
     // The same room data from the populate script
     const rooms = [
       {
@@ -170,27 +166,20 @@ const seedDatabaseHandler = async (request: any) => {
       }
     ];
 
+    const batch = db.batch();
     rooms.forEach(room => {
       const { id, ...roomData } = room;
       const docRef = roomsCollection.doc(id);
       batch.set(docRef, roomData);
     });
 
-    await batch.commit();
-    
-    logger.info(`Successfully seeded ${rooms.length} rooms to database`);
-    
-    return { 
-      success: true, 
-      message: `Successfully seeded ${rooms.length} rooms to the database.`,
-      roomCount: rooms.length
-    };
-  } catch (error: any) {
-    logger.error("Error seeding database", error);
-    throw new HttpsError("internal", "Failed to seed database.");
-  }
-};
-
-export const seedDatabase = onCall(
-  asyncHandler(seedDatabaseHandler, 'seedDatabase')
-);
+    try {
+      await batch.commit();
+      console.log(`Successfully seeded ${rooms.length} rooms.`);
+      response.status(200).send({ success: true, message: `Successfully seeded ${rooms.length} rooms.` });
+    } catch (error) {
+      console.error("Error seeding database:", error);
+      response.status(500).send({ success: false, message: "Failed to seed database." });
+    }
+  });
+});

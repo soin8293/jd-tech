@@ -35,7 +35,7 @@ const setInitialAdminHandler = async (request: any) => {
     const adminConfigRef = admin.firestore().collection('config').doc('admin');
     
     const adminConfigSnap = await adminConfigRef.get();
-    let adminConfig;
+    let adminConfig: any;
     
     if (adminConfigSnap.exists) {
       adminConfig = adminConfigSnap.data();

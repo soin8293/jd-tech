@@ -26,10 +26,12 @@ export const debugFirebaseFunctions = async () => {
   if (currentUser) {
     try {
       const idToken = await currentUser.getIdToken();
+      const tokenResult = await currentUser.getIdTokenResult();
       console.log("🔧 FUNCTIONS_DEBUG: ID Token acquired:", {
         tokenLength: idToken.length,
         tokenPrefix: idToken.substring(0, 20) + '...',
-        tokenExpiry: currentUser.refreshTime
+        expirationTime: tokenResult.expirationTime,
+        issuedAtTime: tokenResult.issuedAtTime
       });
     } catch (error) {
       console.error("🔧 FUNCTIONS_DEBUG: Failed to get ID token:", error);

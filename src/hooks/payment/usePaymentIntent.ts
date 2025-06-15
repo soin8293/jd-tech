@@ -88,10 +88,37 @@ export const usePaymentIntent = (isOpen: boolean, bookingDetails: BookingDetails
       console.log("🚀 PAYMENT_INTENT: Function reference type:", typeof createPaymentIntentFunction);
       console.log("🚀 PAYMENT_INTENT: Function reference name:", createPaymentIntentFunction?.name);
       
+      // Log Firebase Functions instance details
+      console.log("🚀 PAYMENT_INTENT: Firebase Functions debugging:", {
+        functionExists: typeof createPaymentIntentFunction === 'function',
+        functionName: createPaymentIntentFunction.name,
+        functionToString: createPaymentIntentFunction.toString().substring(0, 200) + '...',
+        functionPrototype: Object.getPrototypeOf(createPaymentIntentFunction),
+        functionConstructor: createPaymentIntentFunction.constructor.name
+      });
+      
       console.log("🚀 PAYMENT_INTENT: About to call createPaymentIntent...");
       console.log("🚀 PAYMENT_INTENT: Call timestamp:", new Date().toISOString());
+      console.log("🚀 PAYMENT_INTENT: Call stack trace:", new Error().stack);
       
-      createPaymentIntentFunction(paymentData)
+      // Add timeout wrapper to detect hanging calls
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Function call timeout after 30 seconds'));
+        }, 30000);
+      });
+      
+      const functionCallPromise = createPaymentIntentFunction(paymentData);
+      
+      console.log("🚀 PAYMENT_INTENT: Function call promise created:", {
+        promiseType: typeof functionCallPromise,
+        promiseConstructor: functionCallPromise?.constructor?.name,
+        promisePrototype: Object.getPrototypeOf(functionCallPromise)?.constructor?.name,
+        hasThenth: typeof functionCallPromise?.then === 'function',
+        hasCatch: typeof functionCallPromise?.catch === 'function'
+      });
+      
+      Promise.race([functionCallPromise, timeoutPromise])
         .then((result) => {
           console.log("✅ PAYMENT_INTENT: ================ FUNCTION CALL SUCCESSFUL ================");
           console.log("✅ PAYMENT_INTENT: Success timestamp:", new Date().toISOString());
@@ -174,6 +201,12 @@ export const usePaymentIntent = (isOpen: boolean, bookingDetails: BookingDetails
           console.error("❌ PAYMENT_INTENT: Error JSON:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
           console.error("❌ PAYMENT_INTENT: Error string representation:", String(error));
           console.error("❌ PAYMENT_INTENT: Error valueOf:", error?.valueOf?.());
+          
+          // Check for timeout
+          if (error?.message?.includes?.('timeout')) {
+            console.error("❌ PAYMENT_INTENT: FUNCTION CALL TIMEOUT DETECTED");
+            console.error("❌ PAYMENT_INTENT: Function took longer than 30 seconds to respond");
+          }
           
           // Check for specific Firebase error patterns
           if (error?.code === 'functions/internal') {

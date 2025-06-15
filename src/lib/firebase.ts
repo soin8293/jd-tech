@@ -15,36 +15,87 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-console.log("🚀 FIREBASE DEBUG: Initializing Firebase with config:", firebaseConfig);
+console.log("🚀 FIREBASE DEBUG: ================ FIREBASE INITIALIZATION ================");
+console.log("🚀 FIREBASE DEBUG: Timestamp:", new Date().toISOString());
+console.log("🚀 FIREBASE DEBUG: Environment:", {
+  isDevelopment: window.location.hostname === 'localhost',
+  hostname: window.location.hostname,
+  origin: window.location.origin,
+  protocol: window.location.protocol,
+  userAgent: navigator.userAgent
+});
+console.log("🚀 FIREBASE DEBUG: Config object:", firebaseConfig);
+console.log("🚀 FIREBASE DEBUG: Config validation:", {
+  hasApiKey: !!firebaseConfig.apiKey,
+  hasProjectId: !!firebaseConfig.projectId,
+  hasAuthDomain: !!firebaseConfig.authDomain,
+  apiKeyLength: firebaseConfig.apiKey?.length,
+  projectIdLength: firebaseConfig.projectId?.length
+});
+
 const app = initializeApp(firebaseConfig);
 console.log("🚀 FIREBASE DEBUG: Firebase app initialized:", app);
-console.log("🚀 FIREBASE DEBUG: App name:", app.name);
-console.log("🚀 FIREBASE DEBUG: App options:", app.options);
+console.log("🚀 FIREBASE DEBUG: App details:", {
+  name: app.name,
+  automaticDataCollectionEnabled: app.automaticDataCollectionEnabled,
+  options: app.options
+});
 
 // Initialize Firebase services
 console.log("🚀 FIREBASE DEBUG: Initializing Auth service...");
 export const auth = getAuth(app);
-console.log("🚀 FIREBASE DEBUG: Auth initialized:", auth);
-console.log("🚀 FIREBASE DEBUG: Auth app:", auth.app);
+console.log("🚀 FIREBASE DEBUG: Auth initialized:", {
+  app: auth.app.name,
+  config: auth.config,
+  currentUser: auth.currentUser,
+  name: auth.name
+});
 
 console.log("🚀 FIREBASE DEBUG: Initializing Firestore service...");
 export const db = getFirestore(app);
-console.log("🚀 FIREBASE DEBUG: Firestore initialized:", db);
-console.log("🚀 FIREBASE DEBUG: Firestore app:", db.app);
-console.log("🚀 FIREBASE DEBUG: Firestore type:", db.type);
+console.log("🚀 FIREBASE DEBUG: Firestore initialized:", {
+  app: db.app.name,
+  type: db.type,
+  toJSON: typeof db.toJSON
+});
 
 console.log("🚀 FIREBASE DEBUG: Initializing Functions service...");
 export const functions = getFunctions(app, "us-central1");
-console.log("🚀 FIREBASE DEBUG: Functions initialized:", functions);
-console.log("🚀 FIREBASE DEBUG: Functions region:", functions.region);
+console.log("🚀 FIREBASE DEBUG: Functions initialized:", {
+  app: functions.app.name,
+  region: functions.region,
+  customDomain: functions.customDomain,
+  constructor: functions.constructor.name,
+  emulatorOrigin: (functions as any)._delegate?._emulatorOrigin,
+  url: (functions as any)._delegate?._url
+});
+
+// Additional Functions debugging
+console.log("🚀 FIREBASE DEBUG: Functions detailed analysis:", {
+  functionsObject: functions,
+  functionsKeys: Object.keys(functions),
+  functionsPrototype: Object.getPrototypeOf(functions),
+  functionsDescriptors: Object.getOwnPropertyDescriptors(functions),
+  functionsStringified: functions.toString()
+});
 
 // Connect to Functions emulator in development
 if (window.location.hostname === 'localhost') {
   // Uncomment and set correct ports for local emulator testing
   // connectFunctionsEmulator(functions, "localhost", 5001);
   console.log("🔧 FIREBASE DEBUG: Running in development mode. Functions will use production endpoints.");
+  console.log("🔧 FIREBASE DEBUG: To use emulator, uncomment connectFunctionsEmulator line");
 } else {
   console.log("🌐 FIREBASE DEBUG: Running in production mode.");
 }
+
+// Test functions endpoint construction
+console.log("🚀 FIREBASE DEBUG: Functions endpoint testing:", {
+  expectedRegion: "us-central1",
+  expectedProjectId: "jd-suites-backend",
+  expectedBaseUrl: `https://us-central1-jd-suites-backend.cloudfunctions.net`,
+  actualRegion: functions.region,
+  actualProjectId: functions.app.options.projectId
+});
 
 export default app;

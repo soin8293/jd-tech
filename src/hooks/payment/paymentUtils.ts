@@ -4,8 +4,39 @@ import { functions } from "@/lib/firebase";
 import { toast } from "@/hooks/use-toast";
 import { APIError, PaymentResponse } from "@/components/payment/payment.types";
 
+console.log("💳 PAYMENT_UTILS: ================ PAYMENT UTILS INITIALIZATION ================");
+console.log("💳 PAYMENT_UTILS: Timestamp:", new Date().toISOString());
+console.log("💳 PAYMENT_UTILS: Functions object:", functions);
+console.log("💳 PAYMENT_UTILS: Functions region:", functions.region);
+console.log("💳 PAYMENT_UTILS: Functions app:", functions.app.name);
+console.log("💳 PAYMENT_UTILS: Functions project ID:", functions.app.options.projectId);
+
+// Test httpsCallable function creation
+console.log("💳 PAYMENT_UTILS: Creating httpsCallable functions...");
 export const createPaymentIntentFunction = httpsCallable(functions, 'createPaymentIntent');
 export const processBookingFunction = httpsCallable(functions, 'processBooking');
+
+console.log("💳 PAYMENT_UTILS: Functions created:", {
+  createPaymentIntent: {
+    exists: !!createPaymentIntentFunction,
+    type: typeof createPaymentIntentFunction,
+    name: createPaymentIntentFunction.name,
+    constructor: createPaymentIntentFunction.constructor.name,
+    toString: createPaymentIntentFunction.toString().substring(0, 200) + '...'
+  },
+  processBooking: {
+    exists: !!processBookingFunction,
+    type: typeof processBookingFunction,
+    name: processBookingFunction.name,
+    constructor: processBookingFunction.constructor.name
+  }
+});
+
+// Test function endpoint URLs
+console.log("💳 PAYMENT_UTILS: Expected function URLs:", {
+  createPaymentIntent: `https://us-central1-jd-suites-backend.cloudfunctions.net/createPaymentIntent`,
+  processBooking: `https://us-central1-jd-suites-backend.cloudfunctions.net/processBooking`
+});
 
 export const generateTransactionId = (): string => {
   const timestamp = Date.now();
@@ -161,6 +192,13 @@ export const handlePaymentError = (error: any): APIError => {
     console.error("💳 PAYMENT ERROR:   5. Verify environment variables are set");
     console.error("💳 PAYMENT ERROR:   6. Check Stripe configuration");
   }
+  
+  // Additional debugging: Check auth token
+  console.error("💳 PAYMENT ERROR: Authentication debugging:", {
+    hasAuthHeader: !!localStorage.getItem('firebase:authUser:AIzaSyBEOMvNQtNC4GCoffyr0LR_v1b78093HAM:[DEFAULT]'),
+    authKeys: Object.keys(localStorage).filter(key => key.includes('firebase')),
+    currentUser: functions.app.auth?.()?.currentUser?.uid || 'No current user'
+  });
   
   const apiError: APIError = {
     type: error.details?.type || error.code || 'unknown',

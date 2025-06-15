@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Room } from "@/types/hotel.types";
 import { transactionManager, TransactionResult } from "@/utils/transactionManager";
 import { toast } from "@/hooks/use-toast";
@@ -9,6 +9,7 @@ export interface OptimisticState<T> {
   isPending: boolean;
   isRollingBack: boolean;
   error: string | null;
+  timestamp: Date;
 }
 
 export interface OptimisticOperation<T> {
@@ -17,39 +18,83 @@ export interface OptimisticOperation<T> {
   optimisticData: T;
   rollbackData?: T;
   operation: () => Promise<TransactionResult<any>>;
+  timestamp: Date;
+  retryCount: number;
+  maxRetries: number;
 }
 
-export const useOptimisticUpdates = <T>(initialData: T[]) => {
+export interface ConflictResolution<T> {
+  strategy: 'user_wins' | 'server_wins' | 'merge' | 'prompt_user';
+  mergeFunction?: (local: T, server: T) => T;
+}
+
+export const useOptimisticUpdates = <T>(
+  initialData: T[],
+  conflictResolution: ConflictResolution<T> = { strategy: 'user_wins' }
+) => {
   const [data, setData] = useState<T[]>(initialData);
   const [pendingOperations, setPendingOperations] = useState<Map<string, OptimisticOperation<T>>>(new Map());
   const [isProcessing, setIsProcessing] = useState(false);
+  const [conflicts, setConflicts] = useState<Array<{ local: T; server: T; operation: OptimisticOperation<T> }>>([]);
   const operationQueue = useRef<OptimisticOperation<T>[]>([]);
+  const processingRef = useRef(false);
 
-  // Apply optimistic update immediately
+  // Sync with initial data changes
+  useEffect(() => {
+    if (initialData && initialData.length > 0 && data.length === 0) {
+      setData(initialData);
+    }
+  }, [initialData, data.length]);
+
+  // Apply optimistic update immediately with conflict detection
   const applyOptimisticUpdate = useCallback((operation: OptimisticOperation<T>) => {
     setData(currentData => {
+      const newData = [...currentData];
+      
       switch (operation.type) {
         case 'create':
-          return [...currentData, operation.optimisticData];
-        case 'update':
-          return currentData.map(item => 
-            (item as any).id === (operation.optimisticData as any).id 
-              ? operation.optimisticData 
-              : item
+          // Check if item already exists
+          const existingIndex = newData.findIndex(item => 
+            (item as any).id === (operation.optimisticData as any).id
           );
+          if (existingIndex === -1) {
+            newData.push(operation.optimisticData);
+          } else {
+            // Conflict: item being created already exists
+            logger.warn('Create conflict detected', { 
+              id: (operation.optimisticData as any).id 
+            });
+          }
+          break;
+          
+        case 'update':
+          const updateIndex = newData.findIndex(item => 
+            (item as any).id === (operation.optimisticData as any).id
+          );
+          if (updateIndex !== -1) {
+            newData[updateIndex] = operation.optimisticData;
+          } else {
+            // Item doesn't exist, treat as create
+            newData.push(operation.optimisticData);
+          }
+          break;
+          
         case 'delete':
-          return currentData.filter(item => 
+          return newData.filter(item => 
             (item as any).id !== (operation.optimisticData as any).id
           );
+          
         default:
-          return currentData;
+          return newData;
       }
+      
+      return newData;
     });
 
     setPendingOperations(prev => new Map(prev).set(operation.id, operation));
   }, []);
 
-  // Rollback optimistic update on failure
+  // Rollback optimistic update with proper state restoration
   const rollbackOptimisticUpdate = useCallback((operation: OptimisticOperation<T>) => {
     setData(currentData => {
       switch (operation.type) {
@@ -57,6 +102,7 @@ export const useOptimisticUpdates = <T>(initialData: T[]) => {
           return currentData.filter(item => 
             (item as any).id !== (operation.optimisticData as any).id
           );
+          
         case 'update':
           return operation.rollbackData 
             ? currentData.map(item => 
@@ -65,10 +111,12 @@ export const useOptimisticUpdates = <T>(initialData: T[]) => {
                   : item
               )
             : currentData;
+            
         case 'delete':
           return operation.rollbackData 
             ? [...currentData, operation.rollbackData]
             : currentData;
+            
         default:
           return currentData;
       }
@@ -81,22 +129,81 @@ export const useOptimisticUpdates = <T>(initialData: T[]) => {
     });
   }, []);
 
-  // Process operation queue
-  const processQueue = useCallback(async () => {
-    if (isProcessing || operationQueue.current.length === 0) return;
+  // Handle conflicts based on resolution strategy
+  const handleConflict = useCallback(async (
+    operation: OptimisticOperation<T>,
+    serverData: T
+  ) => {
+    const localData = operation.optimisticData;
+    
+    switch (conflictResolution.strategy) {
+      case 'user_wins':
+        // Keep optimistic data, ignore server data
+        logger.info('Conflict resolved: user wins', { 
+          id: (localData as any).id 
+        });
+        break;
+        
+      case 'server_wins':
+        // Replace optimistic data with server data
+        setData(currentData => 
+          currentData.map(item => 
+            (item as any).id === (localData as any).id ? serverData : item
+          )
+        );
+        logger.info('Conflict resolved: server wins', { 
+          id: (localData as any).id 
+        });
+        break;
+        
+      case 'merge':
+        if (conflictResolution.mergeFunction) {
+          const mergedData = conflictResolution.mergeFunction(localData, serverData);
+          setData(currentData => 
+            currentData.map(item => 
+              (item as any).id === (localData as any).id ? mergedData : item
+            )
+          );
+          logger.info('Conflict resolved: merged', { 
+            id: (localData as any).id 
+          });
+        }
+        break;
+        
+      case 'prompt_user':
+        setConflicts(prev => [...prev, { local: localData, server: serverData, operation }]);
+        toast({
+          title: "Data Conflict",
+          description: "Your changes conflict with recent server changes. Please review.",
+          variant: "destructive",
+        });
+        break;
+    }
+  }, [conflictResolution]);
 
+  // Process operation queue with enhanced error handling
+  const processQueue = useCallback(async () => {
+    if (processingRef.current || operationQueue.current.length === 0) {
+      return;
+    }
+
+    processingRef.current = true;
     setIsProcessing(true);
     
-    while (operationQueue.current.length > 0) {
-      const operation = operationQueue.current.shift()!;
-      
+    const batchSize = 5; // Process in batches to avoid overwhelming the system
+    const operations = operationQueue.current.splice(0, batchSize);
+    
+    for (const operation of operations) {
       try {
-        logger.info(`Processing ${operation.type} operation`, { id: operation.id });
+        logger.info(`Processing ${operation.type} operation`, { 
+          id: operation.id,
+          attempt: operation.retryCount + 1
+        });
         
-        const result = await transactionManager.withRetry(operation.operation);
+        const result = await transactionManager.withRetry(() => operation.operation());
         
         if (result.success) {
-          // Operation succeeded, remove from pending
+          // Operation succeeded
           setPendingOperations(prev => {
             const next = new Map(prev);
             next.delete(operation.id);
@@ -104,61 +211,193 @@ export const useOptimisticUpdates = <T>(initialData: T[]) => {
           });
           
           logger.info(`Operation ${operation.id} completed successfully`);
-        } else {
-          // Operation failed, rollback
-          logger.error(`Operation ${operation.id} failed`, { error: result.error });
-          rollbackOptimisticUpdate(operation);
           
-          toast({
-            title: "Operation Failed",
-            description: result.error || "An unexpected error occurred",
-            variant: "destructive",
-          });
+        } else {
+          // Operation failed
+          if (operation.retryCount < operation.maxRetries && result.retryable) {
+            // Retry the operation
+            const retryOperation = {
+              ...operation,
+              retryCount: operation.retryCount + 1
+            };
+            operationQueue.current.push(retryOperation);
+            
+            logger.warn(`Operation ${operation.id} failed, will retry`, {
+              error: result.error,
+              retryCount: retryOperation.retryCount
+            });
+          } else {
+            // Max retries reached or non-retryable error
+            rollbackOptimisticUpdate(operation);
+            
+            logger.error(`Operation ${operation.id} failed permanently`, {
+              error: result.error,
+              retryCount: operation.retryCount
+            });
+            
+            toast({
+              title: "Operation Failed",
+              description: result.error || "An unexpected error occurred",
+              variant: "destructive",
+            });
+          }
         }
       } catch (error: any) {
         logger.error(`Operation ${operation.id} threw error`, error);
-        rollbackOptimisticUpdate(operation);
         
-        toast({
-          title: "Operation Error",
-          description: error.message || "An unexpected error occurred",
-          variant: "destructive",
-        });
+        if (operation.retryCount < operation.maxRetries) {
+          operationQueue.current.push({
+            ...operation,
+            retryCount: operation.retryCount + 1
+          });
+        } else {
+          rollbackOptimisticUpdate(operation);
+          
+          toast({
+            title: "Operation Error",
+            description: error.message || "An unexpected error occurred",
+            variant: "destructive",
+          });
+        }
       }
     }
     
-    setIsProcessing(false);
-  }, [isProcessing, rollbackOptimisticUpdate]);
+    // Continue processing if there are more operations
+    if (operationQueue.current.length > 0) {
+      setTimeout(() => {
+        processingRef.current = false;
+        processQueue();
+      }, 100);
+    } else {
+      processingRef.current = false;
+      setIsProcessing(false);
+    }
+  }, [rollbackOptimisticUpdate]);
 
-  // Execute optimistic operation
-  const executeOptimistic = useCallback(async (operation: OptimisticOperation<T>) => {
+  // Execute optimistic operation with enhanced validation
+  const executeOptimistic = useCallback(async (operation: Omit<OptimisticOperation<T>, 'timestamp' | 'retryCount' | 'maxRetries'>) => {
+    const fullOperation: OptimisticOperation<T> = {
+      ...operation,
+      timestamp: new Date(),
+      retryCount: 0,
+      maxRetries: 3
+    };
+
+    // Validate operation before applying
+    if (!fullOperation.optimisticData || !(fullOperation.optimisticData as any).id) {
+      logger.error('Invalid operation data', fullOperation);
+      toast({
+        title: "Invalid Operation",
+        description: "Operation data is missing required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Apply optimistic update immediately
-    applyOptimisticUpdate(operation);
+    applyOptimisticUpdate(fullOperation);
     
     // Add to queue for processing
-    operationQueue.current.push(operation);
+    operationQueue.current.push(fullOperation);
     
-    // Process queue if not already processing
-    processQueue();
+    // Start processing if not already running
+    if (!processingRef.current) {
+      processQueue();
+    }
   }, [applyOptimisticUpdate, processQueue]);
 
-  // Check if any operations are pending
-  const hasPendingOperations = pendingOperations.size > 0;
+  // Resolve user conflicts manually
+  const resolveConflict = useCallback((
+    conflictIndex: number,
+    resolution: 'keep_local' | 'use_server' | 'custom',
+    customData?: T
+  ) => {
+    const conflict = conflicts[conflictIndex];
+    if (!conflict) return;
 
-  // Get pending operation for specific item
-  const getPendingOperation = useCallback((id: string) => {
-    return Array.from(pendingOperations.values()).find(
+    const { local, server, operation } = conflict;
+
+    switch (resolution) {
+      case 'keep_local':
+        // Keep the optimistic data
+        break;
+        
+      case 'use_server':
+        setData(currentData => 
+          currentData.map(item => 
+            (item as any).id === (local as any).id ? server : item
+          )
+        );
+        break;
+        
+      case 'custom':
+        if (customData) {
+          setData(currentData => 
+            currentData.map(item => 
+              (item as any).id === (local as any).id ? customData : item
+            )
+          );
+        }
+        break;
+    }
+
+    // Remove conflict from list
+    setConflicts(prev => prev.filter((_, index) => index !== conflictIndex));
+    
+    // Remove from pending operations
+    setPendingOperations(prev => {
+      const next = new Map(prev);
+      next.delete(operation.id);
+      return next;
+    });
+  }, [conflicts]);
+
+  // Clear all conflicts
+  const clearConflicts = useCallback(() => {
+    setConflicts([]);
+  }, []);
+
+  // Force sync all pending operations
+  const forcSync = useCallback(async () => {
+    if (operationQueue.current.length === 0 && pendingOperations.size === 0) {
+      toast({
+        title: "Nothing to Sync",
+        description: "No pending operations to synchronize",
+      });
+      return;
+    }
+
+    await processQueue();
+  }, [processQueue]);
+
+  // Get operation status for specific item
+  const getOperationStatus = useCallback((id: string) => {
+    const operation = Array.from(pendingOperations.values()).find(
       op => (op.optimisticData as any).id === id
     );
+    
+    if (!operation) return null;
+    
+    return {
+      type: operation.type,
+      isPending: true,
+      retryCount: operation.retryCount,
+      timestamp: operation.timestamp
+    };
   }, [pendingOperations]);
 
   return {
     data,
     setData,
     executeOptimistic,
-    hasPendingOperations,
+    hasPendingOperations: pendingOperations.size > 0,
     isProcessing,
-    getPendingOperation,
-    pendingCount: pendingOperations.size
+    getOperationStatus,
+    pendingCount: pendingOperations.size,
+    queueSize: operationQueue.current.length,
+    conflicts,
+    resolveConflict,
+    clearConflicts,
+    forcSync
   };
 };

@@ -18,7 +18,7 @@ export const useRoomMutations = (
     executeOptimistic,
     hasPendingOperations,
     isProcessing,
-    getPendingOperation
+    getOperationStatus
   } = useOptimisticUpdates(initialRooms);
 
   const {
@@ -159,8 +159,9 @@ export const useRoomMutations = (
 
   // Check if a specific room operation is pending
   const isRoomPending = useCallback((roomId: string) => {
-    return !!getPendingOperation(roomId);
-  }, [getPendingOperation]);
+    const status = getOperationStatus(roomId);
+    return !!status?.isPending;
+  }, [getOperationStatus]);
 
   return {
     loading: loading || isProcessing || isProcessingQueue,

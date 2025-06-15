@@ -37,14 +37,27 @@ export class TransactionManager {
           }
         }
 
-        // Read current state for conflict detection
+        // Read current state for conflict detection and validation
         const currentRooms: Room[] = [];
+        const conflicts: string[] = [];
+        
         for (const room of rooms) {
           const roomRef = doc(db, 'rooms', room.id);
           const roomDoc = await transaction.get(roomRef);
+          
           if (roomDoc.exists()) {
-            currentRooms.push({ id: room.id, ...roomDoc.data() } as Room);
+            const currentRoom = { id: room.id, ...roomDoc.data() } as Room;
+            currentRooms.push(currentRoom);
+            
+            // Check for version conflicts (optimistic concurrency control)
+            if (currentRoom.version && room.version && currentRoom.version > room.version) {
+              conflicts.push(`Room ${room.name} has been modified by another user`);
+            }
           }
+        }
+        
+        if (conflicts.length > 0) {
+          throw new Error(`Conflicts detected: ${conflicts.join(', ')}`);
         }
 
         // Apply all writes in the transaction

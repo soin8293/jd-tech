@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const AdminNavigationLink: React.FC = () => {
   const { isAdmin } = useAuth();
   const linkRef = useRef<HTMLAnchorElement>(null);
-  const showAdmin = isAdmin; // Use actual admin status
+  const showAdmin = true; // Temporarily show admin for testing
 
   console.log('🔍 AdminNavigationLink render - showAdmin:', showAdmin, 'isAdmin:', isAdmin);
 

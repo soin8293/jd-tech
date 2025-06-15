@@ -10,27 +10,26 @@ const MainNavigation = () => {
   const isAdmin = true; // currentUser?.email === "amirahcolorado@gmail.com";
 
   return (
-    <nav className="flex space-x-6 flex-grow justify-center">
-      <Link to="/" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2">
+    <nav className="flex space-x-6 flex-grow justify-center relative">
+      <Link to="/" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2 relative z-10">
         <Home className="h-5 w-5" />
         <span className="hidden sm:inline">Home</span>
       </Link>
-      <Link to="/hotel" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2">
+      <Link to="/hotel" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2 relative z-10">
         <Building2 className="h-5 w-5" />
         <span className="hidden sm:inline">Rooms</span>
       </Link>
       {isAdmin && (
-        <Link 
-          to="/room-management" 
-          className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2 cursor-pointer z-10"
-          onClick={(e) => {
-            console.log('Admin link clicked, navigating to /room-management');
-            console.log('Event details:', e);
+        <button 
+          onClick={() => {
+            console.log('Admin button clicked, navigating to /room-management');
+            window.location.href = '/room-management';
           }}
+          className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2 relative z-10 bg-transparent border-none cursor-pointer"
         >
           <Settings className="h-5 w-5" />
           <span className="hidden sm:inline">Admin</span>
-        </Link>
+        </button>
       )}
     </nav>
   );

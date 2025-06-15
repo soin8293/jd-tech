@@ -20,13 +20,7 @@ import * as admin from "firebase-admin";
 // import { updateRoomAvailability } from "./rooms/updateRoomAvailability";
 // import { seedDatabase } from "./admin/seedDatabase";
 
-// --- LEAVE ONLY ONE FUNCTION UNCOMMENTED ---
-import { createPaymentIntent } from "./payment/createPaymentIntent";
+// --- DEPLOY ONLY THE SANITY CHECK ---
+import { sanityCheck } from "./debug/sanityCheck";
 
-// Initialize Firebase Admin SDK
-admin.initializeApp();
-
-// Export only the one function for debugging
-export {
-  createPaymentIntent
-};
+export { sanityCheck };

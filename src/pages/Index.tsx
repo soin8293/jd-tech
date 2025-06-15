@@ -145,10 +145,6 @@ const Index = () => {
                 <span>High-Speed WiFi</span>
               </div>
               <div className="flex items-center gap-2">
-                <Car className="h-4 w-4 text-primary" />
-                <span>Valet Parking</span>
-              </div>
-              <div className="flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-primary" />
                 <span>Business Center</span>
               </div>

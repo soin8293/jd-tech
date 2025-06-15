@@ -136,13 +136,13 @@ export const handlePaymentError = (error: any): APIError => {
     saveData: (navigator as any).connection?.saveData
   });
   
-  // Firebase project configuration check
+  // Firebase project configuration check (using safer property access)
   console.error("💳 PAYMENT ERROR: Firebase configuration:", {
     projectId: functions.app.options.projectId,
     authDomain: functions.app.options.authDomain,
     apiKey: functions.app.options.apiKey ? "Present" : "Missing",
-    functionsRegion: functions._region,
-    functionsEmulator: functions._url,
+    functionsRegion: functions.region || "unknown",
+    functionsCustomDomain: functions.customDomain || "none",
     appName: functions.app.name
   });
   

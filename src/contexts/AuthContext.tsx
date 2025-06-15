@@ -1,10 +1,9 @@
 import React, { createContext, useState, useEffect, ReactNode, useRef } from "react";
 import { 
   GoogleAuthProvider, 
-  signInWithRedirect,
+  signInWithPopup,
   signOut, 
   onAuthStateChanged,
-  getRedirectResult,
   User
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -29,7 +28,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   console.log("🔥 AUTH PROVIDER: State initialized");
   
   // Add state tracking for debugging
-  const redirectCheckCompleted = useRef(false);
   const authStateListenerSetup = useRef(false);
   const componentMountTime = useRef(Date.now());
 
@@ -41,29 +39,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const endTimer = authLogger.startTimer('signInWithGoogle');
     
     try {
-      console.log("🔥 SIGN IN ATTEMPT: Starting Google sign-in process");
+      console.log("🔥 SIGN IN ATTEMPT: Starting Google sign-in process with popup");
       console.log("🔥 SIGN IN: Current URL:", window.location.href);
       console.log("🔥 SIGN IN: Current user before sign-in:", currentUser);
       
-      // Store state before redirect
-      const preRedirectData = {
-        timestamp: Date.now(),
-        url: window.location.href,
-        hasUser: !!currentUser,
-        userId: currentUser?.uid || null,
-      };
-      
-      console.log("🔥 SIGN IN: Storing pre-redirect data:", preRedirectData);
-      sessionStorage.setItem('preRedirectState', JSON.stringify(preRedirectData));
-      
-      authLogger.info('AuthContext.signInWithGoogle', 'Initiating Google sign-in', {
+      authLogger.info('AuthContext.signInWithGoogle', 'Initiating Google sign-in with popup', {
         domain: window.location.hostname,
         authDomain: auth.app.options.authDomain,
         projectId: auth.app.options.projectId,
         userAgent: navigator.userAgent,
         currentUrl: window.location.href,
         hasExistingUser: !!currentUser,
-        redirectCheckCompleted: redirectCheckCompleted.current,
       });
 
       // Assert Firebase is properly initialized
@@ -76,14 +62,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider.addScope('email');
       provider.addScope('profile');
       
-      console.log("🔥 SIGN IN: Provider configured, calling signInWithRedirect...");
-      authLogger.debug('AuthContext.signInWithGoogle', 'Starting redirect to Google OAuth');
+      console.log("🔥 SIGN IN: Provider configured, calling signInWithPopup...");
+      authLogger.debug('AuthContext.signInWithGoogle', 'Starting popup sign-in');
       
-      // Use signInWithRedirect instead of signInWithPopup
-      await signInWithRedirect(auth, provider);
+      // Use signInWithPopup - this eliminates the race condition
+      const result = await signInWithPopup(auth, provider);
       
-      console.log("🔥 SIGN IN: signInWithRedirect call completed");
-      authLogger.info('AuthContext.signInWithGoogle', 'Redirect initiated successfully');
+      console.log("🔥 SIGN IN: ✅ SUCCESS! Popup sign-in completed");
+      console.log("🔥 SIGN IN: User:", result.user);
+      console.log("🔥 SIGN IN: User UID:", result.user.uid);
+      console.log("🔥 SIGN IN: User email:", result.user.email);
+      
+      authLogger.info('AuthContext.signInWithGoogle', 'Popup sign-in successful', {
+        userId: result.user.uid,
+        email: result.user.email,
+        displayName: result.user.displayName,
+        photoURL: result.user.photoURL,
+        providerId: result.providerId,
+        operationType: result.operationType,
+      });
+
+      // Set user ID for subsequent logs
+      authLogger.setUserId(result.user.uid);
+      
+      await checkAdminStatus(result.user, setIsAdmin);
+      
+      toast({
+        title: "Success",
+        description: "You have successfully signed in with Google",
+      });
+      
+      endTimer();
     } catch (error: any) {
       endTimer();
       
@@ -130,6 +139,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else if (error?.code === 'auth/network-request-failed') {
         errorMessage = "Network error. Please check your internet connection.";
         authLogger.error('AuthContext.signInWithGoogle', 'Network error during sign-in');
+      } else if (error?.code === 'auth/popup-blocked') {
+        errorMessage = "Pop-up was blocked by your browser. Please allow pop-ups for this site.";
+        authLogger.error('AuthContext.signInWithGoogle', 'Popup blocked by browser');
       }
       
       toast({
@@ -250,126 +262,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     console.log("🔥 USE EFFECT: AuthContext useEffect triggered at:", new Date().toISOString());
     console.log("🔥 USE EFFECT: URL at mount:", window.location.href);
-    console.log("🔥 USE EFFECT: URL params:", window.location.search);
-    console.log("🔥 USE EFFECT: URL hash:", window.location.hash);
     
-    // Check for pre-redirect state
-    const preRedirectState = sessionStorage.getItem('preRedirectState');
-    if (preRedirectState) {
-      try {
-        const parsed = JSON.parse(preRedirectState);
-        console.log("🔥 REDIRECT: Found pre-redirect state:", parsed);
-        console.log("🔥 REDIRECT: Time since redirect initiation:", Date.now() - parsed.timestamp, "ms");
-      } catch (e) {
-        console.log("🔥 REDIRECT: Failed to parse pre-redirect state");
-      }
-    } else {
-      console.log("🔥 REDIRECT: No pre-redirect state found in sessionStorage");
-    }
-    
-    authLogger.info('AuthContext.useEffect', 'Setting up auth state and redirect result listener', {
+    authLogger.info('AuthContext.useEffect', 'Setting up auth state listener', {
       traceId: authLogger.getTraceId(),
       requestId: authLogger.getRequestId(),
       componentMountTime: componentMountTime.current,
       currentUrl: window.location.href,
-      hasPreRedirectState: !!preRedirectState,
     });
-    
-    // Comprehensive redirect result checking
-    const checkRedirectResult = withAuthPerformanceMarker(async () => {
-      if (redirectCheckCompleted.current) {
-        console.log("🔥 REDIRECT: Check already completed, skipping");
-        return;
-      }
-      
-      const redirectCheckStartTime = Date.now();
-      console.log("🔥 REDIRECT: Starting redirect result check at:", new Date().toISOString());
-      
-      try {
-        authLogger.debug('AuthContext.checkRedirectResult', 'Checking for redirect result', {
-          url: window.location.href,
-          timestamp: redirectCheckStartTime,
-          authConfigured: !!auth,
-          appConfigured: !!auth?.app,
-        });
-        
-        console.log("🔥 REDIRECT: Calling getRedirectResult...");
-        const result = await getRedirectResult(auth);
-        
-        const redirectCheckEndTime = Date.now();
-        console.log("🔥 REDIRECT: getRedirectResult completed in:", redirectCheckEndTime - redirectCheckStartTime, "ms");
-        console.log("🔥 REDIRECT: Result:", result);
-        
-        if (result) {
-          console.log("🔥 REDIRECT: ✅ SUCCESS! Redirect sign-in result found!");
-          console.log("🔥 REDIRECT: User:", result.user);
-          console.log("🔥 REDIRECT: User UID:", result.user.uid);
-          console.log("🔥 REDIRECT: User email:", result.user.email);
-          console.log("🔥 REDIRECT: Provider ID:", result.providerId);
-          console.log("🔥 REDIRECT: Operation type:", result.operationType);
-          
-          authLogger.info('AuthContext.checkRedirectResult', 'Redirect sign-in successful', {
-            userId: result.user.uid,
-            email: result.user.email,
-            displayName: result.user.displayName,
-            photoURL: result.user.photoURL,
-            providerId: result.providerId,
-            operationType: result.operationType,
-            redirectCheckDuration: redirectCheckEndTime - redirectCheckStartTime,
-          });
-
-          // Set user ID for subsequent logs
-          authLogger.setUserId(result.user.uid);
-          
-          await checkAdminStatus(result.user, setIsAdmin);
-          
-          // Clear pre-redirect state
-          sessionStorage.removeItem('preRedirectState');
-          
-          toast({
-            title: "Success",
-            description: "You have successfully signed in with Google",
-          });
-        } else {
-          console.log("🔥 REDIRECT: ❌ No redirect result found");
-          console.log("🔥 REDIRECT: This means:");
-          console.log("  1. User didn't complete the login flow");
-          console.log("  2. This is a fresh page load (not from redirect)");
-          console.log("  3. The redirect result was already consumed");
-          console.log("  4. There was an error during the redirect");
-          
-          authLogger.debug('AuthContext.checkRedirectResult', 'No redirect result found', {
-            url: window.location.href,
-            hasPreRedirectState: !!preRedirectState,
-            redirectCheckDuration: redirectCheckEndTime - redirectCheckStartTime,
-          });
-        }
-        
-        redirectCheckCompleted.current = true;
-        console.log("🔥 REDIRECT: Marked redirect check as completed");
-        
-      } catch (error: any) {
-        const redirectCheckEndTime = Date.now();
-        console.error("🔥 REDIRECT: ❌ Error during redirect result check:", error);
-        console.error("🔥 REDIRECT: Error code:", error?.code);
-        console.error("🔥 REDIRECT: Error message:", error?.message);
-        
-        authLogger.error('AuthContext.checkRedirectResult', 'Error handling redirect result', {
-          errorCode: error?.code,
-          errorMessage: error?.message,
-          errorStack: error?.stack,
-          redirectCheckDuration: redirectCheckEndTime - redirectCheckStartTime,
-        });
-        
-        redirectCheckCompleted.current = true;
-        
-        toast({
-          title: "Sign-in Failed",
-          description: "Could not complete sign-in. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }, 'checkRedirectResult');
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log("🔥 AUTH STATE: onAuthStateChanged fired at:", new Date().toISOString());
@@ -446,12 +345,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Mark auth state listener as setup
     authStateListenerSetup.current = true;
     console.log("🔥 SETUP: Auth state listener setup completed");
-
-    // Check redirect result when component mounts - with delay to ensure Firebase is ready
-    setTimeout(() => {
-      console.log("🔥 REDIRECT: Starting delayed redirect check...");
-      checkRedirectResult();
-    }, 100);
 
     return () => {
       console.log("🔥 CLEANUP: Cleaning up auth context");

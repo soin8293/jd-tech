@@ -18,7 +18,10 @@ interface CreatePaymentIntentParams {
   };
 }
 
-export const createStripePaymentIntent = async (params: CreatePaymentIntentParams) => {
+export const createStripePaymentIntent = async (params: CreatePaymentIntentParams): Promise<{
+  clientSecret: string;
+  paymentIntentId: string;
+}> => {
   try {
     logger.info("Creating Stripe payment intent", { 
       amount: params.amount,
@@ -66,11 +69,12 @@ export const createStripePaymentIntent = async (params: CreatePaymentIntentParam
     });
 
     return {
-      clientSecret: paymentIntent.client_secret,
+      clientSecret: paymentIntent.client_secret!,
       paymentIntentId: paymentIntent.id,
     };
   } catch (stripeError: any) {
     // Use centralized Stripe error handling
     handleStripeError(stripeError, 'Payment intent creation');
+    throw new Error('Unexpected code path'); // This won't be reached due to handleStripeError throwing
   }
 };

@@ -2,7 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { calculateNumberOfNights, calculateRoomPrices } from "../utils/roomPriceCalculator";
 import { createStripePaymentIntent } from "../utils/stripePaymentCreator";
-import { CreatePaymentIntentData, CreatePaymentIntentResponse } from "../types/booking.types";
+import type { CreatePaymentIntentData, CreatePaymentIntentResponse } from "../types/booking.types";
 import { asyncHandler } from "../utils/asyncHandler";
 import { validateRequest, schemas } from "../utils/validation";
 import { logger } from "../utils/logger";
@@ -60,7 +60,7 @@ const createPaymentIntentHandler = async (request: any): Promise<CreatePaymentIn
   const idempotencyKey = transaction_id ? `payment_intent_${transaction_id}` : undefined;
   const stripeParams = {
     amount: totalAmount,
-    currency,
+    currency: currency ?? 'usd',
     idempotencyKey,
     metadata: {
       booking_reference: booking_reference || '',

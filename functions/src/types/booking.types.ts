@@ -6,8 +6,8 @@ export interface Room {
 }
 
 export interface BookingPeriod {
-  checkIn: string;
-  checkOut: string;
+  checkIn: string | Date;
+  checkOut: string | Date;
 }
 
 export interface CreatePaymentIntentData {

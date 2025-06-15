@@ -1,12 +1,13 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { stripe } from "../config/stripe";
-import { ProcessBookingData, PaymentResponse } from "../types/booking.process.types";
+import type { ProcessBookingData, PaymentResponse } from "../types/booking.process.types";
 import { storeBookingData } from "../utils/bookingDataStore";
 import { asyncHandler } from "../utils/asyncHandler";
 import { validateRequest, schemas } from "../utils/validation";
 import { logger } from "../utils/logger";
 import { transactionManager } from "../utils/transactionManager";
 import { handleStripeError } from "../utils/stripeHelpers";
+import type Stripe from "stripe";
 
 const processBookingHandler = async (request: any): Promise<PaymentResponse> => {
   // Validate request data
@@ -37,7 +38,7 @@ const processBookingHandler = async (request: any): Promise<PaymentResponse> => 
   
   // Verify payment status with Stripe
   logger.info("Retrieving payment intent from Stripe");
-  let paymentIntent;
+  let paymentIntent: Stripe.PaymentIntent | null = null;
   try {
     paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
     
@@ -53,15 +54,15 @@ const processBookingHandler = async (request: any): Promise<PaymentResponse> => 
   }
   
   // Check if payment is successful
-  if (paymentIntent.status !== 'succeeded') {
+  if (!paymentIntent || paymentIntent.status !== 'succeeded') {
     logger.warn("Payment verification failed", {
       paymentIntentId,
-      currentStatus: paymentIntent.status
+      currentStatus: paymentIntent?.status ?? 'null'
     });
     
     throw new HttpsError(
       "failed-precondition", 
-      `Payment not completed successfully. Current status: ${paymentIntent.status}`,
+      `Payment not completed successfully. Current status: ${paymentIntent?.status ?? 'null'}`,
       { type: 'payment_failed' }
     );
   }
@@ -75,14 +76,14 @@ const processBookingHandler = async (request: any): Promise<PaymentResponse> => 
   try {
     // Store booking in Firestore with transaction support
     await transactionManager.execute(async (transaction) => {
-      await storeBookingData(bookingId, paymentIntent, validatedData, transaction);
+      await storeBookingData(bookingId, paymentIntent!, validatedData, transaction);
     });
     
     logger.info("Booking processed successfully");
     return {
       success: true,
       bookingId: bookingId,
-      paymentStatus: paymentIntent.status,
+      paymentStatus: paymentIntent!.status,
       message: "Booking confirmed successfully!"
     };
     
@@ -94,7 +95,7 @@ const processBookingHandler = async (request: any): Promise<PaymentResponse> => 
       success: true,
       partial: true,
       bookingId: bookingId,
-      paymentStatus: paymentIntent.status,
+      paymentStatus: paymentIntent!.status,
       message: "Payment successful, but booking details could not be saved. Please contact support with your transaction ID."
     };
   }

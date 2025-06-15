@@ -7,7 +7,7 @@ import { logger } from "./logger";
  */
 export const validateRequest = <T>(schema: z.ZodSchema<T>, data: unknown): T => {
   try {
-    logger.debug("Validating request data", { schema: schema._def.typeName, data });
+    logger.debug("Validating request data", { schema: schema.description || "unknown", data });
     
     const result = schema.parse(data);
     

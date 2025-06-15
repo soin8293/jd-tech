@@ -77,3 +77,53 @@ export interface RoomAvailabilityCheck {
   unavailableReason?: string;
   nextAvailableTime?: Date;
 }
+
+// Admin role hierarchy types
+export type AdminRole = 'super_admin' | 'admin' | 'moderator';
+
+export interface AdminUser {
+  email: string;
+  role: AdminRole;
+  permissions: AdminPermission[];
+  invitedBy?: string;
+  invitedAt?: Date;
+  activatedAt?: Date;
+  lastLogin?: Date;
+  status: 'invited' | 'active' | 'suspended';
+}
+
+export interface AdminInvitation {
+  id: string;
+  email: string;
+  role: AdminRole;
+  invitedBy: string;
+  invitedAt: Date;
+  expiresAt: Date;
+  token: string;
+  status: 'pending' | 'accepted' | 'expired' | 'revoked';
+}
+
+export type AdminPermission = 
+  | 'rooms.read' 
+  | 'rooms.write' 
+  | 'rooms.delete'
+  | 'bookings.read' 
+  | 'bookings.write' 
+  | 'bookings.cancel'
+  | 'admin.invite' 
+  | 'admin.manage' 
+  | 'admin.remove'
+  | 'system.config'
+  | 'system.backup';
+
+export interface AdminConfig {
+  superAdmins: string[]; // Hardcoded fallback emails
+  adminUsers: AdminUser[];
+  invitations: AdminInvitation[];
+  settings: {
+    requireEmailVerification: boolean;
+    invitationExpiryHours: number;
+    maxAdmins: number;
+    allowSelfRegistration: boolean;
+  };
+}

@@ -4,9 +4,11 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { logger } from "../utils/logger";
 
 const setInitialAdminHandler = async (request: any) => {
-  const targetEmail = "amirahcolorado@gmail.com";
+  // Support both hardcoded and dynamic setup
+  const targetEmail = request.data?.email || "amirahcolorado@gmail.com";
+  const role = request.data?.role || "super_admin";
   
-  logger.setContext({ targetEmail });
+  logger.setContext({ targetEmail, role });
   logger.info("Setting initial admin user");
   
   // Initialize Firebase Admin if needed
@@ -22,14 +24,57 @@ const setInitialAdminHandler = async (request: any) => {
     logger.setContext({ targetUid: userRecord.uid });
     logger.info("User found, setting admin claim");
     
-    // Set admin claim
-    await admin.auth().setCustomUserClaims(userRecord.uid, { admin: true });
+    // Set admin claims with role
+    await admin.auth().setCustomUserClaims(userRecord.uid, { 
+      admin: true, 
+      role: role 
+    });
     
-    // Create or update the admin config document
+    // Create or update the admin config document with full structure
     logger.info("Updating admin config in Firestore");
     const adminConfigRef = admin.firestore().collection('config').doc('admin');
+    
+    const adminConfigSnap = await adminConfigRef.get();
+    let adminConfig;
+    
+    if (adminConfigSnap.exists()) {
+      adminConfig = adminConfigSnap.data();
+    } else {
+      adminConfig = {
+        superAdmins: [targetEmail],
+        adminUsers: [],
+        invitations: [],
+        settings: {
+          requireEmailVerification: true,
+          invitationExpiryHours: 72,
+          maxAdmins: 50,
+          allowSelfRegistration: false
+        }
+      };
+    }
+    
+    // Add or update admin user
+    const existingUserIndex = adminConfig.adminUsers.findIndex((u: any) => u.email === targetEmail);
+    const adminUser = {
+      email: targetEmail,
+      role: role,
+      permissions: [],
+      activatedAt: new Date(),
+      status: 'active'
+    };
+    
+    if (existingUserIndex >= 0) {
+      adminConfig.adminUsers[existingUserIndex] = adminUser;
+    } else {
+      adminConfig.adminUsers.push(adminUser);
+    }
+    
+    // Update legacy adminEmails array for backward compatibility
+    const allAdminEmails = adminConfig.adminUsers.map((u: any) => u.email);
+    
     await adminConfigRef.set({
-      adminEmails: [targetEmail]
+      ...adminConfig,
+      adminEmails: allAdminEmails // Keep for compatibility
     }, { merge: true });
     
     logger.info("Initial admin setup completed successfully");

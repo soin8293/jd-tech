@@ -14,9 +14,9 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 const UserProfileDropdown = () => {
   const { currentUser, logout, signInWithGoogle, isLoading, authInitialized } = useAuth();
   
-  // Comprehensive UI debugging
-  console.log("UI Component: Rendering with user:", currentUser);
-  console.log("🔐 UI DEBUG: Component render state:", {
+  // Explicit UI debugging
+  console.log("🔥 UI: UserProfileDropdown rendering with user:", currentUser);
+  console.log("🔥 UI: Component render state:", {
     hasCurrentUser: !!currentUser,
     currentUserUid: currentUser?.uid,
     currentUserEmail: currentUser?.email,
@@ -28,12 +28,12 @@ const UserProfileDropdown = () => {
   const { isAdmin, showAdminMenu, toggleAdminMenu, closeAdminMenu } = useAdminMenu();
   const [supportModalOpen, setSupportModalOpen] = React.useState(false);
 
-  console.log("🔐 UI DEBUG: Admin state:", { isAdmin, showAdminMenu });
+  console.log("🔥 UI: Admin state:", { isAdmin, showAdminMenu });
 
   // Handle sign-in with comprehensive debugging
   const handleSignIn = async () => {
-    console.log("🔐 UI DEBUG: Sign-in button clicked");
-    console.log("🔐 UI DEBUG: Pre-sign-in state:", {
+    console.log("🔥 UI: Sign-in button clicked");
+    console.log("🔥 UI: Pre-sign-in state:", {
       currentUser,
       isLoading,
       authInitialized,
@@ -42,15 +42,15 @@ const UserProfileDropdown = () => {
     
     try {
       await signInWithGoogle();
-      console.log("🔐 UI DEBUG: Sign-in function completed");
+      console.log("🔥 UI: Sign-in function completed");
     } catch (error) {
-      console.error("🔐 UI DEBUG: Sign-in error:", error);
+      console.error("🔥 UI: Sign-in error:", error);
     }
   };
 
   // Show loading state if auth is still initializing
   if (!authInitialized || isLoading) {
-    console.log("🔐 UI DEBUG: Showing loading state");
+    console.log("🔥 UI: Showing loading state");
     return (
       <div className="flex items-center justify-end w-auto min-w-[120px]">
         <div className="h-10 w-10 animate-pulse bg-gray-200 rounded-full"></div>

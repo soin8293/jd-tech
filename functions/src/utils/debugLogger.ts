@@ -15,7 +15,18 @@ export const debugError = (context: string, message: string, error?: any) => {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      code: error.code
+      code: error.code,
+      type: typeof error,
+      constructor: error.constructor?.name,
+      fullError: error
     });
+  }
+};
+
+export const debugStep = (context: string, step: string, data?: any) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] [${context}] STEP: ${step}`);
+  if (data) {
+    console.log(`[${timestamp}] [${context}] Step data:`, JSON.stringify(data, null, 2));
   }
 };

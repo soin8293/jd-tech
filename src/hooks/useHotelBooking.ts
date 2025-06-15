@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { BookingPeriod, Room, BookingDetails, RoomAvailabilityCheck } from "@/types/hotel.types";
@@ -27,19 +28,40 @@ export const useHotelBooking = () => {
   // Load all rooms on component mount
   useEffect(() => {
     const loadRooms = async () => {
+      console.log("🏨 HOTEL BOOKING: ================== STARTING ROOM LOAD ==================");
+      console.log("🏨 HOTEL BOOKING: useHotelBooking loadRooms triggered at:", new Date().toISOString());
+      console.log("🏨 HOTEL BOOKING: Current user:", currentUser?.email || 'Not logged in');
+      
       setIsLoading(true);
       try {
-        await fetchRoomData(
-          setAllRooms,
-          () => {}, // error setter - we'll handle this locally
-          setUsingLocalData,
+        console.log("🏨 HOTEL BOOKING: About to call fetchRoomData...");
+        const fetchedRooms = await fetchRoomData(
+          (rooms) => {
+            console.log("🏨 HOTEL BOOKING: setAllRooms called with:", rooms?.length, "rooms");
+            setAllRooms(rooms);
+          },
+          (error) => {
+            console.log("🏨 HOTEL BOOKING: Error setter called with:", error);
+          }, // error setter - we'll handle this locally
+          (usingLocal) => {
+            console.log("🏨 HOTEL BOOKING: setUsingLocalData called with:", usingLocal);
+            setUsingLocalData(usingLocal);
+          },
           false, // hasShownLocalDataToast
           () => {} // setHasShownLocalDataToast
         );
+        console.log("🏨 HOTEL BOOKING: fetchRoomData returned:", fetchedRooms?.length, "rooms");
+        console.log("🏨 HOTEL BOOKING: Room IDs:", fetchedRooms?.map(r => r.id) || []);
       } catch (error) {
-        console.error("Error loading rooms:", error);
+        console.error("🏨 HOTEL BOOKING: ❌ Error loading rooms:", error);
+        console.error("🏨 HOTEL BOOKING: Error details:", {
+          name: error?.name,
+          message: error?.message,
+          code: error?.code
+        });
       } finally {
         setIsLoading(false);
+        console.log("🏨 HOTEL BOOKING: Room loading completed, isLoading set to false");
       }
     };
 

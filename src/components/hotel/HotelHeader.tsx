@@ -15,7 +15,7 @@ const HotelHeader: React.FC<HotelHeaderProps> = ({ className }) => {
   
   return (
     <div className={cn(
-      "overflow-hidden relative", 
+      "overflow-hidden relative rounded-t-3xl", 
       isMobile ? "h-[85vh]" : "h-[60vh]", 
       className
     )}>

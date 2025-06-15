@@ -9,9 +9,13 @@ const AdminNavigationLink: React.FC = () => {
   // Temporarily show admin for testing - remove this line when done testing
   const showAdmin = true; // isAdmin;
 
-  const handleAdminClick = () => {
-    console.log('Admin navigation clicked, navigating to /room-management');
+  const handleAdminClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🔥 Admin navigation clicked!');
+    console.log('Current location:', window.location.href);
     navigate('/room-management');
+    console.log('Navigate called');
   };
 
   if (!showAdmin) {

@@ -17,6 +17,7 @@ import { MaintenanceScheduler } from "@/components/maintenance/MaintenanceSchedu
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getRooms } from "@/services/room/roomQueries";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { TemplateManager } from "@/components/template/TemplateManager";
 
 const RoomManagement = () => {
   const { rooms, loading, error, fetchRooms, handleSaveRooms, handleDeleteRoom } = useRoomManagement();
@@ -113,8 +114,9 @@ const RoomManagement = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="rooms" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="rooms">Rooms</TabsTrigger>
+                <TabsTrigger value="templates">Templates</TabsTrigger>
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
                 <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
                 <TabsTrigger value="availability">Availability</TabsTrigger>
@@ -159,6 +161,8 @@ const RoomManagement = () => {
               <TabsContent value="templates" className="mt-6">
                 <TemplateManager />
               </TabsContent>
+              
+              <TabsContent value="availability" className="mt-6">
                 <div className="text-center py-8 text-muted-foreground">
                   <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Advanced availability management coming soon</p>

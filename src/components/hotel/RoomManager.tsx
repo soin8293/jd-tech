@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import RoomList from "./RoomList";
 import RoomEditForm from "./RoomEditForm";
 import DeleteRoomDialog from "./DeleteRoomDialog";
+import { AdvancedRoomSearch } from "./AdvancedRoomSearch";
 import { useRoomQuery } from "@/hooks/useRoomQuery";
 
 const defaultRoom: RoomFormData = {
@@ -39,6 +40,7 @@ const RoomManager: React.FC<RoomManagerProps> = ({
   
   // Use state for rooms instead of directly using the query data
   const [rooms, setRooms] = useState<Room[]>(initialRooms);
+  const [filteredRooms, setFilteredRooms] = useState<Room[]>(initialRooms);
   const [editingRoom, setEditingRoom] = useState<RoomFormData | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [activeTab, setActiveTab] = useState('view');
@@ -48,6 +50,7 @@ const RoomManager: React.FC<RoomManagerProps> = ({
   useEffect(() => {
     if (initialRooms.length > 0) {
       setRooms(initialRooms);
+      setFilteredRooms(initialRooms);
     }
   }, [initialRooms]);
 
@@ -126,9 +129,13 @@ const RoomManager: React.FC<RoomManagerProps> = ({
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="view" className="mt-4">
-          <RoomList
+        <TabsContent value="view" className="mt-4 space-y-4">
+          <AdvancedRoomSearch
             rooms={rooms}
+            onFilteredRoomsChange={setFilteredRooms}
+          />
+          <RoomList
+            rooms={filteredRooms}
             showEditButtons={showEditButtons}
             isLoading={isLoading}
             onAddRoom={handleAddRoom}

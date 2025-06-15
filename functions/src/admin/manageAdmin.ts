@@ -36,7 +36,8 @@ const manageAdminRoleHandler = async (request: any) => {
   
   // Validate request data
   const validatedData = validateRequest(schemas.manageAdmin, request.data);
-  const { email, makeAdmin, role = 'admin' } = validatedData;
+  const { email, makeAdmin } = validatedData;
+  const role = request.data?.role || 'admin';
   
   logger.setContext({ 
     targetEmail: email,
@@ -68,7 +69,7 @@ const manageAdminRoleHandler = async (request: any) => {
       }
     };
     
-    if (adminConfigSnap.exists()) {
+    if (adminConfigSnap.exists) {
       adminConfig = { ...adminConfig, ...adminConfigSnap.data() };
     }
     

@@ -37,7 +37,7 @@ const setInitialAdminHandler = async (request: any) => {
     const adminConfigSnap = await adminConfigRef.get();
     let adminConfig;
     
-    if (adminConfigSnap.exists()) {
+    if (adminConfigSnap.exists) {
       adminConfig = adminConfigSnap.data();
     } else {
       adminConfig = {
@@ -51,6 +51,11 @@ const setInitialAdminHandler = async (request: any) => {
           allowSelfRegistration: false
         }
       };
+    }
+    
+    // Ensure adminConfig is properly initialized
+    if (!adminConfig) {
+      throw new Error("Failed to initialize admin config");
     }
     
     // Add or update admin user

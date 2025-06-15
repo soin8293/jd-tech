@@ -26,7 +26,7 @@ const inviteAdminHandler = async (request: any) => {
     const adminConfigRef = admin.firestore().collection('config').doc('admin');
     const adminConfigSnap = await adminConfigRef.get();
     
-    if (!adminConfigSnap.exists()) {
+    if (!adminConfigSnap.exists) {
       throw new HttpsError(
         "failed-precondition",
         "Admin system not initialized. Please contact a super admin."

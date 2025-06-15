@@ -32,7 +32,7 @@ const setupDynamicAdminHandler = async (request: any) => {
     
     let adminConfig: AdminConfig;
     
-    if (!adminConfigSnap.exists()) {
+    if (!adminConfigSnap.exists) {
       // Initialize admin config with hardcoded super admins
       adminConfig = {
         superAdmins: HARDCODED_SUPER_ADMINS,

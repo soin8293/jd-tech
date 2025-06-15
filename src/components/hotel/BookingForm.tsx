@@ -192,8 +192,8 @@ const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch, isLoadin
       
       {isMobile && (
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <DrawerContent className="px-4 pb-12 pt-2">
-            <div className="mb-4">
+          <DrawerContent className="px-4 pb-8 pt-2 max-h-[90vh] flex flex-col">
+            <div className="flex-1 overflow-auto">
               <h3 className="font-semibold text-lg text-center mb-4">Select Dates</h3>
               <Calendar
                 mode="range"
@@ -206,13 +206,14 @@ const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch, isLoadin
                 className="pointer-events-auto mx-auto"
               />
             </div>
-            <div className="flex justify-between px-4">
-              <Button variant="outline" onClick={() => setDrawerOpen(false)}>
+            <div className="flex justify-between gap-4 mt-6 pb-safe">
+              <Button variant="outline" onClick={() => setDrawerOpen(false)} className="flex-1">
                 Cancel
               </Button>
               <Button 
                 onClick={handleSearch}
                 disabled={!dateRange.from || !dateRange.to}
+                className="flex-1"
               >
                 Apply
               </Button>

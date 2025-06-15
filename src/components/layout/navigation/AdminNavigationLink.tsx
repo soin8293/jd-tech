@@ -20,12 +20,21 @@ const AdminNavigationLink: React.FC = () => {
   return (
     <Link 
       to="/room-management"
-      className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2 relative z-10"
+      className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2 relative z-50 pointer-events-auto bg-red-500/20 border border-red-500"
+      style={{ 
+        minHeight: '40px', 
+        minWidth: '60px', 
+        pointerEvents: 'auto',
+        position: 'relative',
+        zIndex: 9999
+      }}
       onClick={(e) => {
         console.log('🔥 Admin Link clicked!');
         console.log('Event target:', e.target);
         console.log('Event currentTarget:', e.currentTarget);
         console.log('Current URL before navigation:', window.location.href);
+        console.log('Link element:', e.currentTarget);
+        console.log('Computed styles:', window.getComputedStyle(e.currentTarget));
       }}
       onMouseEnter={() => console.log('🎯 Admin Link mouse enter')}
       onMouseLeave={() => console.log('🎯 Admin Link mouse leave')}

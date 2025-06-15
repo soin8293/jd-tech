@@ -12,10 +12,51 @@ import UserProfileMenuContent from "./UserProfileMenuContent";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const UserProfileDropdown = () => {
-  const { currentUser, logout, signInWithGoogle } = useAuth();
+  const { currentUser, logout, signInWithGoogle, isLoading, authInitialized } = useAuth();
+  
+  // Comprehensive UI debugging
   console.log("UI Component: Rendering with user:", currentUser);
+  console.log("🔐 UI DEBUG: Component render state:", {
+    hasCurrentUser: !!currentUser,
+    currentUserUid: currentUser?.uid,
+    currentUserEmail: currentUser?.email,
+    isLoading,
+    authInitialized,
+    timestamp: new Date().toISOString(),
+  });
+  
   const { isAdmin, showAdminMenu, toggleAdminMenu, closeAdminMenu } = useAdminMenu();
   const [supportModalOpen, setSupportModalOpen] = React.useState(false);
+
+  console.log("🔐 UI DEBUG: Admin state:", { isAdmin, showAdminMenu });
+
+  // Handle sign-in with comprehensive debugging
+  const handleSignIn = async () => {
+    console.log("🔐 UI DEBUG: Sign-in button clicked");
+    console.log("🔐 UI DEBUG: Pre-sign-in state:", {
+      currentUser,
+      isLoading,
+      authInitialized,
+      url: window.location.href,
+    });
+    
+    try {
+      await signInWithGoogle();
+      console.log("🔐 UI DEBUG: Sign-in function completed");
+    } catch (error) {
+      console.error("🔐 UI DEBUG: Sign-in error:", error);
+    }
+  };
+
+  // Show loading state if auth is still initializing
+  if (!authInitialized || isLoading) {
+    console.log("🔐 UI DEBUG: Showing loading state");
+    return (
+      <div className="flex items-center justify-end w-auto min-w-[120px]">
+        <div className="h-10 w-10 animate-pulse bg-gray-200 rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-end w-auto min-w-[120px]">
@@ -49,7 +90,7 @@ const UserProfileDropdown = () => {
           />
         </>
       ) : (
-        <UserAuthButton onClick={signInWithGoogle} />
+        <UserAuthButton onClick={handleSignIn} />
       )}
       
       {showAdminMenu && isAdmin && (

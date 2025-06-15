@@ -4,15 +4,6 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { logger } from "../utils/logger";
 
 const seedDatabaseHandler = async (request: any) => {
-  // Auth Check: Ensure only an authorized admin can run this
-  if (!request.auth?.token?.admin) {
-    throw new HttpsError(
-      "permission-denied",
-      "You must be an admin to seed the database."
-    );
-  }
-
-  logger.setContext({ adminEmail: request.auth.token.email });
   logger.info("Starting database seeding operation");
 
   const db = admin.firestore();

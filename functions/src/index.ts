@@ -1,14 +1,12 @@
 
-// Export payment functions for debugging
-import { processBooking } from "./payment/processBooking";
-import { createPaymentIntent } from "./payment/createPaymentIntent";
+// Export only the sanity check function for testing the deployment environment
 import { sanityCheck } from "./debug/sanityCheck";
 
 export { 
-  sanityCheck,
-  processBooking,
-  createPaymentIntent
-  // Comment out other functions for now to isolate payment issues
+  sanityCheck
+  // Comment out other functions for now to isolate the test
+  // processBooking,
+  // createPaymentIntent,
   // sendBookingConfirmation,
   // manageAdminRole,
   // setInitialAdmin,

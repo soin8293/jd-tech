@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { stripe } from "../config/stripe";
-import type { ProcessBookingData, PaymentResponse } from "../types/booking.process.types";
+import type { PaymentResponse } from "../types/booking.process.types";
 import { storeBookingData } from "../utils/bookingDataStore";
 import { asyncHandler } from "../utils/asyncHandler";
 import { validateRequest, schemas } from "../utils/validation";

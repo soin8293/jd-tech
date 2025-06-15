@@ -6,7 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 export const storeBookingData = async (
   bookingId: string,
   paymentIntent: any,
-  bookingData: any
+  bookingData: any,
+  transaction?: admin.firestore.Transaction
 ) => {
   try {
     console.log(`Storing booking data for ID: ${bookingId}`, {
@@ -64,10 +65,10 @@ export const storeBookingData = async (
     };
     
     // Run all operations in a transaction for data consistency
-    await admin.firestore().runTransaction(async (transaction) => {
+    const executeTransaction = async (txn: admin.firestore.Transaction) => {
       // 1. Store the booking
       const bookingRef = admin.firestore().collection('bookings').doc(bookingId);
-      transaction.set(bookingRef, bookingRecord);
+      txn.set(bookingRef, bookingRecord);
       
       // 2. Update each room's availability
       if (bookingData.bookingDetails?.rooms && bookingData.bookingDetails.rooms.length > 0) {
@@ -79,7 +80,7 @@ export const storeBookingData = async (
         bookingData.bookingDetails.rooms.forEach((room: any) => {
           if (room.id) {
             const roomRef = admin.firestore().collection('rooms').doc(room.id);
-            transaction.update(roomRef, {
+            txn.update(roomRef, {
               bookings: admin.firestore.FieldValue.arrayUnion(bookingPeriod)
             });
           }
@@ -89,16 +90,16 @@ export const storeBookingData = async (
       // 3. If user has an account, update their profile with the booking reference
       if (userId !== 'guest') {
         const userRef = admin.firestore().collection('users').doc(userId);
-        const userDoc = await transaction.get(userRef);
+        const userDoc = await txn.get(userRef);
         
         if (userDoc.exists) {
-          transaction.update(userRef, {
+          txn.update(userRef, {
             bookings: admin.firestore.FieldValue.arrayUnion(bookingId),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
           });
         } else {
           // Create a new user profile if none exists
-          transaction.set(userRef, {
+          txn.set(userRef, {
             email: userEmail,
             bookings: [bookingId],
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -106,7 +107,14 @@ export const storeBookingData = async (
           });
         }
       }
-    });
+    };
+
+    // Use provided transaction or create a new one
+    if (transaction) {
+      await executeTransaction(transaction);
+    } else {
+      await admin.firestore().runTransaction(executeTransaction);
+    }
     
     console.log(`Booking stored in Firestore with ID: ${bookingId}`);
     

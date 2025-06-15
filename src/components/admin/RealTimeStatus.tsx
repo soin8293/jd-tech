@@ -40,7 +40,7 @@ export const RealTimeStatus: React.FC<RealTimeStatusProps> = ({
     conflictCount,
     syncRooms,
     clearPendingChanges
-  } = useRealTimeRooms(onRoomChange, onConflict);
+  } = useRealTimeRooms(50, true, onRoomChange, onConflict);
 
   const getConnectionStatus = () => {
     if (isConnected) {

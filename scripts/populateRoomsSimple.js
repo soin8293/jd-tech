@@ -164,7 +164,11 @@ async function populateRooms() {
     // Check if collection already exists
     const existingRooms = await db.collection('rooms').get();
     if (!existingRooms.empty) {
-      console.log(`⚠️  Found ${existingRooms.size} existing rooms. This will overwrite them.`);
+      console.log(`⚠️  Found ${existingRooms.size} existing rooms in the database.`);
+      console.log(`🛑 STOPPING: Database already has room data. This script is for initial setup only.`);
+      console.log(`💡 To avoid data loss, this script will not overwrite existing rooms.`);
+      console.log(`💡 If you need to update rooms, use the admin interface or create a separate update script.`);
+      return;
     }
 
     const batch = db.batch();

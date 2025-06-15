@@ -1,31 +1,50 @@
 
-import { doc, setDoc, deleteDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, updateDoc, arrayUnion, runTransaction, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Room, BookingPeriod } from "@/types/hotel.types";
 
 const ROOMS_COLLECTION = "rooms";
 
-export const saveRoom = async (room: Room): Promise<void> => {
+export const saveRoom = async (room: Room, expectedVersion?: number): Promise<void> => {
   try {
     if (!room.id) {
       throw new Error("Room ID is required");
     }
     
     const roomRef = doc(db, ROOMS_COLLECTION, room.id);
-    await setDoc(roomRef, {
-      name: room.name,
-      description: room.description,
-      price: room.price,
-      capacity: room.capacity,
-      size: room.size,
-      bed: room.bed,
-      amenities: room.amenities,
-      images: room.images,
-      availability: room.availability,
-      bookings: room.bookings || []
+    
+    // Use transaction for optimistic concurrency control
+    await runTransaction(db, async (transaction) => {
+      const roomDoc = await transaction.get(roomRef);
+      
+      if (roomDoc.exists() && expectedVersion !== undefined) {
+        const currentVersion = roomDoc.data().version || 0;
+        if (expectedVersion !== currentVersion) {
+          throw new Error("This room has been updated by someone else. Please refresh and try again.");
+        }
+      }
+      
+      const newVersion = roomDoc.exists() ? (roomDoc.data().version || 0) + 1 : 1;
+      
+      transaction.set(roomRef, {
+        name: room.name,
+        description: room.description,
+        price: room.price,
+        capacity: room.capacity,
+        size: room.size,
+        bed: room.bed,
+        amenities: room.amenities,
+        images: room.images,
+        availability: room.availability,
+        bookings: room.bookings || [],
+        version: newVersion,
+        updatedAt: serverTimestamp(),
+        updatedBy: room.updatedBy,
+        updatedByEmail: room.updatedByEmail
+      });
     });
     
-    console.log(`Room ${room.id} saved successfully`);
+    console.log(`Room ${room.id} saved successfully with version control`);
   } catch (error) {
     console.error("Error saving room:", error);
     throw error;

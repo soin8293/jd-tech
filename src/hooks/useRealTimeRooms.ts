@@ -257,17 +257,18 @@ export const useRealTimeRooms = (
     }
   }, [currentUser]);
 
-  // Initialize real-time listeners
+  // Initialize real-time listeners with pagination
   useEffect(() => {
     if (!currentUser) return;
     
-    logger.info('Setting up real-time room listeners');
+    logger.info('Setting up real-time room listeners with pagination');
     
     try {
-      // Set up rooms listener
+      // Set up rooms listener with limit for performance
       const roomsQuery = query(
         collection(db, 'rooms'),
-        orderBy('updatedAt', 'desc')
+        orderBy('updatedAt', 'desc'),
+        limit(50) // Limit for performance and cost optimization
       );
       
       unsubscribeRef.current = onSnapshot(

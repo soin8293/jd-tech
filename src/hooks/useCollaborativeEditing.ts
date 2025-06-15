@@ -55,12 +55,14 @@ export const useCollaborativeEditing = (roomId: string | null) => {
       const lockDocRef = doc(db, 'editLocks', roomId);
       lockRef.current = lockDocRef;
 
+      const expireAt = new Date(Date.now() + duration * 60 * 1000);
       const lockData = {
         roomId,
         userId: currentUser.uid,
         userEmail: currentUser.email,
         lockedAt: serverTimestamp(),
-        expiresAt: new Date(Date.now() + duration * 60 * 1000),
+        expiresAt: expireAt,
+        expireAt, // TTL field for automatic cleanup
         isActive: true
       };
 
@@ -168,17 +170,23 @@ export const useCollaborativeEditing = (roomId: string | null) => {
     }
   }, [roomId, editingState.lockDuration]);
 
-  // Check if room is locked by another user
+  // Check if room is locked by another user using server-side query
   const checkLockStatus = useCallback(async (): Promise<EditLock | null> => {
     if (!roomId) return null;
 
     try {
-      const lockDocRef = doc(db, 'editLocks', roomId);
+      // Use server-side query for efficiency
+      const locksQuery = query(
+        collection(db, 'editLocks'),
+        where('roomId', '==', roomId),
+        where('isActive', '==', true)
+      );
       
       // Set up real-time listener for lock status
-      const unsubscribe = onSnapshot(lockDocRef, (doc) => {
-        if (doc.exists()) {
-          const lockData = doc.data();
+      const unsubscribe = onSnapshot(locksQuery, (snapshot) => {
+        if (!snapshot.empty) {
+          const lockDoc = snapshot.docs[0]; // Should only be one active lock
+          const lockData = lockDoc.data();
           const isActive = lockData.isActive;
           const expiresAt = lockData.expiresAt?.toDate();
           const isExpired = expiresAt && expiresAt < new Date();
@@ -218,6 +226,15 @@ export const useCollaborativeEditing = (roomId: string | null) => {
               lockedAt: undefined
             }));
           }
+        } else {
+          // No locks found
+          setEditingState(prev => ({
+            ...prev,
+            isLocked: false,
+            lockedBy: undefined,
+            lockedByEmail: undefined,
+            lockedAt: undefined
+          }));
         }
       });
 

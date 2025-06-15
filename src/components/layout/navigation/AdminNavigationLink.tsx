@@ -1,14 +1,34 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const AdminNavigationLink: React.FC = () => {
   const { isAdmin } = useAuth();
+  const linkRef = useRef<HTMLAnchorElement>(null);
   // Temporarily show admin for testing - remove this line when done testing
   const showAdmin = true; // isAdmin;
 
   console.log('🔍 AdminNavigationLink render - showAdmin:', showAdmin, 'isAdmin:', isAdmin);
+
+  useEffect(() => {
+    const linkElement = linkRef.current;
+    if (linkElement) {
+      const handleRawClick = (e: Event) => {
+        console.log('🚨 RAW DOM CLICK EVENT DETECTED!', e);
+        console.log('Raw event target:', e.target);
+        console.log('Raw event currentTarget:', e.currentTarget);
+      };
+      
+      linkElement.addEventListener('click', handleRawClick);
+      console.log('🔧 Raw click listener added to Admin link');
+      
+      return () => {
+        linkElement.removeEventListener('click', handleRawClick);
+        console.log('🧹 Raw click listener removed');
+      };
+    }
+  }, []);
 
   if (!showAdmin) {
     console.log('❌ AdminNavigationLink not rendering - showAdmin is false');
@@ -19,6 +39,7 @@ const AdminNavigationLink: React.FC = () => {
 
   return (
     <Link 
+      ref={linkRef}
       to="/room-management"
       className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2 relative z-50 pointer-events-auto bg-red-500/20 border border-red-500"
       style={{ 

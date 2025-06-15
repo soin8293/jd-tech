@@ -13,6 +13,8 @@ export interface Room {
   bookings?: BookingPeriod[]; // New field to track booked periods
   version?: number; // For optimistic concurrency control
   updatedAt?: Date; // Timestamp for last update
+  updatedBy?: string; // User ID who last updated this room
+  updatedByEmail?: string; // Email of user who last updated this room
 }
 
 // Adding RoomFormData type for form handling

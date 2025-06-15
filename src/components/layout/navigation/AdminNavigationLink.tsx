@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const AdminNavigationLink: React.FC = () => {
   const { isAdmin } = useAuth();
   const linkRef = useRef<HTMLAnchorElement>(null);
-  const showAdmin = true; // Temporarily show admin for testing
+  const showAdmin = isAdmin; // Use actual admin status - no more temporary overrides
 
   console.log('🔍 AdminNavigationLink render - showAdmin:', showAdmin, 'isAdmin:', isAdmin);
 
@@ -40,14 +40,7 @@ const AdminNavigationLink: React.FC = () => {
     <Link 
       ref={linkRef}
       to="/room-management"
-      className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2 relative z-50 pointer-events-auto bg-red-500/20 border border-red-500"
-      style={{ 
-        minHeight: '40px', 
-        minWidth: '60px', 
-        pointerEvents: 'auto',
-        position: 'relative',
-        zIndex: 9999
-      }}
+      className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
       onClick={(e) => {
         console.log('🔥 Admin Link clicked!');
         console.log('Event target:', e.target);

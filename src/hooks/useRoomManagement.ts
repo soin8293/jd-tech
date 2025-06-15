@@ -8,32 +8,28 @@ export const useRoomManagement = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [usingLocalData, setUsingLocalData] = useState(false);
-  const [hasShownLocalDataToast, setHasShownLocalDataToast] = useState(false);
   
   const { loading: mutationLoading, handleSaveRooms, handleDeleteRoom } = useRoomMutations(
     rooms,
-    setRooms,
-    usingLocalData,
-    setUsingLocalData,
-    hasShownLocalDataToast,
-    setHasShownLocalDataToast
+    setRooms
   );
 
   const fetchRooms = useCallback(async () => {
     setLoading(true);
     try {
-      await fetchRoomData(
-        setRooms,
-        setError,
-        setUsingLocalData,
-        hasShownLocalDataToast,
-        setHasShownLocalDataToast
-      );
+      // REMOVED: Local data fallback - now uses direct room fetching
+      // This will properly throw errors for permission issues
+      const { getRooms } = await import("@/services/room/roomQueries");
+      const fetchedRooms = await getRooms();
+      setRooms(fetchedRooms);
+      setError(null);
+    } catch (err: any) {
+      console.error("Error fetching rooms:", err);
+      setError(`Failed to load rooms: ${err?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
-  }, [hasShownLocalDataToast]);
+  }, []);
 
   // Initial fetch on mount
   useEffect(() => {
@@ -44,7 +40,6 @@ export const useRoomManagement = () => {
     rooms,
     loading: loading || mutationLoading,
     error,
-    usingLocalData,
     fetchRooms,
     handleSaveRooms,
     handleDeleteRoom

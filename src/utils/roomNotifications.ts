@@ -12,10 +12,10 @@ export const notifyLocalDataUse = (hasShownLocalDataToast: boolean, setHasShownL
   }
 };
 
-export const notifyError = (message: string) => {
+export const notifyError = (title: string, description?: string) => {
   toast({
-    title: "Error",
-    description: message,
+    title,
+    description,
     variant: "destructive",
   });
 };

@@ -21,7 +21,7 @@
     "firebase-functions": "^5.0.1",
     "stripe": "^15.8.0",
     "uuid": "^9.0.1",
-    "zod": "^3.25.65"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.10.0",

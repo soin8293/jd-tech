@@ -93,6 +93,6 @@ const processBookingHandler = async (request: any): Promise<PaymentResponse> => 
   }
 };
 
-export const processBooking = onCall(
-  asyncHandler(processBookingHandler, 'processBooking')
-);
+export const processBooking = onCall({
+  cors: true
+}, processBookingHandler);

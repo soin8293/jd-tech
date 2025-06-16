@@ -1,10 +1,30 @@
-import { onCall } from "firebase-functions/v2/https";
-import * as logger from "firebase-functions/logger";
 
-/**
- * A completely isolated function to test the core deployment environment.
- */
-export const sanityCheck = onCall((request) => {
-  logger.info("Sanity check function was called successfully!");
-  return { status: "ok", message: "The environment is healthy!" };
-});
+import { onCall } from "firebase-functions/v2/https";
+
+const sanityCheckHandler = async (request: any) => {
+  console.log("🩺 SANITY_CHECK: Function called successfully");
+  console.log("🩺 SANITY_CHECK: Request data:", JSON.stringify(request.data, null, 2));
+  console.log("🩺 SANITY_CHECK: Environment check:", {
+    nodeVersion: process.version,
+    platform: process.platform,
+    timestamp: new Date().toISOString(),
+    memoryUsage: process.memoryUsage(),
+    hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
+    stripeKeyLength: process.env.STRIPE_SECRET_KEY?.length || 0
+  });
+  
+  return {
+    success: true,
+    message: "Sanity check passed!",
+    timestamp: new Date().toISOString(),
+    environment: {
+      nodeVersion: process.version,
+      platform: process.platform,
+      hasStripeKey: !!process.env.STRIPE_SECRET_KEY
+    }
+  };
+};
+
+export const sanityCheck = onCall({
+  cors: true
+}, sanityCheckHandler);

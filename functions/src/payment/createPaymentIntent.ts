@@ -1,3 +1,4 @@
+
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { calculateNumberOfNights, calculateRoomPrices } from "../utils/roomPriceCalculator";
@@ -81,7 +82,7 @@ const createPaymentIntentHandler = async (request: any): Promise<CreatePaymentIn
     });
     
     logger.setContext({ 
-      transactionId: transaction_id,
+      transaction_id,
       bookingReference: booking_reference,
       roomCount: rooms.length,
       guests 
@@ -463,4 +464,6 @@ const createPaymentIntentHandler = async (request: any): Promise<CreatePaymentIn
   }
 };
 
-export const createPaymentIntent = onCall(createPaymentIntentHandler);
+export const createPaymentIntent = onCall({
+  cors: true
+}, createPaymentIntentHandler);

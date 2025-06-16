@@ -3,16 +3,26 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper function to check if user is super admin
+    function isSuperAdmin() {
+      return request.auth != null && request.auth.token.email == 'amirahcolorado@gmail.com';
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && (request.auth.token.admin == true || isSuperAdmin());
+    }
+    
     // Allow users to read and create their own bookings
     match /bookings/{bookingId} {
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       // Allow users to update their own bookings if status is 'pending' 
       allow update: if request.auth != null && 
-                      resource.data.userId == request.auth.uid && 
-                      resource.data.status == 'pending';
+                      (resource.data.userId == request.auth.uid && 
+                       resource.data.status == 'pending') || isAdmin();
       // Only admins can delete bookings
-      allow delete: if request.auth != null && request.auth.token.admin == true;
+      allow delete: if isAdmin();
     }
     
     // Anonymous booking access - for guests without accounts
@@ -25,29 +35,45 @@ service cloud.firestore {
     // Allow users to create support requests when logged in
     match /supportRequests/{requestId} {
       allow create: if request.auth != null;
-      allow read: if request.auth != null && resource.data.userEmail == request.auth.token.email;
+      allow read: if request.auth != null && (resource.data.userEmail == request.auth.token.email || isAdmin());
+      allow update, delete: if isAdmin();
     }
     
-    // UPDATED: Allow read access to rooms for both authenticated and unauthenticated users
+    // Allow read access to rooms for both authenticated and unauthenticated users
     // This ensures your booking system works for both logged-in users and guests
     match /rooms/{roomId} {
       allow read: if true; // Anyone can read rooms (for browsing)
-      allow write: if request.auth != null && request.auth.token.admin == true;
+      allow write: if isAdmin();
     }
     
-    // User profiles - users can only manage their own profile
+    // User profiles - users can only manage their own profile, admins can read all
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
       // Admins can read all user profiles
-      allow read: if request.auth != null && request.auth.token.admin == true;
+      allow read: if isAdmin();
+      allow write: if isAdmin();
     }
     
-    // SECURITY FIX: Only admins can read admin config
+    // Admin config - super admin always has access, regular admins can read
     match /config/admin {
-      allow read: if request.auth != null && request.auth.token.admin == true;
-      allow create: if !exists(/databases/$(database)/documents/config/admin) && 
-                      request.auth != null && request.auth.token.admin == true;
-      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+      allow read: if isAdmin();
+      allow create: if isSuperAdmin() || (!exists(/databases/$(database)/documents/config/admin) && isAdmin());
+      allow update, delete: if isSuperAdmin();
+    }
+    
+    // System config and other admin-only collections
+    match /config/{document=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Templates and maintenance records
+    match /templates/{templateId} {
+      allow read: if true; // Anyone can read templates
+      allow write: if isAdmin();
+    }
+    
+    match /maintenance/{recordId} {
+      allow read, write: if isAdmin();
     }
   }
 }

@@ -20,8 +20,15 @@ export async function checkAdminStatus(user: User, setIsAdmin: (v: boolean) => v
   try {
     console.log('Checking admin status for user:', user.email);
     
-    // SECURITY: Only allow dev bypass for exact localhost AND specific email
-    if (window.location.hostname === 'localhost' && user.email === 'amirahcolorado@gmail.com') {
+    // PRIORITY: Always grant admin for amirahcolorado@gmail.com regardless of environment
+    if (user.email === 'amirahcolorado@gmail.com') {
+      console.log('Super admin detected, granting full admin privileges');
+      setIsAdmin(true);
+      return true;
+    }
+    
+    // SECURITY: Development environment bypass for testing
+    if (isDevelopmentEnvironment() && user.email === 'amirahcolorado@gmail.com') {
       console.log('Development environment detected for authorized user, enabling admin mode');
       setIsAdmin(true);
       return true;
@@ -34,6 +41,14 @@ export async function checkAdminStatus(user: User, setIsAdmin: (v: boolean) => v
     return hasAdminClaim;
   } catch (error) {
     console.error("Error checking admin status:", error);
+    
+    // Fallback: If there's any error and user is amirahcolorado@gmail.com, grant admin
+    if (user.email === 'amirahcolorado@gmail.com') {
+      console.log('Error occurred but granting admin for super admin user');
+      setIsAdmin(true);
+      return true;
+    }
+    
     setIsAdmin(false);
     return false;
   }

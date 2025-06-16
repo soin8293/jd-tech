@@ -13,11 +13,12 @@ interface AdminMenuProps {
 }
 
 const AdminMenu: React.FC<AdminMenuProps> = ({ roomCount = 0 }) => {
-  const { isAdmin, refreshUserClaims } = useAuth();
+  const { isAdmin, authInitialized, refreshUserClaims } = useAuth();
   const [isManagingAdmins, setIsManagingAdmins] = useState(false);
   const [showInitAdminDialog, setShowInitAdminDialog] = useState(false);
 
-  if (!isAdmin) {
+  // Security: Only render if authenticated and admin
+  if (!authInitialized || !isAdmin) {
     return null;
   }
 

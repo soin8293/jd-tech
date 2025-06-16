@@ -11,13 +11,14 @@ import AdminManageDialog from "@/components/admin/AdminManageDialog";
 import AdminRoleManager from "@/components/admin/AdminRoleManager";
 import ConnectionStatusIndicator from "@/components/admin/ConnectionStatusIndicator";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Settings, BarChart3, Wrench } from "lucide-react";
+import { UserPlus, Settings, BarChart3, Wrench, Activity } from "lucide-react";
 import { RevenueAnalytics } from "@/components/analytics/RevenueAnalytics";
 import { MaintenanceScheduler } from "@/components/maintenance/MaintenanceScheduler";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getRooms } from "@/services/room/roomQueries";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { TemplateManager } from "@/components/template/TemplateManager";
+import { SystemHealthMonitor } from "@/components/monitoring/SystemHealthMonitor";
 
 const RoomManagement = () => {
   const { rooms, loading, error, fetchRooms, handleSaveRooms, handleDeleteRoom } = useRoomManagement();
@@ -109,17 +110,18 @@ const RoomManagement = () => {
           <CardHeader>
             <CardTitle>Room Management</CardTitle>
             <CardDescription>
-              Comprehensive room management with analytics, maintenance scheduling, and inventory control.
+              Comprehensive room management with analytics, maintenance scheduling, and system monitoring.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="rooms" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="rooms">Rooms</TabsTrigger>
                 <TabsTrigger value="templates">Templates</TabsTrigger>
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
                 <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
                 <TabsTrigger value="availability">Availability</TabsTrigger>
+                <TabsTrigger value="monitoring">System Health</TabsTrigger>
               </TabsList>
               
               <TabsContent value="rooms" className="mt-6">
@@ -168,6 +170,10 @@ const RoomManagement = () => {
                   <p>Advanced availability management coming soon</p>
                   <p className="text-sm">This will include real-time availability tracking and conflict resolution</p>
                 </div>
+              </TabsContent>
+              
+              <TabsContent value="monitoring" className="mt-6">
+                <SystemHealthMonitor />
               </TabsContent>
             </Tabs>
           </CardContent>

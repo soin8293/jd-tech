@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Settings } from "lucide-react";
@@ -7,14 +8,13 @@ const AdminNavigationLink: React.FC = () => {
   const { isAdmin, authInitialized, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Don't show link until auth is initialized and we know admin status
+  // Only show if user is authenticated AND is admin
   if (!authInitialized || isLoading || !isAdmin) {
     return null;
   }
 
   const handleAdminClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Use React Router navigation instead of browser navigation
     navigate('/room-management');
   };
 

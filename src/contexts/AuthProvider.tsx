@@ -42,7 +42,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const handleRefreshUserClaims = async () => {
-    await refreshUserClaims(currentUser, setIsAdmin);
+    console.log("🔥 AUTH PROVIDER: ================== REFRESHING USER CLAIMS ==================");
+    if (!currentUser) {
+      console.log("🔥 AUTH PROVIDER: No current user to refresh claims for");
+      return;
+    }
+    
+    try {
+      console.log("🔥 AUTH PROVIDER: Forcing token refresh for user:", currentUser.email);
+      // Force refresh the ID token to get latest claims
+      const idTokenResult = await currentUser.getIdTokenResult(true);
+      console.log("🔥 AUTH PROVIDER: Refreshed token claims:", idTokenResult.claims);
+      
+      // Re-check admin status with fresh token
+      await checkAdminStatus(currentUser, setIsAdmin);
+      console.log("🔥 AUTH PROVIDER: ✅ User claims refreshed successfully");
+    } catch (error) {
+      console.error("🔥 AUTH PROVIDER: ❌ Error refreshing user claims:", error);
+    }
   };
 
   useEffect(() => {
@@ -57,10 +74,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("🔥 AUTH STATE: ================== AUTH STATE CHANGED ==================");
       console.log("🔥 AUTH STATE: onAuthStateChanged fired at:", new Date().toISOString());
-      console.log("🔥 AUTH STATE: User object:", user);
+      console.log("🔥 AUTH STATE: User object exists:", !!user);
       console.log("🔥 AUTH STATE: User UID:", user?.uid);
       console.log("🔥 AUTH STATE: User email:", user?.email);
+      console.log("🔥 AUTH STATE: User emailVerified:", user?.emailVerified);
       console.log("🔥 AUTH STATE: Auth initialized:", authInitialized);
       console.log("🔥 AUTH STATE: Is loading:", isLoading);
       
@@ -82,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("🔥 AUTH STATE: Updated currentUser state");
       
       if (user) {
-        console.log("🔥 AUTH STATE: User is signed in, processing...");
+        console.log("🔥 AUTH STATE: User is signed in, processing admin status...");
         // Set user ID for all subsequent logs
         authLogger.setUserId(user.uid);
         
@@ -97,15 +116,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           lastAuthCheck,
         });
         
+        console.log("🔥 AUTH STATE: About to check admin status...");
         const isUserAdmin = await checkAdminStatus(user, setIsAdmin);
-        console.log("🔥 AUTH STATE: Admin status checked:", isUserAdmin);
+        console.log("🔥 AUTH STATE: ✅ Admin status checked:", isUserAdmin);
         
         // Cache admin status for faster loading using the actual returned value
         if (isUserAdmin) {
           localStorage.setItem('adminStatus', 'true');
           authLogger.debug('AuthProvider.onAuthStateChanged', 'Admin status cached');
+          console.log("🔥 AUTH STATE: ✅ Admin status cached as true");
         } else {
           localStorage.removeItem('adminStatus');
+          console.log("🔥 AUTH STATE: ❌ Admin status not cached (user is not admin)");
         }
       } else {
         console.log("🔥 AUTH STATE: User is signed out, clearing state");

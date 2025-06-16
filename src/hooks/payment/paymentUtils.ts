@@ -1,4 +1,3 @@
-
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/lib/firebase";
 import { toast } from "@/hooks/use-toast";
@@ -400,7 +399,7 @@ export const handlePaymentError = (error: any): APIError => {
     app: {
       exists: !!functions?.app,
       name: functions?.app?.name,
-      automaticallyDataCollectionEnabled: functions?.app?.automaticallyDataCollectionEnabled
+      automaticDataCollectionEnabled: functions?.app?.automaticDataCollectionEnabled
     },
     options: functions?.app?.options ? {
       projectId: functions.app.options.projectId || 'MISSING',

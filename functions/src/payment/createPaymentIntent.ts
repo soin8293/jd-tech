@@ -1,10 +1,8 @@
-
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { calculateNumberOfNights, calculateRoomPrices } from "../utils/roomPriceCalculator";
 import { createStripePaymentIntent } from "../utils/stripePaymentCreator";
 import type { CreatePaymentIntentResponse } from "../types/booking.types";
-import { asyncHandler } from "../utils/asyncHandler";
 import { validateRequest, schemas } from "../utils/validation";
 import { logger } from "../utils/logger";
 

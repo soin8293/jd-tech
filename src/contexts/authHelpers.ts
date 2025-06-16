@@ -20,8 +20,8 @@ export async function checkAdminStatus(user: User, setIsAdmin: (v: boolean) => v
   try {
     console.log('Checking admin status for user:', user.email);
     
-    // SECURITY: Only allow dev bypass for exact localhost
-    if (hostname === 'localhost' && user.email === 'amirahcolorado@gmail.com') {
+    // SECURITY: Only allow dev bypass for exact localhost AND specific email
+    if (window.location.hostname === 'localhost' && user.email === 'amirahcolorado@gmail.com') {
       console.log('Development environment detected for authorized user, enabling admin mode');
       setIsAdmin(true);
       return true;

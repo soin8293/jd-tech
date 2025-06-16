@@ -42,11 +42,11 @@ service cloud.firestore {
       allow read: if request.auth != null && request.auth.token.admin == true;
     }
     
-    // UPDATED: Allow any authenticated user to read admin config
-    // Allow any user to create if not existing (for initial setup)
+    // SECURITY FIX: Only admins can read admin config
     match /config/admin {
-      allow read: if true; // Allow anyone to read admin config
-      allow create: if !exists(/databases/$(database)/documents/config/admin);
+      allow read: if request.auth != null && request.auth.token.admin == true;
+      allow create: if !exists(/databases/$(database)/documents/config/admin) && 
+                      request.auth != null && request.auth.token.admin == true;
       allow update, delete: if request.auth != null && request.auth.token.admin == true;
     }
   }

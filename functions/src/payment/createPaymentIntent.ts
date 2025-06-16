@@ -91,8 +91,8 @@ const createPaymentIntentHandler = async (request: any): Promise<CreatePaymentIn
     console.log("🚀 PAYMENT_INTENT_HANDLER: Checking Firebase Admin initialization status...");
     console.log("🚀 PAYMENT_INTENT_HANDLER: Admin apps length:", admin.apps?.length || 0);
     console.log("🚀 PAYMENT_INTENT_HANDLER: Admin apps:", admin.apps?.map(app => ({
-      name: app.name,
-      projectId: app.options?.projectId
+      name: app?.name || 'unknown',
+      projectId: app?.options?.projectId || 'unknown'
     })) || []);
     
     if (!admin.apps.length) {
@@ -103,15 +103,15 @@ const createPaymentIntentHandler = async (request: any): Promise<CreatePaymentIn
       console.log("🚀 PAYMENT_INTENT_HANDLER: ✅ Firebase Admin SDK initialized successfully!");
       console.log("🚀 PAYMENT_INTENT_HANDLER: Initialization took:", (initEndTime - initStartTime) + 'ms');
       console.log("🚀 PAYMENT_INTENT_HANDLER: Admin app details:", {
-        name: admin.apps[0]?.name,
-        projectId: admin.apps[0]?.options?.projectId
+        name: admin.apps[0]?.name || 'unknown',
+        projectId: admin.apps[0]?.options?.projectId || 'unknown'
       });
     } else {
       console.log("🚀 PAYMENT_INTENT_HANDLER: Firebase Admin SDK already initialized");
       console.log("🚀 PAYMENT_INTENT_HANDLER: Existing app details:", {
         count: admin.apps.length,
-        names: admin.apps.map(app => app.name),
-        projectIds: admin.apps.map(app => app.options?.projectId)
+        names: admin.apps.map(app => app?.name || 'unknown'),
+        projectIds: admin.apps.map(app => app?.options?.projectId || 'unknown')
       });
     }
 
@@ -133,14 +133,16 @@ const createPaymentIntentHandler = async (request: any): Promise<CreatePaymentIn
         type: typeof period?.checkIn,
         constructor: period?.checkIn?.constructor?.name,
         isString: typeof period?.checkIn === 'string',
-        length: period?.checkIn?.length || 0
+        isDate: period?.checkIn instanceof Date,
+        length: typeof period?.checkIn === 'string' ? period.checkIn.length : 'not a string'
       },
       checkOut: {
         value: period?.checkOut,
         type: typeof period?.checkOut,
         constructor: period?.checkOut?.constructor?.name,
         isString: typeof period?.checkOut === 'string',
-        length: period?.checkOut?.length || 0
+        isDate: period?.checkOut instanceof Date,
+        length: typeof period?.checkOut === 'string' ? period.checkOut.length : 'not a string'
       }
     });
     
@@ -188,7 +190,6 @@ const createPaymentIntentHandler = async (request: any): Promise<CreatePaymentIn
         name: room.name,
         price: room.price,
         priceType: typeof room.price,
-        capacity: room.capacity,
         allKeys: Object.keys(room),
         roomSize: JSON.stringify(room).length + ' characters'
       });
@@ -227,7 +228,7 @@ const createPaymentIntentHandler = async (request: any): Promise<CreatePaymentIn
     const idempotencyKey = transaction_id ? `payment_intent_${transaction_id}` : undefined;
     console.log("🚀 PAYMENT_INTENT_HANDLER: Idempotency key:", {
       hasTransactionId: !!transaction_id,
-      transactionId,
+      transaction_id,
       idempotencyKey,
       keyLength: idempotencyKey?.length || 0
     });

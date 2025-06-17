@@ -3,7 +3,10 @@ import { BookingPeriod, Room } from "../types/booking.types";
 
 // Define our own BookingData type since it's not exported from booking.types
 export interface BookingData {
-  period: BookingPeriod;
+  period: {
+    checkIn: string;
+    checkOut: string;
+  };
   guests: number;
   rooms: Room[];
   totalPrice: number;
@@ -12,17 +15,14 @@ export interface BookingData {
   specialRequests?: string;
 }
 
-export interface ProcessBookingData {
-  paymentMethodId: string;
-  clientSecret: string;
-  paymentType: string;
-  transaction_id: string;
+export interface ProcessBookingParams {
   paymentIntentId: string;
-  bookingDetails: BookingData;
-  serverCalculatedAmount?: number;
-  timestamp?: string;
+  transaction_id: string;
   userEmail?: string;
-  userId?: string; // Added to support user ID tracking
+  userId?: string;
+  paymentType: string;
+  paymentMethodId?: string;
+  bookingDetails: BookingData;
 }
 
 export interface PaymentResponse {

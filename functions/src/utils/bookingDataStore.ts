@@ -29,16 +29,33 @@ export const storeBookingData = async (
     // Create a secure booking token for anonymous users
     const bookingToken = uuidv4();
     
-    // Extract important data from nested bookingDetails to top level
-    const checkIn = bookingData.bookingDetails?.period?.checkIn;
-    const checkOut = bookingData.bookingDetails?.period?.checkOut;
-    const numberOfNights = bookingData.bookingDetails?.numberOfNights ||
-      (checkIn && checkOut ? 
-        Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 3600 * 24)) : 
-        0);
+    // Extract and convert dates properly
+    const checkInStr = bookingData.bookingDetails?.period?.checkIn;
+    const checkOutStr = bookingData.bookingDetails?.period?.checkOut;
+    
+    let checkInDate: Date | null = null;
+    let checkOutDate: Date | null = null;
+    
+    if (checkInStr) {
+      checkInDate = new Date(checkInStr);
+    }
+    if (checkOutStr) {
+      checkOutDate = new Date(checkOutStr);
+    }
+    
+    const numberOfNights = checkInDate && checkOutDate ? 
+      Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 3600 * 24)) : 
+      0;
+    
     const guests = bookingData.bookingDetails?.guests || 1;
-    const userId = bookingData.userId || bookingData.bookingDetails?.userId || 'guest';
-    const userEmail = bookingData.userEmail || bookingData.bookingDetails?.userEmail || null;
+    const userId = bookingData.userId || 'guest';
+    const userEmail = bookingData.userEmail || null;
+    
+    // Create the period object with Firebase Timestamps
+    const period = {
+      startDate: checkInDate ? admin.firestore.Timestamp.fromDate(checkInDate) : null,
+      endDate: checkOutDate ? admin.firestore.Timestamp.fromDate(checkOutDate) : null
+    };
     
     // Structure the booking record
     const bookingRecord = {
@@ -47,10 +64,11 @@ export const storeBookingData = async (
       paymentMethodId: bookingData.paymentMethodId,
       paymentType: bookingData.paymentType,
       transaction_id: bookingData.transaction_id,
-      bookingDetails: bookingData.bookingDetails,
-      // Top-level fields for easier querying
-      checkIn,
-      checkOut,
+      // Store the period in the format expected by the frontend
+      period,
+      // Also store top-level dates for easier querying
+      checkIn: checkInDate,
+      checkOut: checkOutDate,
       numberOfNights,
       guests,
       rooms: bookingData.bookingDetails?.rooms || [],
@@ -71,10 +89,10 @@ export const storeBookingData = async (
       txn.set(bookingRef, bookingRecord);
       
       // 2. Update each room's availability
-      if (bookingData.bookingDetails?.rooms && bookingData.bookingDetails.rooms.length > 0) {
+      if (bookingData.bookingDetails?.rooms && bookingData.bookingDetails.rooms.length > 0 && checkInDate && checkOutDate) {
         const bookingPeriod = {
-          checkIn: bookingData.bookingDetails.period.checkIn,
-          checkOut: bookingData.bookingDetails.period.checkOut
+          checkIn: checkInDate,
+          checkOut: checkOutDate
         };
         
         bookingData.bookingDetails.rooms.forEach((room: any) => {

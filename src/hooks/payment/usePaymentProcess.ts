@@ -5,6 +5,7 @@ import { usePaymentIntent } from './usePaymentIntent';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import type { BookingDetails } from '@/types/hotel.types';
 import type { PaymentStatus, ProcessBookingParams, PaymentResponse } from './paymentHooks.types';
 import { v4 as uuidv4 } from 'uuid';
@@ -20,11 +21,13 @@ export const usePaymentProcess = (
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [bookingToken] = useState(() => uuidv4());
   const [calculatedAmount, setCalculatedAmount] = useState<number | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
 
   const stripe = useStripe();
   const elements = useElements();
   const { createPaymentIntent } = usePaymentIntent();
   const { toast } = useToast();
+  const { currentUser } = useAuth();
 
   // Create payment intent when modal opens and we have booking details
   useEffect(() => {
@@ -44,7 +47,7 @@ export const usePaymentProcess = (
       setPaymentStatus('loading');
       setErrorDetails(null);
 
-      console.log("🔧 usePaymentProcess: Creating payment intent with real booking data:", {
+      console.log("🔧 usePaymentProcess: Creating payment intent with booking data:", {
         rooms: bookingDetails.rooms.map(r => ({ id: r.id, name: r.name, price: r.price })),
         period: bookingDetails.period,
         guests: bookingDetails.guests,
@@ -59,8 +62,8 @@ export const usePaymentProcess = (
           capacity: room.capacity
         })),
         period: {
-          checkIn: bookingDetails.period.checkIn,
-          checkOut: bookingDetails.period.checkOut
+          checkIn: bookingDetails.period.checkIn.toISOString(),
+          checkOut: bookingDetails.period.checkOut.toISOString()
         },
         guests: bookingDetails.guests,
         transaction_id: transactionId,
@@ -73,6 +76,7 @@ export const usePaymentProcess = (
       console.log("🔧 usePaymentProcess: Payment intent response:", response);
       
       setCalculatedAmount(response.calculatedAmount);
+      setPaymentIntentId(response.paymentIntentId);
       setPaymentStatus('ready');
       
     } catch (error: any) {
@@ -92,30 +96,60 @@ export const usePaymentProcess = (
     paymentType: 'card' | 'google_pay',
     paymentMethodId: string
   ) => {
-    if (!stripe || !elements || !bookingDetails) {
+    if (!stripe || !elements || !bookingDetails || !paymentIntentId) {
       setErrorDetails('Payment system not ready');
       return;
     }
 
-    console.log("🔧 usePaymentProcess: Processing payment with real booking data");
+    console.log("🔧 usePaymentProcess: Processing payment with booking data");
     
     try {
       setPaymentStatus('processing');
       setErrorDetails(null);
 
-      // Process the booking with actual room data
+      // Confirm the payment intent first
+      let confirmResult;
+      
+      if (paymentType === 'card') {
+        const cardElement = elements.getElement('card');
+        if (!cardElement) {
+          throw new Error('Card element not found');
+        }
+        
+        confirmResult = await stripe.confirmCardPayment(paymentIntentId, {
+          payment_method: paymentMethodId
+        });
+      } else {
+        // For Google Pay, the payment method is already created
+        confirmResult = await stripe.confirmCardPayment(paymentIntentId, {
+          payment_method: paymentMethodId
+        });
+      }
+
+      if (confirmResult.error) {
+        throw new Error(confirmResult.error.message || 'Payment confirmation failed');
+      }
+
+      console.log("🔧 usePaymentProcess: Payment confirmed, processing booking...");
+
+      // Process the booking with confirmed payment
       const processBookingFn = httpsCallable<ProcessBookingParams, PaymentResponse>(
         functions,
         'processBooking'
       );
 
       const bookingParams: ProcessBookingParams = {
-        paymentIntentId: paymentMethodId, // This should be the actual payment intent ID
+        paymentIntentId: confirmResult.paymentIntent.id,
         transaction_id: transactionId,
-        userEmail: bookingDetails.userEmail,
+        userEmail: currentUser?.email || bookingDetails.userEmail || 'guest@example.com',
+        userId: currentUser?.uid,
         paymentType,
+        paymentMethodId,
         bookingDetails: {
-          period: bookingDetails.period,
+          period: {
+            checkIn: bookingDetails.period.checkIn.toISOString(),
+            checkOut: bookingDetails.period.checkOut.toISOString()
+          },
           guests: bookingDetails.guests,
           rooms: bookingDetails.rooms.map(room => ({
             id: room.id,
@@ -124,7 +158,7 @@ export const usePaymentProcess = (
             capacity: room.capacity
           })),
           totalPrice: bookingDetails.totalPrice,
-          userEmail: bookingDetails.userEmail
+          userEmail: currentUser?.email || bookingDetails.userEmail || 'guest@example.com'
         }
       };
 
@@ -160,7 +194,7 @@ export const usePaymentProcess = (
         variant: "destructive",
       });
     }
-  }, [stripe, elements, bookingDetails, transactionId, onPaymentComplete, toast]);
+  }, [stripe, elements, bookingDetails, paymentIntentId, transactionId, currentUser, onPaymentComplete, toast]);
 
   return {
     paymentStatus,

@@ -465,5 +465,15 @@ const createPaymentIntentHandler = async (request: any): Promise<CreatePaymentIn
 };
 
 export const createPaymentIntent = onCall({
-  cors: true
+  cors: {
+    origin: [
+      "https://jd-suites-backend.web.app",
+      "https://jd-suites-backend.firebaseapp.com",
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "https://c09097ef-16d0-43bf-b1c5-ea78455f9bda.lovableproject.com"
+    ],
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Client-Info", "apikey"]
+  }
 }, createPaymentIntentHandler);

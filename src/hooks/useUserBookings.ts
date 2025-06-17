@@ -15,6 +15,10 @@ interface Booking {
     startDate: { seconds: number; nanoseconds: number };
     endDate: { seconds: number; nanoseconds: number };
   };
+  // Add the missing properties
+  checkIn: { seconds: number; nanoseconds: number } | Date;
+  checkOut: { seconds: number; nanoseconds: number } | Date;
+  numberOfNights: number;
   guests: number;
   amount: number;
   status: string;

@@ -41,14 +41,26 @@ const MyBookings = () => {
       ) : (
         <div className="grid gap-6">
           {bookings.map((booking) => {
-            // Handle different date formats
-            const startDate = booking.period.startDate?.seconds 
+            // Handle different date formats - prioritize period fields, fallback to top-level
+            const startDate = booking.period?.startDate?.seconds 
               ? new Date(booking.period.startDate.seconds * 1000)
-              : new Date(booking.checkIn);
+              : booking.checkIn?.seconds 
+              ? new Date(booking.checkIn.seconds * 1000)
+              : booking.checkIn instanceof Date 
+              ? booking.checkIn 
+              : new Date();
             
-            const endDate = booking.period.endDate?.seconds 
+            const endDate = booking.period?.endDate?.seconds 
               ? new Date(booking.period.endDate.seconds * 1000)
-              : new Date(booking.checkOut);
+              : booking.checkOut?.seconds 
+              ? new Date(booking.checkOut.seconds * 1000)
+              : booking.checkOut instanceof Date 
+              ? booking.checkOut 
+              : new Date();
+
+            // Calculate nights if not provided
+            const nights = booking.numberOfNights || 
+              Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
             return (
               <Card key={booking.id} className="overflow-hidden">
@@ -105,9 +117,9 @@ const MyBookings = () => {
                         </div>
                       </div>
                       
-                      {booking.numberOfNights && (
+                      {nights && (
                         <div className="text-sm text-muted-foreground">
-                          {booking.numberOfNights} night{booking.numberOfNights !== 1 ? 's' : ''}
+                          {nights} night{nights !== 1 ? 's' : ''}
                         </div>
                       )}
                     </div>

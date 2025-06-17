@@ -9,7 +9,12 @@ export const useGooglePay = (amount: number) => {
   const [googlePayError, setGooglePayError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!stripe || !amount) return;
+    if (!stripe || !amount || amount <= 0) {
+      console.log("GOOGLE_PAY: Not initializing - stripe:", !!stripe, "amount:", amount);
+      return;
+    }
+    
+    console.log("GOOGLE_PAY: Initializing with amount:", amount);
     
     try {
       const pr = stripe.paymentRequest({
@@ -17,26 +22,40 @@ export const useGooglePay = (amount: number) => {
         currency: 'usd',
         total: {
           label: 'JD Suites Booking',
-          amount: Math.round(amount * 100),
+          amount: Math.round(amount * 100), // Convert to cents
         },
         requestPayerName: true,
         requestPayerEmail: true,
       });
       
+      console.log("GOOGLE_PAY: Payment request created, checking availability...");
+      
       pr.canMakePayment().then(result => {
+        console.log("GOOGLE_PAY: canMakePayment result:", result);
+        
         if (result) {
           setPaymentRequest(pr);
           setGooglePayAvailable(true);
           setGooglePayError(null);
+          console.log("GOOGLE_PAY: Available and ready");
         } else {
+          setPaymentRequest(null);
           setGooglePayAvailable(false);
           setGooglePayError("Google Pay is not available in this browser");
+          console.log("GOOGLE_PAY: Not available in this browser");
         }
+      }).catch(error => {
+        console.error("GOOGLE_PAY: Error checking availability:", error);
+        setPaymentRequest(null);
+        setGooglePayAvailable(false);
+        setGooglePayError(error.message || "Google Pay check failed");
       });
       
     } catch (error: any) {
+      console.error("GOOGLE_PAY: Error creating payment request:", error);
+      setPaymentRequest(null);
       setGooglePayAvailable(false);
-      setGooglePayError(error.message);
+      setGooglePayError(error.message || "Google Pay initialization failed");
     }
   }, [stripe, amount]);
 

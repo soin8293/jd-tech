@@ -20,6 +20,8 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
   stripe,
   onCardElementChange,
 }) => {
+  console.log("CARD_FORM: Rendering with processing:", processing, "disabled:", disabled, "stripe:", stripe);
+
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="p-4 border border-border rounded-md">
@@ -32,24 +34,30 @@ const CardPaymentForm: React.FC<CardPaymentFormProps> = ({
                 '::placeholder': {
                   color: '#6b7280',
                 },
+                fontFamily: 'system-ui, sans-serif',
+              },
+              invalid: {
+                color: '#ef4444',
               },
             },
-            hidePostalCode: true,
+            hidePostalCode: false,
           }}
           onChange={onCardElementChange}
         />
       </div>
       
       {cardError && (
-        <div className="text-sm text-destructive">{cardError}</div>
+        <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+          {cardError}
+        </div>
       )}
       
       <Button 
         type="submit"
-        className="w-full"
+        className="w-full h-12"
         disabled={disabled || processing || !stripe}
       >
-        {processing ? 'Processing...' : 'Pay Now'}
+        {processing ? 'Processing Payment...' : 'Pay Now'}
       </Button>
     </form>
   );

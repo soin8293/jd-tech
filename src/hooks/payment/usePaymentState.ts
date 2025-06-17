@@ -1,36 +1,36 @@
 
 import { useState } from 'react';
-import type { PaymentStatus } from './paymentHooks.types';
+import { PaymentStatus, APIError } from "@/components/payment/payment.types";
 import { v4 as uuidv4 } from 'uuid';
 
 export interface PaymentState {
   paymentStatus: PaymentStatus;
-  errorDetails: string | null;
+  errorDetails: APIError | null;
+  clientSecret: string;
+  paymentIntentId: string;
   transactionId: string;
-  bookingId: string | null;
+  bookingId: string;
   bookingToken: string;
   calculatedAmount: number | null;
-  paymentIntentId: string | null;
 }
 
 export const usePaymentState = () => {
   const [state, setState] = useState<PaymentState>({
     paymentStatus: 'idle',
     errorDetails: null,
-    transactionId: uuidv4(),
-    bookingId: null,
-    bookingToken: uuidv4(),
+    clientSecret: '',
+    paymentIntentId: '',
+    transactionId: '',
+    bookingId: '',
+    bookingToken: '',
     calculatedAmount: null,
-    paymentIntentId: null,
   });
 
-  const updateStatus = (status: PaymentStatus) => {
-    console.log(`🔧 PaymentState: Status changed from ${state.paymentStatus} to ${status}`);
+  const updatePaymentStatus = (status: PaymentStatus) => {
     setState(prev => ({ ...prev, paymentStatus: status }));
   };
 
-  const setError = (error: string) => {
-    console.error('🔧 PaymentState: Error set:', error);
+  const setError = (error: APIError) => {
     setState(prev => ({ 
       ...prev, 
       paymentStatus: 'error', 
@@ -38,35 +38,51 @@ export const usePaymentState = () => {
     }));
   };
 
-  const setPaymentIntent = (paymentIntentId: string, calculatedAmount: number) => {
-    console.log('🔧 PaymentState: Payment intent set:', { paymentIntentId, calculatedAmount });
+  const setPaymentIntent = (clientSecret: string, paymentIntentId: string, calculatedAmount?: number) => {
     setState(prev => ({ 
       ...prev, 
-      paymentIntentId, 
-      calculatedAmount,
-      paymentStatus: 'ready'
+      clientSecret, 
+      paymentIntentId,
+      calculatedAmount: calculatedAmount || null,
+      paymentStatus: 'idle'
     }));
   };
 
-  const setBookingComplete = (bookingId: string) => {
-    console.log('🔧 PaymentState: Booking completed:', bookingId);
+  const setBookingComplete = (bookingId: string, bookingToken: string) => {
     setState(prev => ({ 
       ...prev, 
       bookingId, 
-      paymentStatus: 'completed' 
+      bookingToken, 
+      paymentStatus: 'success' 
     }));
   };
 
-  const clearError = () => {
-    setState(prev => ({ ...prev, errorDetails: null }));
+  const generateTransactionId = () => {
+    const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    setState(prev => ({ ...prev, transactionId }));
+    return transactionId;
+  };
+
+  const resetState = () => {
+    setState({
+      paymentStatus: 'idle',
+      errorDetails: null,
+      clientSecret: '',
+      paymentIntentId: '',
+      transactionId: '',
+      bookingId: '',
+      bookingToken: '',
+      calculatedAmount: null,
+    });
   };
 
   return {
     state,
-    updateStatus,
+    updatePaymentStatus,
     setError,
     setPaymentIntent,
     setBookingComplete,
-    clearError,
+    generateTransactionId,
+    resetState,
   };
 };

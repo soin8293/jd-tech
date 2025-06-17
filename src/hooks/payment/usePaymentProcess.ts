@@ -1,88 +1,67 @@
-import { useState, useCallback, useEffect } from 'react';
+
+import { useEffect, useCallback } from 'react';
 import { useStripe, useElements } from '@stripe/react-stripe-js';
-import { usePaymentIntent } from './usePaymentIntent';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 import type { BookingDetails } from '@/types/hotel.types';
-import type { PaymentStatus, PaymentResponse } from './paymentHooks.types';
-import type { ProcessBookingParams } from '../../../functions/src/types/booking.process.types';
-import { v4 as uuidv4 } from 'uuid';
+import { usePaymentState } from './usePaymentState';
+import { usePaymentIntentHandler } from './usePaymentIntentHandler';
+import { useBookingProcessor } from './useBookingProcessor';
+import { PaymentLogger } from './paymentLogger';
+import { PaymentValidators } from './paymentValidators';
 
 export const usePaymentProcess = (
   isOpen: boolean,
   bookingDetails: BookingDetails | null,
   onPaymentComplete: () => void
 ) => {
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
-  const [errorDetails, setErrorDetails] = useState<string | null>(null);
-  const [transactionId] = useState(() => uuidv4());
-  const [bookingId, setBookingId] = useState<string | null>(null);
-  const [bookingToken] = useState(() => uuidv4());
-  const [calculatedAmount, setCalculatedAmount] = useState<number | null>(null);
-  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
-
   const stripe = useStripe();
   const elements = useElements();
-  const { createPaymentIntent } = usePaymentIntent();
   const { toast } = useToast();
-  const { currentUser } = useAuth();
+  
+  const {
+    state,
+    updateStatus,
+    setError,
+    setPaymentIntent,
+    setBookingComplete,
+    clearError,
+  } = usePaymentState();
+
+  const { handleCreatePaymentIntent } = usePaymentIntentHandler();
+  const { confirmPayment, processBooking } = useBookingProcessor();
 
   // Create payment intent when modal opens and we have booking details
   useEffect(() => {
-    if (isOpen && bookingDetails && !calculatedAmount) {
-      console.log("🔧 usePaymentProcess: Modal opened, creating payment intent...");
-      handleCreatePaymentIntent();
+    if (isOpen && bookingDetails && !state.calculatedAmount) {
+      PaymentLogger.logStateChange('modal_closed', 'modal_opened', { hasBookingDetails: true });
+      initializePaymentIntent();
     }
   }, [isOpen, bookingDetails]);
 
-  const handleCreatePaymentIntent = async () => {
+  const initializePaymentIntent = async () => {
     if (!bookingDetails) {
-      console.error("🔧 usePaymentProcess: No booking details available");
+      PaymentLogger.logValidationError('No booking details available', { bookingDetails });
+      return;
+    }
+
+    const validation = PaymentValidators.validateBookingDetails(bookingDetails);
+    if (!validation.isValid) {
+      const errorMsg = `Invalid booking data: ${validation.errors.join(', ')}`;
+      PaymentLogger.logValidationError(errorMsg, validation.errors);
+      setError(errorMsg);
       return;
     }
 
     try {
-      setPaymentStatus('loading');
-      setErrorDetails(null);
+      updateStatus('loading');
+      clearError();
 
-      console.log("🔧 usePaymentProcess: Creating payment intent with booking data:", {
-        rooms: bookingDetails.rooms.map(r => ({ id: r.id, name: r.name, price: r.price })),
-        period: bookingDetails.period,
-        guests: bookingDetails.guests,
-        totalPrice: bookingDetails.totalPrice
-      });
-
-      const paymentIntentParams = {
-        rooms: bookingDetails.rooms.map(room => ({
-          id: room.id,
-          name: room.name,
-          price: room.price,
-          capacity: room.capacity
-        })),
-        period: {
-          checkIn: bookingDetails.period.checkIn.toISOString(),
-          checkOut: bookingDetails.period.checkOut.toISOString()
-        },
-        guests: bookingDetails.guests,
-        transaction_id: transactionId,
-        booking_reference: `booking-${Date.now()}`,
-        currency: 'usd'
-      };
-
-      const response = await createPaymentIntent(paymentIntentParams);
-      
-      console.log("🔧 usePaymentProcess: Payment intent response:", response);
-      
-      setCalculatedAmount(response.calculatedAmount);
-      setPaymentIntentId(response.paymentIntentId);
-      setPaymentStatus('ready');
+      const response = await handleCreatePaymentIntent(bookingDetails, state.transactionId);
+      setPaymentIntent(response.paymentIntentId, response.calculatedAmount);
       
     } catch (error: any) {
-      console.error("🔧 usePaymentProcess: Failed to create payment intent:", error);
-      setErrorDetails(error.message || 'Failed to initialize payment');
-      setPaymentStatus('error');
+      PaymentLogger.logPaymentError(error, 'payment_intent_creation');
+      setError(error.message || 'Failed to initialize payment');
       
       toast({
         title: "Payment Setup Failed",
@@ -96,97 +75,57 @@ export const usePaymentProcess = (
     paymentType: 'card' | 'google_pay',
     paymentMethodId: string
   ) => {
-    if (!stripe || !elements || !bookingDetails || !paymentIntentId) {
-      setErrorDetails('Payment system not ready');
+    const validation = PaymentValidators.validatePaymentReadiness(
+      stripe, 
+      elements, 
+      bookingDetails, 
+      state.paymentIntentId
+    );
+
+    if (!validation.isValid) {
+      const errorMsg = `Payment system not ready: ${validation.errors.join(', ')}`;
+      PaymentLogger.logValidationError(errorMsg, validation.errors);
+      setError(errorMsg);
       return;
     }
 
-    console.log("🔧 usePaymentProcess: Processing payment with booking data");
+    PaymentLogger.logProcessStart(paymentType, paymentMethodId);
     
     try {
-      setPaymentStatus('processing');
-      setErrorDetails(null);
+      updateStatus('processing');
+      clearError();
 
-      // Confirm the payment intent first
-      let confirmResult;
-      
-      if (paymentType === 'card') {
-        const cardElement = elements.getElement('card');
-        if (!cardElement) {
-          throw new Error('Card element not found');
-        }
-        
-        confirmResult = await stripe.confirmCardPayment(paymentIntentId, {
-          payment_method: paymentMethodId
-        });
-      } else {
-        // For Google Pay, the payment method is already created
-        confirmResult = await stripe.confirmCardPayment(paymentIntentId, {
-          payment_method: paymentMethodId
-        });
-      }
-
-      if (confirmResult.error) {
-        throw new Error(confirmResult.error.message || 'Payment confirmation failed');
-      }
-
-      console.log("🔧 usePaymentProcess: Payment confirmed, processing booking...");
-
-      // Process the booking with confirmed payment
-      const processBookingFn = httpsCallable<ProcessBookingParams, PaymentResponse>(
-        functions,
-        'processBooking'
+      // Step 1: Confirm payment with Stripe
+      const confirmedPaymentIntent = await confirmPayment(
+        paymentType, 
+        paymentMethodId, 
+        state.paymentIntentId!
       );
 
-      const bookingParams: ProcessBookingParams = {
-        paymentIntentId: confirmResult.paymentIntent.id,
-        transaction_id: transactionId,
-        userEmail: currentUser?.email || bookingDetails.userEmail || 'guest@example.com',
-        userId: currentUser?.uid,
+      // Step 2: Process booking with backend
+      const result = await processBooking(
+        confirmedPaymentIntent,
+        bookingDetails!,
+        state.transactionId,
         paymentType,
-        paymentMethodId,
-        bookingDetails: {
-          period: {
-            checkIn: bookingDetails.period.checkIn.toISOString(),
-            checkOut: bookingDetails.period.checkOut.toISOString()
-          },
-          guests: bookingDetails.guests,
-          rooms: bookingDetails.rooms.map(room => ({
-            id: room.id,
-            name: room.name,
-            price: room.price,
-            capacity: room.capacity
-          })),
-          totalPrice: bookingDetails.totalPrice,
-          userEmail: currentUser?.email || bookingDetails.userEmail || 'guest@example.com'
-        }
-      };
+        paymentMethodId
+      );
 
-      console.log("🔧 usePaymentProcess: Calling processBooking with:", bookingParams);
-
-      const result = await processBookingFn(bookingParams);
+      // Step 3: Complete the process
+      setBookingComplete(result.bookingId!);
+      PaymentLogger.logPaymentSuccess(result.bookingId!, result.message);
       
-      console.log("🔧 usePaymentProcess: Booking processed:", result.data);
+      toast({
+        title: "Payment Successful!",
+        description: result.message,
+        variant: "default",
+      });
       
-      if (result.data.success) {
-        setBookingId(result.data.bookingId);
-        setPaymentStatus('completed');
-        
-        toast({
-          title: "Payment Successful!",
-          description: result.data.message,
-          variant: "default",
-        });
-        
-        onPaymentComplete();
-      } else {
-        throw new Error(result.data.message || 'Payment processing failed');
-      }
+      onPaymentComplete();
       
     } catch (error: any) {
-      console.error("🔧 usePaymentProcess: Payment processing failed:", error);
-      setErrorDetails(error.message || 'Payment processing failed');
-      setPaymentStatus('error');
+      PaymentLogger.logPaymentError(error, 'payment_processing');
+      setError(error.message || 'Payment processing failed');
       
       toast({
         title: "Payment Failed",
@@ -194,15 +133,25 @@ export const usePaymentProcess = (
         variant: "destructive",
       });
     }
-  }, [stripe, elements, bookingDetails, paymentIntentId, transactionId, currentUser, onPaymentComplete, toast]);
+  }, [
+    stripe, 
+    elements, 
+    bookingDetails, 
+    state.paymentIntentId, 
+    state.transactionId,
+    confirmPayment,
+    processBooking,
+    onPaymentComplete,
+    toast
+  ]);
 
   return {
-    paymentStatus,
-    errorDetails,
-    transactionId,
-    bookingId,
-    bookingToken,
+    paymentStatus: state.paymentStatus,
+    errorDetails: state.errorDetails,
+    transactionId: state.transactionId,
+    bookingId: state.bookingId,
+    bookingToken: state.bookingToken,
     processPayment,
-    calculatedAmount,
+    calculatedAmount: state.calculatedAmount,
   };
 };

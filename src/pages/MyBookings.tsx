@@ -41,22 +41,24 @@ const MyBookings = () => {
       ) : (
         <div className="grid gap-6">
           {bookings.map((booking) => {
+            // Helper function to convert Firebase timestamp or Date to Date object
+            const convertToDate = (dateValue: any): Date => {
+              if (!dateValue) return new Date();
+              if (dateValue instanceof Date) return dateValue;
+              if (typeof dateValue === 'object' && 'seconds' in dateValue) {
+                return new Date(dateValue.seconds * 1000);
+              }
+              return new Date(dateValue);
+            };
+
             // Handle different date formats - prioritize period fields, fallback to top-level
-            const startDate = booking.period?.startDate?.seconds 
-              ? new Date(booking.period.startDate.seconds * 1000)
-              : booking.checkIn?.seconds 
-              ? new Date(booking.checkIn.seconds * 1000)
-              : booking.checkIn instanceof Date 
-              ? booking.checkIn 
-              : new Date();
+            const startDate = booking.period?.startDate 
+              ? convertToDate(booking.period.startDate)
+              : convertToDate(booking.checkIn);
             
-            const endDate = booking.period?.endDate?.seconds 
-              ? new Date(booking.period.endDate.seconds * 1000)
-              : booking.checkOut?.seconds 
-              ? new Date(booking.checkOut.seconds * 1000)
-              : booking.checkOut instanceof Date 
-              ? booking.checkOut 
-              : new Date();
+            const endDate = booking.period?.endDate 
+              ? convertToDate(booking.period.endDate)
+              : convertToDate(booking.checkOut);
 
             // Calculate nights if not provided
             const nights = booking.numberOfNights || 

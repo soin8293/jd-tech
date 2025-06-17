@@ -42,6 +42,13 @@ const processBookingHandler = async (request: any): Promise<PaymentResponse> => 
       created: new Date(paymentIntent.created * 1000).toISOString()
     });
   } catch (stripeError: any) {
+    // Log only serializable properties to avoid circular structure error
+    console.error("Stripe error in processBooking:", {
+      message: stripeError.message,
+      code: stripeError.code,
+      type: stripeError.type,
+      name: stripeError.name
+    });
     handleStripeError(stripeError, 'Payment intent retrieval');
   }
   
@@ -81,7 +88,12 @@ const processBookingHandler = async (request: any): Promise<PaymentResponse> => 
     
   } catch (error: any) {
     // Payment was successful, but we couldn't store the booking
-    logger.error("Failed to store booking data", error);
+    console.error("Failed to store booking data:", {
+      message: error.message,
+      code: error.code,
+      type: error.type,
+      name: error.name
+    });
     
     return {
       success: true,

@@ -27,15 +27,22 @@ const createPaymentIntentHandler = async (request: any): Promise<CreatePaymentIn
     return response;
 
   } catch (error: any) {
-    // Log error
-    paymentLogger.logError(error, request, "PAYMENT_INTENT_HANDLER");
+    // Log only serializable properties to avoid circular structure error
+    console.error("🚀 PAYMENT_INTENT_HANDLER: ❌ Error occurred:", {
+      message: error.message,
+      code: error.code,
+      type: error.type,
+      name: error.name,
+      stack: error.stack?.substring(0, 500) // Truncate stack trace
+    });
     
     if (error instanceof HttpsError) {
       throw error;
     }
     
     throw new HttpsError('internal', 'An unexpected error occurred while creating the payment intent.', {
-      originalMessage: error.message,
+      errorMessage: error.message || 'Unknown error',
+      errorCode: error.code || 'unknown',
       errorType: error.constructor.name,
       timestamp: new Date().toISOString()
     });

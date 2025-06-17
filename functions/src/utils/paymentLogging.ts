@@ -32,11 +32,14 @@ export class PaymentLogger {
     console.log(`🚀 ${functionName}: Request exists:`, !!request);
     console.log(`🚀 ${functionName}: Request type:`, typeof request);
     console.log(`🚀 ${functionName}: Request constructor:`, request?.constructor?.name);
-    console.log(`🚀 ${functionName}: Request prototype:`, Object.getPrototypeOf(request || {})?.constructor?.name);
     console.log(`🚀 ${functionName}: Request keys:`, Object.keys(request || {}));
-    console.log(`🚀 ${functionName}: Request own properties:`, Object.getOwnPropertyNames(request || {}));
-    console.log(`🚀 ${functionName}: Request descriptors:`, Object.getOwnPropertyDescriptors(request || {}));
-    console.log(`🚀 ${functionName}: Request JSON serialization:`, JSON.stringify(request, null, 2));
+    
+    // Safely stringify request without circular references
+    try {
+      console.log(`🚀 ${functionName}: Request JSON serialization:`, JSON.stringify(request, null, 2));
+    } catch (error) {
+      console.log(`🚀 ${functionName}: Request cannot be stringified (circular structure), keys:`, Object.keys(request || {}));
+    }
     
     if (request?.data) {
       console.log(`🚀 ${functionName}: Request.data ultra-detailed analysis:`);
@@ -44,9 +47,13 @@ export class PaymentLogger {
       console.log(`🚀 ${functionName}: Data type:`, typeof request.data);
       console.log(`🚀 ${functionName}: Data constructor:`, request.data?.constructor?.name);
       console.log(`🚀 ${functionName}: Data keys:`, Object.keys(request.data || {}));
-      console.log(`🚀 ${functionName}: Data own properties:`, Object.getOwnPropertyNames(request.data || {}));
-      console.log(`🚀 ${functionName}: Data JSON:`, JSON.stringify(request.data, null, 2));
-      console.log(`🚀 ${functionName}: Data size (bytes):`, JSON.stringify(request.data).length);
+      
+      try {
+        console.log(`🚀 ${functionName}: Data JSON:`, JSON.stringify(request.data, null, 2));
+        console.log(`🚀 ${functionName}: Data size (bytes):`, JSON.stringify(request.data).length);
+      } catch (error) {
+        console.log(`🚀 ${functionName}: Data cannot be stringified, keys:`, Object.keys(request.data || {}));
+      }
     } else {
       console.error(`🚀 ${functionName}: ❌ CRITICAL: request.data is missing or falsy!`);
     }
@@ -67,12 +74,22 @@ export class PaymentLogger {
       hasTransactionId: !!validatedData.transaction_id,
       hasCurrency: !!validatedData.currency
     });
-    console.log(`🚀 ${functionName}: Validated data JSON:`, JSON.stringify(validatedData, null, 2));
+    
+    try {
+      console.log(`🚀 ${functionName}: Validated data JSON:`, JSON.stringify(validatedData, null, 2));
+    } catch (error) {
+      console.log(`🚀 ${functionName}: Validated data cannot be stringified, structure logged above`);
+    }
   }
 
   logCalculationPhase(phase: string, data: any, functionName: string) {
     console.log(`🚀 ${functionName}: ================ ${phase.toUpperCase()} ================`);
-    console.log(`🚀 ${functionName}: ${phase} data:`, data);
+    
+    try {
+      console.log(`🚀 ${functionName}: ${phase} data:`, JSON.stringify(data, null, 2));
+    } catch (error) {
+      console.log(`🚀 ${functionName}: ${phase} data cannot be stringified:`, data);
+    }
   }
 
   logSuccess(response: any, functionName: string) {
@@ -91,22 +108,21 @@ export class PaymentLogger {
     console.error(`🚀 ${functionName}: Error timestamp:`, new Date().toISOString());
     console.error(`🚀 ${functionName}: Error in function execution context`);
     
-    console.error(`🚀 ${functionName}: Error ultra-comprehensive analysis:`, {
+    // Log only serializable error properties
+    console.error(`🚀 ${functionName}: Error analysis:`, {
       errorExists: !!error,
       errorType: typeof error,
       errorConstructor: error?.constructor?.name,
-      errorPrototype: Object.getPrototypeOf(error || {})?.constructor?.name,
-      errorString: String(error),
-      errorToString: error?.toString?.()
+      errorMessage: error?.message,
+      errorCode: error?.code,
+      errorName: error?.name
     });
     
     logger.error("!!! UNHANDLED EXCEPTION IN createPaymentIntentHandler !!!", {
       errorMessage: error.message,
       errorCode: error.code,
       errorType: error.constructor.name,
-      stack: error.stack,
-      requestData: request.data,
-      errorDetails: error.details || null,
+      requestDataKeys: request?.data ? Object.keys(request.data) : [],
       timestamp: new Date().toISOString(),
       memoryUsage: process.memoryUsage()
     });

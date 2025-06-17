@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { BookingDetails } from "@/types/hotel.types";
 import { PaymentMethodType } from "@/components/payment/payment.types";
@@ -43,9 +42,9 @@ export const usePaymentProcessLogic = (
       createPaymentIntent(bookingDetails, transactionId)
         .then((responseData) => {
           setPaymentIntent(
-            responseData.clientSecret!,
             responseData.paymentIntentId || '',
-            responseData.calculatedAmount
+            responseData.calculatedAmount,
+            responseData.clientSecret
           );
         })
         .catch((error: any) => {

@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useStripe, useElements } from '@stripe/react-stripe-js';
 import { usePaymentIntent } from './usePaymentIntent';
@@ -7,7 +6,8 @@ import { functions } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import type { BookingDetails } from '@/types/hotel.types';
-import type { PaymentStatus, ProcessBookingParams, PaymentResponse } from './paymentHooks.types';
+import type { PaymentStatus, PaymentResponse } from './paymentHooks.types';
+import type { ProcessBookingParams } from '../../../functions/src/types/booking.process.types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const usePaymentProcess = (

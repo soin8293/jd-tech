@@ -41,61 +41,20 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       });
     }
   }, [isOpen, bookingDetails]);
-  
-  const {
-    paymentStatus,
-    errorDetails,
-    transactionId,
-    bookingId,
-    bookingToken,
-    processPayment,
-    calculatedAmount,
-  } = usePaymentProcess(isOpen, bookingDetails, () => {
-    console.log("PAYMENT_MODAL: Payment complete callback triggered");
-    setShowConfirmation(true);
-    onPaymentComplete();
-  });
-
-  useEffect(() => {
-    console.log("PAYMENT_MODAL: Payment status changed:", paymentStatus);
-    if (errorDetails) {
-      console.error("PAYMENT_MODAL: Error details:", errorDetails);
-    }
-  }, [paymentStatus, errorDetails]);
 
   if (!bookingDetails) {
     console.error("PAYMENT_MODAL: No booking details provided");
     return null;
   }
 
+  console.log("PAYMENT_MODAL: Rendering payment modal, showConfirmation:", showConfirmation);
+
   const handleClose = () => {
-    console.log("PAYMENT_MODAL: Close button clicked. Payment status:", paymentStatus);
-    // Only allow closing if not processing payment or if showing confirmation
-    if (paymentStatus !== 'loading' && paymentStatus !== 'processing' || showConfirmation) {
-      console.log("PAYMENT_MODAL: Closing modal");
-      onClose();
-      // Reset the confirmation view when closing
-      setTimeout(() => setShowConfirmation(false), 300);
-    } else {
-      console.log("PAYMENT_MODAL: Cannot close during payment processing");
-    }
+    console.log("PAYMENT_MODAL: Close button clicked");
+    onClose();
+    // Reset the confirmation view when closing
+    setTimeout(() => setShowConfirmation(false), 300);
   };
-
-  const handlePayWithCard = async (paymentMethodId: string) => {
-    console.log("PAYMENT_MODAL: Pay with card initiated with payment method ID:", paymentMethodId);
-    await processPayment('card', paymentMethodId);
-  };
-
-  const handleGooglePay = async (paymentMethodId: string) => {
-    console.log("PAYMENT_MODAL: Google Pay initiated with payment method ID:", paymentMethodId);
-    await processPayment('google_pay', paymentMethodId);
-  };
-
-  // Convert payment status and error details to match component types
-  const componentPaymentStatus = paymentStatus === 'completed' ? 'success' : paymentStatus;
-  const componentErrorDetails = typeof errorDetails === 'string' 
-    ? { type: 'unknown', message: errorDetails } 
-    : errorDetails;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -119,10 +78,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </DialogDescription>
             </DialogHeader>
             <BookingConfirmationContent 
-              bookingId={bookingId} 
+              bookingId="" 
               bookingDetails={bookingDetails}
-              transactionId={transactionId}
-              bookingToken={bookingToken}
+              transactionId=""
+              bookingToken=""
             />
           </>
         ) : (
@@ -135,21 +94,71 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             </DialogHeader>
             
             <StripeWrapper>
-              <PaymentContent
+              <PaymentModalContent
                 bookingDetails={bookingDetails}
-                paymentStatus={componentPaymentStatus}
-                errorDetails={componentErrorDetails}
-                transactionId={transactionId}
-                bookingId={bookingId}
-                onCardPayment={handlePayWithCard}
-                onGooglePayment={handleGooglePay}
-                calculatedAmount={calculatedAmount}
+                onPaymentComplete={() => {
+                  console.log("PAYMENT_MODAL: Payment complete callback triggered");
+                  setShowConfirmation(true);
+                  onPaymentComplete();
+                }}
               />
             </StripeWrapper>
           </>
         )}
       </DialogContent>
     </Dialog>
+  );
+};
+
+// Separate component that uses Stripe hooks - must be inside StripeWrapper
+const PaymentModalContent: React.FC<{
+  bookingDetails: BookingDetails;
+  onPaymentComplete: () => void;
+}> = ({ bookingDetails, onPaymentComplete }) => {
+  const {
+    paymentStatus,
+    errorDetails,
+    transactionId,
+    bookingId,
+    bookingToken,
+    processPayment,
+    calculatedAmount,
+  } = usePaymentProcess(true, bookingDetails, onPaymentComplete);
+
+  useEffect(() => {
+    console.log("PAYMENT_MODAL_CONTENT: Payment status changed:", paymentStatus);
+    if (errorDetails) {
+      console.error("PAYMENT_MODAL_CONTENT: Error details:", errorDetails);
+    }
+  }, [paymentStatus, errorDetails]);
+
+  const handlePayWithCard = async (paymentMethodId: string) => {
+    console.log("PAYMENT_MODAL_CONTENT: Pay with card initiated with payment method ID:", paymentMethodId);
+    await processPayment('card', paymentMethodId);
+  };
+
+  const handleGooglePay = async (paymentMethodId: string) => {
+    console.log("PAYMENT_MODAL_CONTENT: Google Pay initiated with payment method ID:", paymentMethodId);
+    await processPayment('google_pay', paymentMethodId);
+  };
+
+  // Convert payment status and error details to match component types
+  const componentPaymentStatus = paymentStatus === 'completed' ? 'success' : paymentStatus;
+  const componentErrorDetails = typeof errorDetails === 'string' 
+    ? { type: 'unknown', message: errorDetails } 
+    : errorDetails;
+
+  return (
+    <PaymentContent
+      bookingDetails={bookingDetails}
+      paymentStatus={componentPaymentStatus}
+      errorDetails={componentErrorDetails}
+      transactionId={transactionId}
+      bookingId={bookingId}
+      onCardPayment={handlePayWithCard}
+      onGooglePayment={handleGooglePay}
+      calculatedAmount={calculatedAmount}
+    />
   );
 };
 

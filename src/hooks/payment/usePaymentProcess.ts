@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from 'react';
 import { useStripe, useElements } from '@stripe/react-stripe-js';
 import { useToast } from '@/hooks/use-toast';
@@ -112,7 +111,7 @@ export const usePaymentProcess = (
       );
 
       // Step 3: Complete the process
-      setBookingComplete(result.bookingId!);
+      setBookingComplete(result.bookingId!, result.bookingToken);
       PaymentLogger.logPaymentSuccess(result.bookingId!, result.message);
       
       toast({

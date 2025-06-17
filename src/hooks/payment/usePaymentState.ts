@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { PaymentStatus, APIError } from "@/components/payment/payment.types";
-import { v4 as uuidv4 } from 'uuid';
 
 export interface PaymentState {
   paymentStatus: PaymentStatus;
@@ -30,29 +29,40 @@ export const usePaymentState = () => {
     setState(prev => ({ ...prev, paymentStatus: status }));
   };
 
-  const setError = (error: APIError) => {
+  const updateStatus = (status: PaymentStatus) => {
+    setState(prev => ({ ...prev, paymentStatus: status }));
+  };
+
+  const setError = (error: APIError | string) => {
+    const errorObj = typeof error === 'string' 
+      ? { type: 'unknown', message: error }
+      : error;
     setState(prev => ({ 
       ...prev, 
       paymentStatus: 'error', 
-      errorDetails: error 
+      errorDetails: errorObj 
     }));
   };
 
-  const setPaymentIntent = (clientSecret: string, paymentIntentId: string, calculatedAmount?: number) => {
+  const clearError = () => {
+    setState(prev => ({ ...prev, errorDetails: null }));
+  };
+
+  const setPaymentIntent = (paymentIntentId: string, calculatedAmount: number | null, clientSecret?: string) => {
     setState(prev => ({ 
       ...prev, 
-      clientSecret, 
+      clientSecret: clientSecret || '',
       paymentIntentId,
-      calculatedAmount: calculatedAmount || null,
+      calculatedAmount,
       paymentStatus: 'idle'
     }));
   };
 
-  const setBookingComplete = (bookingId: string, bookingToken: string) => {
+  const setBookingComplete = (bookingId: string, bookingToken?: string) => {
     setState(prev => ({ 
       ...prev, 
       bookingId, 
-      bookingToken, 
+      bookingToken: bookingToken || '', 
       paymentStatus: 'success' 
     }));
   };
@@ -79,7 +89,9 @@ export const usePaymentState = () => {
   return {
     state,
     updatePaymentStatus,
+    updateStatus,
     setError,
+    clearError,
     setPaymentIntent,
     setBookingComplete,
     generateTransactionId,

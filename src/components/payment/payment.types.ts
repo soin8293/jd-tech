@@ -1,5 +1,5 @@
 
-export type PaymentStatus = 'idle' | 'loading' | 'processing' | 'success' | 'error';
+export type PaymentStatus = 'idle' | 'loading' | 'processing' | 'completed' | 'ready' | 'error' | 'success';
 
 export type PaymentMethodType = 'card' | 'google_pay' | 'apple_pay' | 'bank_transfer';
 

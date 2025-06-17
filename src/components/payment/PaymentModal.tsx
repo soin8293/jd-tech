@@ -91,6 +91,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     await processPayment('google_pay', paymentMethodId);
   };
 
+  // Convert payment status and error details to match component types
+  const componentPaymentStatus = paymentStatus === 'completed' ? 'success' : paymentStatus;
+  const componentErrorDetails = typeof errorDetails === 'string' 
+    ? { type: 'unknown', message: errorDetails } 
+    : errorDetails;
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className={showConfirmation ? "sm:max-w-md md:max-w-lg" : "sm:max-w-md"}>
@@ -131,8 +137,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <StripeWrapper>
               <PaymentContent
                 bookingDetails={bookingDetails}
-                paymentStatus={paymentStatus}
-                errorDetails={errorDetails}
+                paymentStatus={componentPaymentStatus}
+                errorDetails={componentErrorDetails}
                 transactionId={transactionId}
                 bookingId={bookingId}
                 onCardPayment={handlePayWithCard}

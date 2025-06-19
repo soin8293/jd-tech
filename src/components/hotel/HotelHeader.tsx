@@ -14,7 +14,7 @@ interface HotelHeaderProps {
 const HeaderContainer = ({ children, className, isMobile }: { children: React.ReactNode, className?: string, isMobile: boolean }) => (
   <div className={cn(
     "overflow-hidden relative rounded-t-3xl", 
-    isMobile ? "h-[85vh]" : "h-[60vh]", 
+    isMobile ? "min-h-screen" : "min-h-[80vh]", 
     className
   )}>
     {children}
@@ -24,8 +24,8 @@ const HeaderContainer = ({ children, className, isMobile }: { children: React.Re
 // Content wrapper with positioning and padding
 const ContentWrapper = ({ children, isMobile }: { children: React.ReactNode, isMobile: boolean }) => (
   <div className={cn(
-    "flex flex-col justify-end px-6 md:px-8 lg:px-20 text-white h-full relative z-10",
-    isMobile ? "pb-4" : "pb-6 md:pb-8 lg:pb-10"
+    "flex flex-col justify-center items-center px-6 md:px-8 lg:px-20 text-white h-full relative z-10",
+    isMobile ? "py-8" : "py-12"
   )}>
     {children}
   </div>
@@ -34,29 +34,21 @@ const ContentWrapper = ({ children, isMobile }: { children: React.ReactNode, isM
 // Main content box with responsive flexbox layout and sizing
 const ContentBox = ({ children }: { children: React.ReactNode }) => (
   <div 
-    className="book-card animate-slide-up opacity-0 bg-black/20 backdrop-blur-sm rounded-3xl border border-white/10 relative overflow-hidden" 
+    className="book-card animate-slide-up opacity-0 bg-black/20 backdrop-blur-sm rounded-3xl border border-white/10 relative overflow-hidden max-h-[90vh] overflow-y-auto" 
     style={{ 
       animationDelay: "0.3s", 
       animationFillMode: "forwards",
-      minHeight: "clamp(24rem, 60vh, 38rem)",
+      minHeight: "clamp(20rem, 50vh, 32rem)",
       maxWidth: "90vw",
       width: "clamp(20rem, 80vw, 64rem)",
       display: "flex",
       flexDirection: "column",
-      padding: "2rem",
-      gap: "1.5rem"
+      padding: "clamp(1rem, 4vw, 2rem)",
+      gap: "clamp(0.75rem, 2vw, 1.5rem)"
     }}
   >
-    <style jsx>{`
-      @media (max-height: 600px) {
-        .book-card {
-          padding: 1.25rem 1rem !important;
-          gap: 0.75rem !important;
-        }
-      }
-    `}</style>
     <GradientHero className="absolute inset-0 rounded-3xl" />
-    <div className="flex flex-col h-full relative z-10" style={{ gap: "1.5rem" }}>
+    <div className="flex flex-col h-full relative z-10" style={{ gap: "clamp(0.75rem, 2vw, 1.5rem)" }}>
       {children}
     </div>
   </div>
@@ -75,9 +67,8 @@ const RatingBadge = () => (
 const MainTitle = () => (
   <h1 className="font-light tracking-tight text-balance relative z-10"
       style={{ 
-        fontSize: "clamp(2rem, 5vw + 1rem, 4.5rem)",
-        lineHeight: "1.2",
-        marginBottom: "1rem"
+        fontSize: "clamp(1.75rem, 5vw + 0.5rem, 4rem)",
+        lineHeight: "1.2"
       }}>
     Book a Room
   </h1>
@@ -85,11 +76,10 @@ const MainTitle = () => (
 
 // Description component with responsive typography
 const Description = () => (
-  <p className="text-white/90 max-w-3xl relative z-10"
+  <p className="text-white/90 max-w-3xl relative z-10 flex-1"
      style={{ 
-       fontSize: "clamp(1rem, 2vw + 0.5rem, 1.25rem)",
-       lineHeight: "1.4",
-       marginBottom: "2rem"
+       fontSize: "clamp(0.875rem, 2vw + 0.25rem, 1.125rem)",
+       lineHeight: "1.4"
      }}>
     {hotelDetails.description}
   </p>
@@ -97,20 +87,16 @@ const Description = () => (
 
 // Amenities list component with responsive button-like styling
 const AmenitiesList = () => (
-  <div className="flex flex-col sm:flex-row gap-3 mt-auto relative z-10">
+  <div className="flex flex-col sm:flex-row gap-2 mt-auto relative z-10 flex-wrap">
     {hotelDetails.amenities.slice(0, 6).map((amenity, index) => (
       <span 
         key={index}
-        className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-center"
+        className="px-3 py-2 rounded-full bg-white/20 backdrop-blur-sm text-center flex items-center justify-center"
         style={{
-          minHeight: "3rem",
-          width: "clamp(8rem, 35%, 12rem)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "clamp(0.75rem, 1.5vw + 0.5rem, 0.875rem)",
-          minWidth: "44px", // Accessibility tap target
-          minHeight: "44px"
+          minHeight: "44px",
+          width: "clamp(6rem, 30%, 10rem)",
+          fontSize: "clamp(0.75rem, 1.5vw + 0.25rem, 0.875rem)",
+          minWidth: "44px"
         }}
       >
         {amenity}

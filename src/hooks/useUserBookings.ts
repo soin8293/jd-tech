@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
 
@@ -48,11 +48,11 @@ export const useUserBookings = () => {
         const bookingsRef = collection(db, "bookings");
         console.log("📋 BOOKINGS DEBUG: Bookings collection reference:", bookingsRef);
         
-        console.log("📋 BOOKINGS DEBUG: Creating query with filters");
+        // Use a simpler query that only filters by userId (no orderBy to avoid composite index requirement)
+        console.log("📋 BOOKINGS DEBUG: Creating query with userId filter only");
         const q = query(
           bookingsRef,
-          where("userId", "==", currentUser.uid),
-          orderBy("createdAt", "desc")
+          where("userId", "==", currentUser.uid)
         );
         console.log("📋 BOOKINGS DEBUG: Query created:", q);
         console.log("📋 BOOKINGS DEBUG: Query filters - userId:", currentUser.uid);
@@ -62,7 +62,6 @@ export const useUserBookings = () => {
         console.log("📋 BOOKINGS DEBUG: Query snapshot received:", querySnapshot);
         console.log("📋 BOOKINGS DEBUG: Query snapshot size:", querySnapshot.size);
         console.log("📋 BOOKINGS DEBUG: Query snapshot empty:", querySnapshot.empty);
-        console.log("📋 BOOKINGS DEBUG: Query snapshot metadata:", querySnapshot.metadata);
         
         const bookingsList: Booking[] = [];
         
@@ -79,7 +78,14 @@ export const useUserBookings = () => {
           bookingsList.push(bookingData);
         });
 
-        console.log("✅ BOOKINGS DEBUG: Successfully fetched bookings:", bookingsList);
+        // Sort by createdAt on the client side (most recent first)
+        bookingsList.sort((a, b) => {
+          const aTime = a.createdAt?.seconds || 0;
+          const bTime = b.createdAt?.seconds || 0;
+          return bTime - aTime;
+        });
+
+        console.log("✅ BOOKINGS DEBUG: Successfully fetched and sorted bookings:", bookingsList);
         setBookings(bookingsList);
         setError(null);
       } catch (err) {
@@ -91,7 +97,7 @@ export const useUserBookings = () => {
         console.error("❌ BOOKINGS ERROR: Error details:", (err as any)?.details);
         console.error("❌ BOOKINGS ERROR: Full error object:", err);
         console.error("❌ BOOKINGS ERROR: Error stack:", (err as any)?.stack);
-        setError("Failed to fetch bookings");
+        setError("Unable to load your bookings. Please try again.");
       } finally {
         console.log("📋 BOOKINGS DEBUG: Setting loading to false");
         setLoading(false);

@@ -2,10 +2,11 @@
 import React from "react";
 import { useUserBookings } from "@/hooks/useUserBookings";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
-import { Loader2, Calendar, Users, DollarSign, MapPin } from "lucide-react";
+import { Navigate, Link } from "react-router-dom";
+import { Loader2, Calendar, Users, DollarSign, MapPin, Building2 } from "lucide-react";
 
 const MyBookings = () => {
   const { bookings, loading, error } = useUserBookings();
@@ -27,19 +28,48 @@ const MyBookings = () => {
       ) : error ? (
         <Card>
           <CardContent className="py-8">
-            <p className="text-center text-destructive">{error}</p>
+            <div className="text-center">
+              <p className="text-destructive text-lg mb-4">{error}</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline"
+                className="mt-2"
+              >
+                Try Again
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : bookings.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground text-lg">No bookings found.</p>
-            <p className="text-sm text-muted-foreground mt-2">Your future reservations will appear here.</p>
+        <Card className="border-dashed">
+          <CardContent className="py-12 text-center">
+            <div className="mx-auto w-16 h-16 mb-6 rounded-full bg-muted flex items-center justify-center">
+              <Calendar className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3">No bookings yet</h3>
+            <p className="text-muted-foreground text-base mb-6 max-w-md mx-auto">
+              You haven't made any reservations yet. Start planning your perfect getaway and book your first room with us.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button asChild>
+                <Link to="/hotel" className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Browse Rooms
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/">
+                  Go to Homepage
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-6">
+          <div className="text-sm text-muted-foreground mb-4">
+            Showing {bookings.length} booking{bookings.length !== 1 ? 's' : ''}
+          </div>
           {bookings.map((booking) => {
             // Helper function to convert Firebase timestamp or Date to Date object
             const convertToDate = (dateValue: any): Date => {
@@ -51,7 +81,6 @@ const MyBookings = () => {
               return new Date(dateValue);
             };
 
-            // Handle different date formats - prioritize period fields, fallback to top-level
             const startDate = booking.period?.startDate 
               ? convertToDate(booking.period.startDate)
               : convertToDate(booking.checkIn);
@@ -60,7 +89,6 @@ const MyBookings = () => {
               ? convertToDate(booking.period.endDate)
               : convertToDate(booking.checkOut);
 
-            // Calculate nights if not provided
             const nights = booking.numberOfNights || 
               Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 

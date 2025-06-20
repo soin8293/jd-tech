@@ -1,3 +1,4 @@
+
 /**
  * Centralized booking service for all booking-related operations
  * Handles booking creation, validation, price calculation, and state management
@@ -44,7 +45,7 @@ export const validateBooking = (
   }
 
   // Check if check-in is before check-out
-  if (bookingPeriod.checkIn >= bookingPeriod.checkOut) {
+  if (bookingPeriod.checkIn && bookingPeriod.checkOut && bookingPeriod.checkIn >= bookingPeriod.checkOut) {
     errors.push("Check-out date must be after check-in date.");
   }
 
@@ -54,7 +55,7 @@ export const validateBooking = (
   }
 
   // Check room capacity
-  const totalCapacity = selectedRooms.reduce((sum, room) => sum + room.capacity, 0);
+  const totalCapacity = selectedRooms.reduce((sum, room) => sum + (room.capacity || 0), 0);
   if (guests > totalCapacity) {
     errors.push(`Selected rooms can accommodate maximum ${totalCapacity} guests, but ${guests} guests were specified.`);
   }

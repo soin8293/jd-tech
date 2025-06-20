@@ -43,11 +43,13 @@ export const debugFirebaseFunctions = async () => {
   console.log("🔧 FUNCTIONS_DEBUG: Testing function endpoint manually...");
   
   try {
+    const authHeader = currentUser ? `Bearer ${await currentUser.getIdToken()}` : '';
+    
     const response = await fetch(functionUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': currentUser ? `Bearer ${await currentUser.getIdToken()}` : ''
+        ...(authHeader && { 'Authorization': authHeader })
       },
       body: JSON.stringify({
         data: {

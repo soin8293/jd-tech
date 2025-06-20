@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { RoomFormData } from "@/types/hotel.types";
 import { useToast } from "@/hooks/use-toast";
@@ -77,8 +76,8 @@ export const useRoomEditForm = (
         throw new Error('Bed type is required');
       }
 
-      // Create the data object with explicit type assertion after validation
-      const roomData = {
+      // Create the validated data object with all required fields
+      const validatedData = roomFormSchema.parse({
         id: formData.id,
         name: sanitizedName,
         description: sanitizedDescription,
@@ -89,12 +88,10 @@ export const useRoomEditForm = (
         amenities: formData.amenities ?? [],
         images: formData.images ?? [],
         availability: formData.availability ?? true
-      } as RoomFormData;
-
-      // Now validate with schema
-      const validatedData = roomFormSchema.parse(roomData);
+      });
       
-      onSave(validatedData);
+      // Cast to RoomFormData since we know all required fields are present after validation
+      onSave(validatedData as RoomFormData);
     } catch (error: any) {
       toast({
         title: "Validation Error",

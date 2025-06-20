@@ -90,21 +90,8 @@ export const useRoomEditForm = (
         throw new Error('Valid room capacity is required');
       }
 
-      // Create validation data with proper typing - all fields are now guaranteed to be defined
-      const validationData: RoomFormData = {
-        id: roomData.id,
-        name: String(roomData.name),
-        description: String(roomData.description),
-        bed: String(roomData.bed),
-        price: Number(roomData.price),
-        capacity: Number(roomData.capacity),
-        size: Number(roomData.size),
-        amenities: roomData.amenities,
-        images: roomData.images,
-        availability: roomData.availability
-      };
-      
-      const validatedData = roomFormSchema.parse(validationData);
+      // Validate using the schema directly with the properly formed data
+      const validatedData = roomFormSchema.parse(roomData);
       
       onSave(validatedData);
     } catch (error: any) {

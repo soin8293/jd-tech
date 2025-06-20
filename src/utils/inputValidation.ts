@@ -88,8 +88,9 @@ export const validationSchemas = {
 
 // Combined schemas for complex forms
 export const roomFormSchema = z.object({
+  id: z.string().optional(),
   name: validationSchemas.roomName,
-  description: validationSchemas.roomDescription.optional(),
+  description: validationSchemas.roomDescription.default(''),
   price: validationSchemas.price,
   capacity: validationSchemas.capacity,
   size: validationSchemas.size,

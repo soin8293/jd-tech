@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { BookingPeriod } from "@/types/hotel.types";
 import { cn } from "@/lib/utils";
 import { format, addDays } from "date-fns";
@@ -42,7 +42,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch, isLoadin
         return;
       }
 
-      // Create proper BookingPeriod object with required fields
+      // Create proper BookingPeriod object with required fields - ensuring both dates are defined
       const bookingPeriod: BookingPeriod = {
         checkIn: dateRange.from,
         checkOut: dateRange.to

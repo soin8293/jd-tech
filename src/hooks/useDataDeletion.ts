@@ -9,7 +9,7 @@ import { useSecurityAuditLogger } from '@/hooks/useSecurityAuditLogger';
 export const useDataDeletion = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
-  const { currentUser, signOut } = useAuth();
+  const { currentUser, logout } = useAuth();
   const { logSecurityEvent } = useSecurityAuditLogger();
 
   const deleteUserData = async (includeAccount: boolean = false) => {
@@ -87,7 +87,7 @@ export const useDataDeletion = () => {
           description: "Your account and all associated data have been permanently deleted.",
         });
       } else {
-        await signOut();
+        await logout();
         
         toast({
           title: "Data Deleted",

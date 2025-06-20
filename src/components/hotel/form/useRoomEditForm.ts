@@ -65,17 +65,17 @@ export const useRoomEditForm = (
         bed: 'string'
       });
 
-      // Create properly typed data object with all required fields
+      // Create properly typed data object with all required fields, ensuring all properties are defined
       const roomData: RoomFormData = {
-        name: sanitizedData.name || formData.name,
-        description: sanitizedData.description || formData.description,
-        price: formData.price,
-        capacity: formData.capacity,
-        size: formData.size,
-        bed: sanitizedData.bed || formData.bed,
-        amenities: formData.amenities, // Already sanitized in component
-        images: formData.images, // Already validated in component
-        availability: formData.availability
+        name: sanitizedData.name || formData.name || '',
+        description: sanitizedData.description || formData.description || '',
+        price: formData.price || 0,
+        capacity: formData.capacity || 1,
+        size: formData.size || 0,
+        bed: sanitizedData.bed || formData.bed || '',
+        amenities: formData.amenities || [],
+        images: formData.images || [],
+        availability: formData.availability !== undefined ? formData.availability : true
       };
 
       // Validate the entire form

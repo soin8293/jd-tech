@@ -2,8 +2,7 @@
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { getRooms as fetchRoomsDirectly } from "@/services/room/roomQueries";
 import { Room } from "@/types/hotel.types";
-
-const functions = getFunctions();
+import { auth, functions } from "@/lib/firebase";
 
 /**
  * Attempts to seed the database with initial room data
@@ -12,6 +11,15 @@ const functions = getFunctions();
 export const seedRoomDatabase = async (): Promise<Room[] | null> => {
   console.log("🌱 SEEDING: ================== STARTING DATABASE SEEDING ==================");
   console.log("🌱 SEEDING: Starting database seeding at:", new Date().toISOString());
+  
+  // Check if Firebase is properly initialized
+  if (!auth || !functions) {
+    console.error("🌱 SEEDING: ❌ Firebase is not properly initialized");
+    console.error("🌱 SEEDING: This is likely due to missing Firebase configuration");
+    console.error("🌱 SEEDING: Please check your environment variables");
+    return null;
+  }
+  
   console.log("🌱 SEEDING: Functions instance:", functions);
   console.log("🌱 SEEDING: Functions app:", functions.app);
   
@@ -93,7 +101,7 @@ export const seedRoomDatabase = async (): Promise<Room[] | null> => {
     console.error("🌱 SEEDING: This could be due to:");
     console.error("🌱 SEEDING:   - Cloud Function not deployed");
     console.error("🌱 SEEDING:   - CORS issues");
-    console.error("🌱 SEIRING:   - Network connectivity problems");
+    console.error("🌱 SEEDING:   - Network connectivity problems");
     console.error("🌱 SEEDING:   - Function timeout (>10 seconds)");
     console.error("🌱 SEEDING:   - Firebase project configuration issues");
     console.error("🌱 SEEDING:   - Authentication/permission problems");

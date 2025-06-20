@@ -1,18 +1,19 @@
 
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
-import { auth } from "@/lib/firebase";
+import { auth, functions } from "@/lib/firebase";
 
 export const debugFirebaseFunctions = async () => {
   console.log("🔧 FUNCTIONS_DEBUG: ================ FIREBASE FUNCTIONS DIAGNOSTICS ================");
   
   // Check if Firebase is properly initialized
-  if (!auth) {
-    console.error("🔧 FUNCTIONS_DEBUG: Firebase auth is not initialized. Check your Firebase configuration.");
+  if (!auth || !functions) {
+    console.error("🔧 FUNCTIONS_DEBUG: Firebase is not properly initialized. Check your Firebase configuration.");
+    console.error("🔧 FUNCTIONS_DEBUG: Missing environment variables or invalid configuration.");
+    console.error("🔧 FUNCTIONS_DEBUG: Please ensure all Firebase environment variables are set correctly.");
     return;
   }
   
   // 1. Check if functions are properly initialized
-  const functions = getFunctions();
   console.log("🔧 FUNCTIONS_DEBUG: Functions instance:", {
     region: functions.region,
     app: functions.app.name,
@@ -121,6 +122,6 @@ export const debugFirebaseFunctions = async () => {
 };
 
 // Auto-run diagnostics when this module is imported - but only if Firebase is configured
-if (auth) {
+if (auth && functions) {
   debugFirebaseFunctions();
 }

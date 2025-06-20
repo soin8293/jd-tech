@@ -10,7 +10,7 @@ export const useRoomEditForm = (
   onSave: (room: RoomFormData) => void
 ) => {
   const { toast } = useToast();
-  const { sanitizeObject } = useInputSanitization();
+  const { sanitizeString } = useInputSanitization();
   const [formData, setFormData] = useState<RoomFormData>(editingRoom);
 
   const handleFormChange = (name: string, value: string | number) => {
@@ -58,28 +58,26 @@ export const useRoomEditForm = (
 
   const handleSave = () => {
     try {
-      // Sanitize all string inputs
-      const sanitizedData = sanitizeObject(formData, {
-        name: 'string',
-        description: 'html',
-        bed: 'string'
-      });
+      // Sanitize string inputs individually to maintain type safety
+      const sanitizedName = sanitizeString(formData.name || '', 'name');
+      const sanitizedDescription = sanitizeString(formData.description || '', 'description');
+      const sanitizedBed = sanitizeString(formData.bed || '', 'bed');
 
       // Create properly typed data object with all required fields guaranteed
       const roomData: RoomFormData = {
         id: formData.id,
-        name: typeof sanitizedData.name === 'string' ? sanitizedData.name : formData.name,
-        description: typeof sanitizedData.description === 'string' ? sanitizedData.description : formData.description,
+        name: sanitizedName,
+        description: sanitizedDescription,
         price: formData.price,
         capacity: formData.capacity,
         size: formData.size,
-        bed: typeof sanitizedData.bed === 'string' ? sanitizedData.bed : formData.bed,
+        bed: sanitizedBed,
         amenities: formData.amenities,
         images: formData.images,
         availability: formData.availability
       };
 
-      // Ensure all required fields are present and valid
+      // Validate required fields
       if (!roomData.name || roomData.name.trim() === '') {
         throw new Error('Room name is required');
       }
@@ -93,22 +91,8 @@ export const useRoomEditForm = (
         throw new Error('Bed type is required');
       }
 
-      // Create a final validated object that definitely matches RoomFormData
-      const finalRoomData: RoomFormData = {
-        id: roomData.id,
-        name: roomData.name,
-        description: roomData.description,
-        price: roomData.price,
-        capacity: roomData.capacity,
-        size: roomData.size,
-        bed: roomData.bed,
-        amenities: roomData.amenities,
-        images: roomData.images,
-        availability: roomData.availability
-      };
-
-      // Now validate with schema - all required fields are guaranteed to be defined
-      const validatedData = roomFormSchema.parse(finalRoomData);
+      // Validate with schema
+      const validatedData = roomFormSchema.parse(roomData);
       
       onSave(validatedData);
     } catch (error: any) {

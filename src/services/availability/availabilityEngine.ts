@@ -13,24 +13,28 @@ import { logger } from '@/utils/logger';
 
 class FirebaseAvailabilityEngine implements AvailabilityEngine {
   
-  // Cloud Functions callable references
-  private checkAvailabilityFn = httpsCallable(functions, 'checkAvailability');
-  private getNextAvailableFn = httpsCallable(functions, 'getNextAvailable');
-  private blockDatesFn = httpsCallable(functions, 'blockDates');
-  private getOccupancyRateFn = httpsCallable(functions, 'getOccupancyRate');
-  private createReservationHoldFn = httpsCallable(functions, 'createReservationHold');
-  private releaseReservationHoldFn = httpsCallable(functions, 'releaseReservationHold');
-  private processAtomicBookingFn = httpsCallable(functions, 'processAtomicBooking');
+  private isFirebaseInitialized(): boolean {
+    if (!functions) {
+      console.warn('Firebase functions not initialized - availability features disabled');
+      return false;
+    }
+    return true;
+  }
 
   /**
    * Check if a room is available for a specific period
    * Server-side function ensures atomicity and real-time accuracy
    */
   async checkAvailability(roomId: string, period: BookingPeriod): Promise<AvailabilityResult> {
+    if (!this.isFirebaseInitialized()) {
+      throw new Error('Firebase is not properly configured. Please check your environment variables.');
+    }
+
     try {
       logger.info('Checking availability', { roomId, period });
       
-      const result = await this.checkAvailabilityFn({
+      const checkAvailabilityFn = httpsCallable(functions, 'checkAvailability');
+      const result = await checkAvailabilityFn({
         roomId,
         startDate: period.checkIn.toISOString(),
         endDate: period.checkOut.toISOString()
@@ -51,10 +55,15 @@ class FirebaseAvailabilityEngine implements AvailabilityEngine {
    * Find the next available date for a room with specified duration
    */
   async getNextAvailable(roomId: string, duration: number): Promise<Date | null> {
+    if (!this.isFirebaseInitialized()) {
+      throw new Error('Firebase is not properly configured. Please check your environment variables.');
+    }
+
     try {
       logger.info('Finding next available date', { roomId, duration });
       
-      const result = await this.getNextAvailableFn({
+      const getNextAvailableFn = httpsCallable(functions, 'getNextAvailable');
+      const result = await getNextAvailableFn({
         roomId,
         duration,
         startFrom: new Date().toISOString()
@@ -75,10 +84,15 @@ class FirebaseAvailabilityEngine implements AvailabilityEngine {
    * Admin-only function with atomic transaction
    */
   async blockDates(roomId: string, periods: BlockedPeriod[]): Promise<void> {
+    if (!this.isFirebaseInitialized()) {
+      throw new Error('Firebase is not properly configured. Please check your environment variables.');
+    }
+
     try {
       logger.info('Blocking dates', { roomId, periodsCount: periods.length });
       
-      await this.blockDatesFn({
+      const blockDatesFn = httpsCallable(functions, 'blockDates');
+      await blockDatesFn({
         roomId,
         periods: periods.map(p => ({
           startDate: p.startDate.toISOString(),
@@ -100,10 +114,15 @@ class FirebaseAvailabilityEngine implements AvailabilityEngine {
    * Get occupancy rate and revenue analytics for a room
    */
   async getOccupancyRate(roomId: string, timeRange: DateRange): Promise<OccupancyData> {
+    if (!this.isFirebaseInitialized()) {
+      throw new Error('Firebase is not properly configured. Please check your environment variables.');
+    }
+
     try {
       logger.info('Getting occupancy rate', { roomId, timeRange });
       
-      const result = await this.getOccupancyRateFn({
+      const getOccupancyRateFn = httpsCallable(functions, 'getOccupancyRate');
+      const result = await getOccupancyRateFn({
         roomId,
         startDate: timeRange.startDate.toISOString(),
         endDate: timeRange.endDate.toISOString()
@@ -125,10 +144,15 @@ class FirebaseAvailabilityEngine implements AvailabilityEngine {
    * Prevents double-booking during checkout process
    */
   async createReservationHold(roomId: string, period: BookingPeriod, userId: string): Promise<string> {
+    if (!this.isFirebaseInitialized()) {
+      throw new Error('Firebase is not properly configured. Please check your environment variables.');
+    }
+
     try {
       logger.info('Creating reservation hold', { roomId, userId, period });
       
-      const result = await this.createReservationHoldFn({
+      const createReservationHoldFn = httpsCallable(functions, 'createReservationHold');
+      const result = await createReservationHoldFn({
         roomId,
         userId,
         startDate: period.checkIn.toISOString(),
@@ -150,10 +174,16 @@ class FirebaseAvailabilityEngine implements AvailabilityEngine {
    * Release a reservation hold manually
    */
   async releaseReservationHold(holdId: string): Promise<void> {
+    if (!this.isFirebaseInitialized()) {
+      console.warn('Firebase not initialized - cannot release reservation hold');
+      return;
+    }
+
     try {
       logger.info('Releasing reservation hold', { holdId });
       
-      await this.releaseReservationHoldFn({ holdId });
+      const releaseReservationHoldFn = httpsCallable(functions, 'releaseReservationHold');
+      await releaseReservationHoldFn({ holdId });
       
       logger.info('Reservation hold released', { holdId });
       
@@ -169,10 +199,15 @@ class FirebaseAvailabilityEngine implements AvailabilityEngine {
    * Uses Firestore transaction to prevent double-booking
    */
   async processAtomicBooking(paymentIntentId: string, holdId: string): Promise<string> {
+    if (!this.isFirebaseInitialized()) {
+      throw new Error('Firebase is not properly configured. Please check your environment variables.');
+    }
+
     try {
       logger.info('Processing atomic booking', { paymentIntentId, holdId });
       
-      const result = await this.processAtomicBookingFn({
+      const processAtomicBookingFn = httpsCallable(functions, 'processAtomicBooking');
+      const result = await processAtomicBookingFn({
         paymentIntentId,
         holdId
       });

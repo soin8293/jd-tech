@@ -42,13 +42,16 @@ const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch, isLoadin
         return;
       }
 
+      // Create proper BookingPeriod object
+      const bookingPeriod: BookingPeriod = {
+        checkIn: dateRange.from,
+        checkOut: dateRange.to
+      };
+
       // Validate booking data
       const bookingData = {
         guests,
-        dateRange: {
-          checkIn: dateRange.from,
-          checkOut: dateRange.to
-        }
+        dateRange: bookingPeriod
       };
 
       const validatedData = bookingFormSchema.parse(bookingData);

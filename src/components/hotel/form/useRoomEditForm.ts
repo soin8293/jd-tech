@@ -65,12 +65,18 @@ export const useRoomEditForm = (
         bed: 'string'
       });
 
-      // Validate the entire form
-      const validatedData = roomFormSchema.parse({
-        ...sanitizedData,
+      // Create properly typed data object
+      const roomData: RoomFormData = {
+        ...formData,
+        name: sanitizedData.name || formData.name,
+        description: sanitizedData.description || formData.description,
+        bed: sanitizedData.bed || formData.bed,
         amenities: formData.amenities, // Already sanitized in component
         images: formData.images // Already validated in component
-      });
+      };
+
+      // Validate the entire form
+      const validatedData = roomFormSchema.parse(roomData);
       
       onSave(validatedData);
     } catch (error: any) {

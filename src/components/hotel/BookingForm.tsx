@@ -6,6 +6,8 @@ import { BookingPeriod } from "@/types/hotel.types";
 import { cn } from "@/lib/utils";
 import { format, addDays } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useInputSanitization } from "@/hooks/useInputSanitization";
+import { bookingFormSchema } from "@/utils/inputValidation";
 import DatePickerField from "@/components/hotel/form/DatePickerField";
 import GuestSelector from "@/components/hotel/form/GuestSelector";
 import SearchButton from "@/components/hotel/form/SearchButton";
@@ -19,6 +21,7 @@ interface BookingFormProps {
 const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch, isLoading = false }) => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { sanitizeObject } = useInputSanitization();
   const [guests, setGuests] = useState<number>(2);
   const [dateRange, setDateRange] = useState<{
     from: Date;
@@ -29,27 +32,40 @@ const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch, isLoadin
   });
 
   const handleSearch = () => {
-    if (!dateRange.from || !dateRange.to) {
+    try {
+      if (!dateRange.from || !dateRange.to) {
+        toast({
+          title: "Please select dates",
+          description: "You need to select both check-in and check-out dates",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Validate booking data
+      const bookingData = {
+        guests,
+        dateRange: {
+          checkIn: dateRange.from,
+          checkOut: dateRange.to
+        }
+      };
+
+      const validatedData = bookingFormSchema.parse(bookingData);
+      
+      onSearch(validatedData.dateRange, validatedData.guests);
+      
       toast({
-        title: "Please select dates",
-        description: "You need to select both check-in and check-out dates",
+        title: "Searching for rooms",
+        description: `${format(dateRange.from, "MMM d, yyyy")} - ${format(dateRange.to, "MMM d, yyyy")} for ${guests} guests`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Invalid booking data",
+        description: error.message || "Please check your booking details and try again.",
         variant: "destructive"
       });
-      return;
     }
-    
-    onSearch(
-      { 
-        checkIn: dateRange.from, 
-        checkOut: dateRange.to 
-      },
-      guests
-    );
-    
-    toast({
-      title: "Searching for rooms",
-      description: `${format(dateRange.from, "MMM d, yyyy")} - ${format(dateRange.to, "MMM d, yyyy")} for ${guests} guests`,
-    });
   };
 
   return (

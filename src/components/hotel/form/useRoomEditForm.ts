@@ -2,19 +2,21 @@
 import { useState } from "react";
 import { RoomFormData } from "@/types/hotel.types";
 import { useToast } from "@/hooks/use-toast";
+import { useInputSanitization } from "@/hooks/useInputSanitization";
+import { roomFormSchema } from "@/utils/inputValidation";
 
 export const useRoomEditForm = (
   editingRoom: RoomFormData,
   onSave: (room: RoomFormData) => void
 ) => {
   const { toast } = useToast();
+  const { sanitizeObject } = useInputSanitization();
   const [formData, setFormData] = useState<RoomFormData>(editingRoom);
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
+  const handleFormChange = (name: string, value: string | number) => {
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : value
+      [name]: value
     }));
   };
 
@@ -55,16 +57,29 @@ export const useRoomEditForm = (
   };
 
   const handleSave = () => {
-    if (!formData.name || !formData.price) {
+    try {
+      // Sanitize all string inputs
+      const sanitizedData = sanitizeObject(formData, {
+        name: 'string',
+        description: 'html',
+        bed: 'string'
+      });
+
+      // Validate the entire form
+      const validatedData = roomFormSchema.parse({
+        ...sanitizedData,
+        amenities: formData.amenities, // Already sanitized in component
+        images: formData.images // Already validated in component
+      });
+      
+      onSave(validatedData);
+    } catch (error: any) {
       toast({
-        title: "Missing information",
-        description: "Please fill in the room name and price.",
+        title: "Validation Error",
+        description: error.message || "Please check your input and try again.",
         variant: "destructive",
       });
-      return;
     }
-    
-    onSave(formData);
   };
 
   return {

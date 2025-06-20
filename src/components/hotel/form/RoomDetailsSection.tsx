@@ -1,8 +1,8 @@
 
 import React from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { ValidatedInput } from "@/components/forms/ValidatedInput";
+import { ValidatedTextarea } from "@/components/forms/ValidatedTextarea";
+import { validationSchemas } from "@/utils/inputValidation";
 
 interface RoomDetailsSectionProps {
   name: string;
@@ -11,7 +11,7 @@ interface RoomDetailsSectionProps {
   capacity: number;
   size: number;
   bed: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onChange: (name: string, value: string | number) => void;
 }
 
 const RoomDetailsSection: React.FC<RoomDetailsSectionProps> = ({
@@ -26,77 +26,70 @@ const RoomDetailsSection: React.FC<RoomDetailsSectionProps> = ({
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Room Name*</Label>
-          <Input 
-            id="name" 
-            name="name"
-            value={name} 
-            onChange={onChange}
-            placeholder="Deluxe Room"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="price">Price per Night (USD)*</Label>
-          <Input 
-            id="price" 
-            name="price"
-            type="number"
-            value={price} 
-            onChange={onChange}
-            placeholder="300"
-          />
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea 
-          id="description" 
-          name="description"
-          value={description} 
+        <ValidatedInput
+          label="Room Name"
+          name="name"
+          value={name}
           onChange={onChange}
-          placeholder="Elegant and spacious room with premium amenities..."
-          rows={3}
+          schema={validationSchemas.roomName}
+          placeholder="Deluxe Room"
+          required
+        />
+        
+        <ValidatedInput
+          label="Price per Night (USD)"
+          name="price"
+          value={price}
+          onChange={onChange}
+          schema={validationSchemas.price}
+          type="number"
+          placeholder="300"
+          required
         />
       </div>
       
+      <ValidatedTextarea
+        label="Description"
+        name="description"
+        value={description}
+        onChange={onChange}
+        schema={validationSchemas.roomDescription}
+        placeholder="Elegant and spacious room with premium amenities..."
+        rows={3}
+        allowHtml={true}
+      />
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="capacity">Max Guests</Label>
-          <Input 
-            id="capacity" 
-            name="capacity"
-            type="number"
-            value={capacity} 
-            onChange={onChange}
-            placeholder="2"
-          />
-        </div>
+        <ValidatedInput
+          label="Max Guests"
+          name="capacity"
+          value={capacity}
+          onChange={onChange}
+          schema={validationSchemas.capacity}
+          type="number"
+          placeholder="2"
+          required
+        />
         
-        <div className="space-y-2">
-          <Label htmlFor="size">Size (sq ft)</Label>
-          <Input 
-            id="size" 
-            name="size"
-            type="number"
-            value={size} 
-            onChange={onChange}
-            placeholder="400"
-          />
-        </div>
+        <ValidatedInput
+          label="Size (sq ft)"
+          name="size"
+          value={size}
+          onChange={onChange}
+          schema={validationSchemas.size}
+          type="number"
+          placeholder="400"
+        />
         
-        <div className="space-y-2">
-          <Label htmlFor="bed">Bed Type</Label>
-          <Input 
-            id="bed" 
-            name="bed"
-            value={bed} 
-            onChange={onChange}
-            placeholder="King"
-          />
-        </div>
+        <ValidatedInput
+          label="Bed Type"
+          name="bed"
+          value={bed}
+          onChange={onChange}
+          schema={validationSchemas.bedType}
+          placeholder="King"
+          required
+        />
       </div>
     </>
   );

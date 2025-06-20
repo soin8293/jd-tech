@@ -1,100 +1,158 @@
-
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { BookingPeriod } from "@/types/hotel.types";
+import React, { useState } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { format, addDays } from "date-fns";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useInputSanitization } from "@/hooks/useInputSanitization";
-import { bookingFormSchema } from "@/utils/inputValidation";
-import DatePickerField from "@/components/hotel/form/DatePickerField";
-import GuestSelector from "@/components/hotel/form/GuestSelector";
-import SearchButton from "@/components/hotel/form/SearchButton";
+import { useToast } from "@/hooks/use-toast";
+import { BookingPeriod, Room } from "@/types/hotel.types";
+import { checkRoomAvailability } from "@/services/booking/bookingQueries";
+import RoomCard from "./RoomCard";
 
-interface BookingFormProps {
-  className?: string;
-  onSearch: (booking: BookingPeriod, guests: number) => void;
-  isLoading?: boolean;
-}
-
-const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch, isLoading = false }) => {
+const BookingForm: React.FC = () => {
+  const [checkIn, setCheckIn] = useState<Date | undefined>(undefined);
+  const [checkOut, setCheckOut] = useState<Date | undefined>(undefined);
+  const [guests, setGuests] = useState<number>(1);
+  const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
+  const [showResults, setShowResults] = useState<boolean>(false);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
   const { toast } = useToast();
-  const isMobile = useIsMobile();
-  const { sanitizeObject } = useInputSanitization();
-  const [guests, setGuests] = useState<number>(2);
-  const [dateRange, setDateRange] = useState<{
-    from: Date;
-    to: Date | undefined;
-  }>({
-    from: new Date(),
-    to: addDays(new Date(), 3)
-  });
 
-  const handleSearch = () => {
-    try {
-      if (!dateRange.from || !dateRange.to) {
-        toast({
-          title: "Please select dates",
-          description: "You need to select both check-in and check-out dates",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Create proper BookingPeriod object with required fields - ensuring both dates are defined
-      const bookingPeriod: BookingPeriod = {
-        checkIn: dateRange.from,
-        checkOut: dateRange.to
-      };
-
-      // Validate booking data
-      const bookingData = {
-        guests,
-        dateRange: bookingPeriod
-      };
-
-      const validatedData = bookingFormSchema.parse(bookingData);
-      
-      onSearch(validatedData.dateRange, validatedData.guests);
-      
+  const checkAvailability = async () => {
+    if (!checkIn || !checkOut) {
       toast({
-        title: "Searching for rooms",
-        description: `${format(dateRange.from, "MMM d, yyyy")} - ${format(dateRange.to, "MMM d, yyyy")} for ${guests} guests`,
+        title: "Missing Dates",
+        description: "Please select both check-in and check-out dates.",
+        variant: "destructive",
       });
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      // Ensure we have valid dates for BookingPeriod
+      const bookingPeriod: BookingPeriod = {
+        checkIn: checkIn,
+        checkOut: checkOut
+      };
+
+      const availableRooms = await checkRoomAvailability(bookingPeriod, guests);
+      setAvailableRooms(availableRooms);
+      setShowResults(true);
     } catch (error: any) {
       toast({
-        title: "Invalid booking data",
-        description: error.message || "Please check your booking details and try again.",
-        variant: "destructive"
+        title: "Search Failed",
+        description: error.message || "Failed to check room availability",
+        variant: "destructive",
       });
+    } finally {
+      setIsSearching(false);
     }
   };
 
   return (
-    <Card className={cn(
-      "animate-slide-up opacity-0 w-full shadow-lg", 
-      isMobile ? "bg-white/95" : "",
-      className
-    )} style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}>
-      <CardContent className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <DatePickerField 
-            dateRange={dateRange}
-            onDateChange={setDateRange}
-            onSearch={handleSearch}
-          />
+    <Card>
+      <CardHeader>
+        <CardTitle>Check Availability</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="check-in">Check In</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !checkIn && "text-muted-foreground"
+                  )}
+                >
+                  {checkIn ? (
+                    format(checkIn, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="center" side="bottom">
+                <Calendar
+                  mode="single"
+                  selected={checkIn}
+                  onSelect={setCheckIn}
+                  disabled={(date) =>
+                    date < new Date()
+                  }
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
 
-          <GuestSelector 
-            guests={guests}
-            onGuestsChange={setGuests}
-          />
+          <div>
+            <Label htmlFor="check-out">Check Out</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !checkOut && "text-muted-foreground"
+                  )}
+                >
+                  {checkOut ? (
+                    format(checkOut, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="center" side="bottom">
+                <Calendar
+                  mode="single"
+                  selected={checkOut}
+                  onSelect={setCheckOut}
+                  disabled={(date) =>
+                    date < (checkIn || new Date())
+                  }
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
 
-          <SearchButton 
-            onClick={handleSearch}
-            isLoading={isLoading}
+        <div>
+          <Label htmlFor="guests">Guests</Label>
+          <Input
+            type="number"
+            id="guests"
+            min="1"
+            value={guests}
+            onChange={(e) => setGuests(parseInt(e.target.value))}
           />
         </div>
+
+        <Button onClick={checkAvailability} disabled={isSearching}>
+          {isSearching ? "Searching..." : "Check Availability"}
+        </Button>
+
+        {showResults && (
+          <div>
+            {availableRooms.length > 0 ? (
+              <div className="grid gap-4">
+                {availableRooms.map((room) => (
+                  <RoomCard key={room.id} room={room} checkIn={checkIn} checkOut={checkOut} guests={guests} />
+                ))}
+              </div>
+            ) : (
+              <p>No rooms available for the selected dates and number of guests.</p>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

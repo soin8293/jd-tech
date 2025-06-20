@@ -63,6 +63,20 @@ export const useRoomEditForm = (
       const sanitizedDescription = sanitizeString(formData.description || '', 'description');
       const sanitizedBed = sanitizeString(formData.bed || '', 'bed');
 
+      // Validate required fields before creating the object
+      if (!sanitizedName || sanitizedName.trim() === '') {
+        throw new Error('Room name is required');
+      }
+      if (!formData.price || formData.price <= 0) {
+        throw new Error('Valid room price is required');
+      }
+      if (!formData.capacity || formData.capacity <= 0) {
+        throw new Error('Valid room capacity is required');
+      }
+      if (!sanitizedBed || sanitizedBed.trim() === '') {
+        throw new Error('Bed type is required');
+      }
+
       // Create properly typed data object with all required fields guaranteed
       const roomData: RoomFormData = {
         id: formData.id,
@@ -70,26 +84,12 @@ export const useRoomEditForm = (
         description: sanitizedDescription,
         price: formData.price,
         capacity: formData.capacity,
-        size: formData.size,
+        size: formData.size || 0,
         bed: sanitizedBed,
-        amenities: formData.amenities,
-        images: formData.images,
-        availability: formData.availability
+        amenities: formData.amenities || [],
+        images: formData.images || [],
+        availability: formData.availability ?? true
       };
-
-      // Validate required fields
-      if (!roomData.name || roomData.name.trim() === '') {
-        throw new Error('Room name is required');
-      }
-      if (!roomData.price || roomData.price <= 0) {
-        throw new Error('Valid room price is required');
-      }
-      if (!roomData.capacity || roomData.capacity <= 0) {
-        throw new Error('Valid room capacity is required');
-      }
-      if (!roomData.bed || roomData.bed.trim() === '') {
-        throw new Error('Bed type is required');
-      }
 
       // Validate with schema
       const validatedData = roomFormSchema.parse(roomData);

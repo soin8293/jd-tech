@@ -67,15 +67,15 @@ export const useRoomEditForm = (
 
       // Create properly typed data object with all required fields, ensuring all properties are defined
       const roomData: RoomFormData = {
-        name: sanitizedData.name || formData.name || '',
-        description: sanitizedData.description || formData.description || '',
-        price: formData.price || 0,
-        capacity: formData.capacity || 1,
-        size: formData.size || 0,
-        bed: sanitizedData.bed || formData.bed || '',
-        amenities: formData.amenities || [],
-        images: formData.images || [],
-        availability: formData.availability !== undefined ? formData.availability : true
+        name: sanitizedData.name || formData.name,
+        description: sanitizedData.description || formData.description,
+        price: formData.price,
+        capacity: formData.capacity,
+        size: formData.size,
+        bed: sanitizedData.bed || formData.bed,
+        amenities: formData.amenities,
+        images: formData.images,
+        availability: formData.availability
       };
 
       // Validate the entire form

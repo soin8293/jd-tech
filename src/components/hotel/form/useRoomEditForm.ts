@@ -90,15 +90,18 @@ export const useRoomEditForm = (
         throw new Error('Valid room capacity is required');
       }
 
-      // Validate the entire form - ensure all required fields are strings/numbers
-      const validationData = {
-        ...roomData,
+      // Create validation data with proper typing - all fields are now guaranteed to be defined
+      const validationData: RoomFormData = {
+        id: roomData.id,
         name: String(roomData.name),
-        description: String(roomData.description || ''),
+        description: String(roomData.description),
         bed: String(roomData.bed),
         price: Number(roomData.price),
         capacity: Number(roomData.capacity),
-        size: Number(roomData.size)
+        size: Number(roomData.size),
+        amenities: roomData.amenities,
+        images: roomData.images,
+        availability: roomData.availability
       };
       
       const validatedData = roomFormSchema.parse(validationData);

@@ -35,7 +35,7 @@ export const validateBooking = (
   const errors: string[] = [];
 
   // Check if rooms are selected
-  if (!selectedRooms || selectedRooms.length === 0) {
+  if (!selectedRooms || !Array.isArray(selectedRooms) || selectedRooms.length === 0) {
     errors.push("Please select at least one room to continue.");
   }
 
@@ -50,12 +50,16 @@ export const validateBooking = (
   }
 
   // Check if guest count is valid
-  if (guests < 1) {
+  if (!guests || typeof guests !== 'number' || guests < 1) {
     errors.push("Number of guests must be at least 1.");
   }
 
   // Check room capacity
-  const totalCapacity = selectedRooms.reduce((sum, room) => sum + (room.capacity || 0), 0);
+  const totalCapacity = selectedRooms.reduce((sum, room) => {
+    const capacity = room.capacity || 0;
+    return sum + (typeof capacity === 'number' ? capacity : 0);
+  }, 0);
+  
   if (guests > totalCapacity) {
     errors.push(`Selected rooms can accommodate maximum ${totalCapacity} guests, but ${guests} guests were specified.`);
   }
@@ -73,14 +77,18 @@ export const calculateBookingPrice = (
   selectedRooms: Room[],
   bookingPeriod: BookingPeriod
 ): BookingCalculation => {
+  if (!bookingPeriod.checkIn || !bookingPeriod.checkOut) {
+    throw new Error("Invalid booking period: missing check-in or check-out dates");
+  }
+  
   const nights = differenceInDays(bookingPeriod.checkOut, bookingPeriod.checkIn);
   
   const priceBreakdown = selectedRooms.map(room => ({
     roomId: room.id,
-    roomName: room.name,
-    pricePerNight: room.price,
+    roomName: room.name || 'Unknown Room',
+    pricePerNight: room.price || 0,
     nights,
-    subtotal: room.price * nights
+    subtotal: (room.price || 0) * nights
   }));
 
   const totalPrice = priceBreakdown.reduce((sum, breakdown) => sum + breakdown.subtotal, 0);
@@ -125,7 +133,7 @@ export const formatBookingConfirmation = (
  * Stores user email for booking (if user is authenticated)
  */
 export const storeUserEmailForBooking = (userEmail?: string): void => {
-  if (userEmail) {
+  if (userEmail && typeof userEmail === 'string') {
     localStorage.setItem('userEmail', userEmail);
   }
 };
@@ -134,7 +142,12 @@ export const storeUserEmailForBooking = (userEmail?: string): void => {
  * Retrieves stored user email for booking
  */
 export const getStoredUserEmail = (): string | null => {
-  return localStorage.getItem('userEmail');
+  try {
+    return localStorage.getItem('userEmail');
+  } catch (error) {
+    console.warn('Failed to retrieve stored user email:', error);
+    return null;
+  }
 };
 
 /**

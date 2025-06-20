@@ -5,6 +5,12 @@ import { auth } from "@/lib/firebase";
 export const debugFirebaseFunctions = async () => {
   console.log("🔧 FUNCTIONS_DEBUG: ================ FIREBASE FUNCTIONS DIAGNOSTICS ================");
   
+  // Check if Firebase is properly initialized
+  if (!auth) {
+    console.error("🔧 FUNCTIONS_DEBUG: Firebase auth is not initialized. Check your Firebase configuration.");
+    return;
+  }
+  
   // 1. Check if functions are properly initialized
   const functions = getFunctions();
   console.log("🔧 FUNCTIONS_DEBUG: Functions instance:", {
@@ -43,14 +49,28 @@ export const debugFirebaseFunctions = async () => {
   console.log("🔧 FUNCTIONS_DEBUG: Testing function endpoint manually...");
   
   try {
-    const authHeader = currentUser ? `Bearer ${await currentUser.getIdToken()}` : '';
+    let authHeader = '';
+    
+    if (currentUser) {
+      try {
+        const token = await currentUser.getIdToken();
+        authHeader = `Bearer ${token}`;
+      } catch (tokenError) {
+        console.warn("🔧 FUNCTIONS_DEBUG: Failed to get auth token:", tokenError);
+      }
+    }
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
     
     const response = await fetch(functionUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(authHeader && { 'Authorization': authHeader })
-      },
+      headers,
       body: JSON.stringify({
         data: {
           rooms: [{ id: "test", name: "Test Room", price: 100 }],
@@ -100,5 +120,7 @@ export const debugFirebaseFunctions = async () => {
   console.log("🔧 FUNCTIONS_DEBUG: ================ END DIAGNOSTICS ================");
 };
 
-// Auto-run diagnostics when this module is imported
-debugFirebaseFunctions();
+// Auto-run diagnostics when this module is imported - but only if Firebase is configured
+if (auth) {
+  debugFirebaseFunctions();
+}

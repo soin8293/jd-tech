@@ -14,23 +14,28 @@ export const checkAvailableRooms = async (
     
     // Filter rooms based on capacity and availability
     const availableRooms = allRooms.filter(room => {
-      // Check basic capacity
-      if (room.capacity < guests) {
+      // Check basic capacity - ensure room.capacity exists and is a number
+      if (!room.capacity || typeof room.capacity !== 'number' || room.capacity < guests) {
         return false;
       }
       
       // Check if room is generally available
-      if (!room.availability) {
+      if (room.availability === false) {
         return false;
       }
       
       // Check for booking conflicts
-      if (!room.bookings || room.bookings.length === 0) {
+      if (!room.bookings || !Array.isArray(room.bookings) || room.bookings.length === 0) {
         return true;
       }
       
       // Check if the requested period conflicts with existing bookings
       const hasConflict = room.bookings.some(booking => {
+        // Ensure booking has valid dates
+        if (!booking.checkIn || !booking.checkOut) {
+          return false;
+        }
+        
         const bookingStart = new Date(booking.checkIn);
         const bookingEnd = new Date(booking.checkOut);
         const requestStart = new Date(period.checkIn);

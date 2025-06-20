@@ -93,8 +93,22 @@ export const useRoomEditForm = (
         throw new Error('Bed type is required');
       }
 
+      // Create a properly typed object that matches RoomFormData exactly
+      const validatedRoomData: RoomFormData = {
+        id: roomData.id,
+        name: roomData.name,
+        description: roomData.description,
+        price: roomData.price,
+        capacity: roomData.capacity,
+        size: roomData.size,
+        bed: roomData.bed,
+        amenities: roomData.amenities,
+        images: roomData.images,
+        availability: roomData.availability
+      };
+
       // Now validate with schema - all required fields are guaranteed to be defined
-      const validatedData = roomFormSchema.parse(roomData);
+      const validatedData = roomFormSchema.parse(validatedRoomData);
       
       onSave(validatedData);
     } catch (error: any) {

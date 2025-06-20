@@ -1,4 +1,3 @@
-
 import { 
   GoogleAuthProvider, 
   signInWithPopup,
@@ -10,10 +9,16 @@ import { toast } from "@/hooks/use-toast";
 import { checkAdminStatus } from "./authHelpers";
 import { authLogger, withAuthPerformanceMarker } from "@/utils/authLogger";
 
+// Generate session ID for tracking
+const generateSessionId = () => {
+  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
 export const signInWithGoogle = withAuthPerformanceMarker(async () => {
   console.log("🔥 SIGN IN: signInWithGoogle function called at:", new Date().toISOString());
   
   const endTimer = authLogger.startTimer('signInWithGoogle');
+  const sessionId = generateSessionId();
   
   try {
     console.log("🔥 SIGN IN ATTEMPT: Starting Google sign-in process with popup");
@@ -25,6 +30,7 @@ export const signInWithGoogle = withAuthPerformanceMarker(async () => {
       projectId: auth.app.options.projectId,
       userAgent: navigator.userAgent,
       currentUrl: window.location.href,
+      sessionId
     });
 
     // Assert Firebase is properly initialized
@@ -37,16 +43,26 @@ export const signInWithGoogle = withAuthPerformanceMarker(async () => {
     provider.addScope('email');
     provider.addScope('profile');
     
+    // Set custom parameters for enhanced security
+    provider.setCustomParameters({
+      prompt: 'select_account',
+      access_type: 'offline'
+    });
+    
     console.log("🔥 SIGN IN: Provider configured, calling signInWithPopup...");
     authLogger.debug('AuthService.signInWithGoogle', 'Starting popup sign-in');
     
-    // Use signInWithPopup - this eliminates the race condition
     const result = await signInWithPopup(auth, provider);
     
     console.log("🔥 SIGN IN: ✅ SUCCESS! Popup sign-in completed");
     console.log("🔥 SIGN IN: User:", result.user);
     console.log("🔥 SIGN IN: User UID:", result.user.uid);
     console.log("🔥 SIGN IN: User email:", result.user.email);
+    
+    // Store session information
+    sessionStorage.setItem('sessionId', sessionId);
+    sessionStorage.setItem('loginTime', Date.now().toString());
+    localStorage.setItem('lastSuccessfulLogin', Date.now().toString());
     
     authLogger.info('AuthService.signInWithGoogle', 'Popup sign-in successful', {
       userId: result.user.uid,
@@ -55,6 +71,8 @@ export const signInWithGoogle = withAuthPerformanceMarker(async () => {
       photoURL: result.user.photoURL,
       providerId: result.providerId,
       operationType: result.operationType,
+      sessionId,
+      emailVerified: result.user.emailVerified
     });
 
     // Set user ID for subsequent logs
@@ -69,6 +87,10 @@ export const signInWithGoogle = withAuthPerformanceMarker(async () => {
   } catch (error: any) {
     endTimer();
     
+    // Clear any partial session data
+    sessionStorage.removeItem('sessionId');
+    sessionStorage.removeItem('loginTime');
+    
     console.error("🔥 SIGN IN ERROR:", error);
     console.error("🔥 SIGN IN ERROR code:", error?.code);
     console.error("🔥 SIGN IN ERROR message:", error?.message);
@@ -80,10 +102,12 @@ export const signInWithGoogle = withAuthPerformanceMarker(async () => {
       domain: window.location.hostname,
       userAgent: navigator.userAgent,
       timestamp: Date.now(),
+      sessionId
     });
     
     let errorMessage = "Could not sign in with Google. Please try again.";
     
+    // Enhanced error handling with security considerations
     if (error?.code === 'auth/unauthorized-domain') {
       const currentDomain = window.location.hostname;
       errorMessage = `Authentication Error: This domain (${currentDomain}) is not authorized in Firebase.`;
@@ -115,6 +139,9 @@ export const signInWithGoogle = withAuthPerformanceMarker(async () => {
     } else if (error?.code === 'auth/popup-blocked') {
       errorMessage = "Pop-up was blocked by your browser. Please allow pop-ups for this site.";
       authLogger.error('AuthService.signInWithGoogle', 'Popup blocked by browser');
+    } else if (error?.code === 'auth/account-exists-with-different-credential') {
+      errorMessage = "An account already exists with a different sign-in method.";
+      authLogger.error('AuthService.signInWithGoogle', 'Account conflict error');
     }
     
     toast({
@@ -132,23 +159,37 @@ export const logout = withAuthPerformanceMarker(async (currentUser: User | null)
   
   try {
     console.log("🔥 LOGOUT: Starting logout process");
+    const sessionId = sessionStorage.getItem('sessionId');
+    const loginTime = sessionStorage.getItem('loginTime');
+    const sessionDuration = loginTime ? Date.now() - parseInt(loginTime) : 0;
+    
     authLogger.info('AuthService.logout', 'Starting logout process', {
       userId: currentUser?.uid,
       email: currentUser?.email,
       currentPath: window.location.pathname,
+      sessionId,
+      sessionDuration
     });
 
     // Assert user exists before logout
     authLogger.assert(!!currentUser, 'User must be logged in to logout');
     
-    // Clear any cached data or local storage
+    // Clear session data
+    sessionStorage.removeItem('sessionId');
+    sessionStorage.removeItem('loginTime');
+    
+    // Clear any cached data or local storage (preserve long-term preferences)
     localStorage.removeItem('adminStatus');
-    sessionStorage.clear();
-    authLogger.debug('AuthService.logout', 'Local storage cleared');
+    localStorage.removeItem('lastAuthCheck');
+    
+    authLogger.debug('AuthService.logout', 'Session data cleared');
     
     // Sign out from Firebase
     await signOut(auth);
-    authLogger.info('AuthService.logout', 'Firebase sign-out completed');
+    authLogger.info('AuthService.logout', 'Firebase sign-out completed', {
+      sessionDuration,
+      finalPath: window.location.pathname
+    });
     
     // Redirect to home page after logout
     if (window.location.pathname === '/room-management') {

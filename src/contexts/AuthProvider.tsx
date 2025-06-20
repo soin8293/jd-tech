@@ -10,6 +10,7 @@ import { AuthContextType } from "./AuthContext.types";
 import { checkAdminStatus } from "./authHelpers";
 import { authLogger } from "@/utils/authLogger";
 import { signInWithGoogle, logout, refreshUserClaims } from "./authService";
+import { useSessionManager } from "@/hooks/useSessionManager";
 
 console.log("🔥 AUTH CONTEXT: File loaded at:", new Date().toISOString());
 
@@ -109,11 +110,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authLogger.assert(!!user.uid, 'User must have UID');
         authLogger.assert(!!user.email, 'User must have email');
         
-        // Persist user session
+        // Enhanced session tracking
+        const sessionId = sessionStorage.getItem('sessionId') || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        if (!sessionStorage.getItem('sessionId')) {
+          sessionStorage.setItem('sessionId', sessionId);
+        }
+        
+        // Persist user session with enhanced security tracking
         const lastAuthCheck = Date.now().toString();
         localStorage.setItem('lastAuthCheck', lastAuthCheck);
         authLogger.debug('AuthProvider.onAuthStateChanged', 'User session persisted', {
           lastAuthCheck,
+          sessionId,
+          emailVerified: user.emailVerified,
+          providerData: user.providerData?.map(p => ({ providerId: p.providerId, uid: p.uid }))
         });
         
         console.log("🔥 AUTH STATE: About to check admin status...");
@@ -135,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsAdmin(false);
         localStorage.removeItem('adminStatus');
         localStorage.removeItem('lastAuthCheck');
+        sessionStorage.clear(); // Clear all session data on logout
         authLogger.clearLogs();
       }
       
@@ -180,5 +191,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authInitialized,
   });
   
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      {/* Session management is handled by components that need it */}
+    </AuthContext.Provider>
+  );
 }

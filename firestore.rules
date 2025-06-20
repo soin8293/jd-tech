@@ -13,6 +13,20 @@ service cloud.firestore {
       return request.auth != null && (request.auth.token.admin == true || isSuperAdmin());
     }
     
+    // Security audit log - admin read only, system write
+    match /securityAuditLog/{logId} {
+      allow read: if isAdmin();
+      allow create: if request.auth != null; // Users can create their own audit entries
+      allow update, delete: if false; // Audit logs are immutable
+    }
+    
+    // User permissions - admin managed, users can read their own
+    match /userPermissions/{userId} {
+      allow read: if request.auth != null && 
+                   (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin();
+    }
+    
     // Allow users to read and create their own bookings
     match /bookings/{bookingId} {
       allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());

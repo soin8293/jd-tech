@@ -91,7 +91,7 @@ export const useRoomEditForm = (
         availability: formData.availability ?? true
       };
 
-      // Validate with schema
+      // Now validate with schema - all required fields are present
       const validatedData = roomFormSchema.parse(roomData);
       
       onSave(validatedData);

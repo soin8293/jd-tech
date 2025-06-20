@@ -2,12 +2,13 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Check, Loader2 } from "lucide-react";
 import { RoomFormData } from "@/types/hotel.types";
 import RoomDetailsSection from "./form/RoomDetailsSection";
 import RoomAmenitiesSection from "./form/RoomAmenitiesSection";
 import RoomImagesSection from "./form/RoomImagesSection";
 import RoomAvailabilityToggle from "./form/RoomAvailabilityToggle";
+import EnhancedS
+
 import { useRoomEditForm } from "./form/useRoomEditForm";
 
 interface RoomEditFormProps {
@@ -67,6 +68,7 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({
           images={formData.images}
           onAddImage={handleAddImage}
           onRemoveImage={handleRemoveImage}
+          roomId={formData.id || 'temp'}
         />
       </CardContent>
       <CardFooter className="flex justify-between">
@@ -76,14 +78,11 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({
         >
           Cancel
         </Button>
-        <Button 
+        <EnhancedSaveButton
           onClick={handleSave}
-          className="gap-1"
-          disabled={isLoading}
-        >
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-          {isAdding ? "Add Room" : "Save Changes"}
-        </Button>
+          isLoading={isLoading}
+          isAdding={isAdding}
+        />
       </CardFooter>
     </Card>
   );

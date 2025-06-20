@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
+import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -57,6 +58,13 @@ console.log("🚀 FIREBASE DEBUG: Firestore initialized:", {
   app: db.app.name,
   type: db.type,
   toJSON: typeof db.toJSON
+});
+
+console.log("🚀 FIREBASE DEBUG: Initializing Storage service...");
+export const storage = getStorage(app);
+console.log("🚀 FIREBASE DEBUG: Storage initialized:", {
+  app: storage.app.name,
+  bucket: storage._bucket
 });
 
 console.log("🚀 FIREBASE DEBUG: Initializing Functions service...");

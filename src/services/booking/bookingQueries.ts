@@ -1,9 +1,8 @@
 
 import { Room, BookingPeriod } from "@/types/hotel.types";
 import { getRooms } from "../room/roomQueries";
-import { checkRoomAvailability } from "@/utils/availabilityUtils";
 
-export const checkRoomAvailability = async (
+export const checkAvailableRooms = async (
   period: BookingPeriod,
   guests: number
 ): Promise<Room[]> => {

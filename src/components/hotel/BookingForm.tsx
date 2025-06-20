@@ -10,10 +10,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { BookingPeriod, Room } from "@/types/hotel.types";
-import { checkRoomAvailability } from "@/services/booking/bookingQueries";
+import { checkAvailableRooms } from "@/services/booking/bookingQueries";
 import RoomCard from "./RoomCard";
 
-const BookingForm: React.FC = () => {
+interface BookingFormProps {
+  onSearch?: (period: BookingPeriod, guestCount: number) => Promise<void>;
+  className?: string;
+  isLoading?: boolean;
+}
+
+const BookingForm: React.FC<BookingFormProps> = ({ onSearch, className, isLoading: externalLoading }) => {
   const [checkIn, setCheckIn] = useState<Date | undefined>(undefined);
   const [checkOut, setCheckOut] = useState<Date | undefined>(undefined);
   const [guests, setGuests] = useState<number>(1);
@@ -40,9 +46,13 @@ const BookingForm: React.FC = () => {
         checkOut: checkOut
       };
 
-      const availableRooms = await checkRoomAvailability(bookingPeriod, guests);
-      setAvailableRooms(availableRooms);
-      setShowResults(true);
+      if (onSearch) {
+        await onSearch(bookingPeriod, guests);
+      } else {
+        const availableRooms = await checkAvailableRooms(bookingPeriod, guests);
+        setAvailableRooms(availableRooms);
+        setShowResults(true);
+      }
     } catch (error: any) {
       toast({
         title: "Search Failed",
@@ -55,7 +65,7 @@ const BookingForm: React.FC = () => {
   };
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle>Check Availability</CardTitle>
       </CardHeader>
@@ -137,19 +147,18 @@ const BookingForm: React.FC = () => {
           />
         </div>
 
-        <Button onClick={checkAvailability} disabled={isSearching}>
-          {isSearching ? "Searching..." : "Check Availability"}
+        <Button onClick={checkAvailability} disabled={isSearching || externalLoading}>
+          {isSearching || externalLoading ? "Searching..." : "Check Availability"}
         </Button>
 
-        {showResults && (
+        {showResults && !onSearch && (
           <div>
             {availableRooms.length > 0 ? (
               <div className="grid gap-4">
                 {availableRooms.map((room) => (
                   <RoomCard 
                     key={room.id} 
-                    room={room} 
-                    guests={guests}
+                    room={room}
                   />
                 ))}
               </div>

@@ -79,8 +79,8 @@ export const useRoomEditForm = (
         availability: formData.availability !== undefined ? formData.availability : true
       };
 
-      // Ensure all required fields are present
-      if (!roomData.name) {
+      // Ensure all required fields are present and valid
+      if (!roomData.name || roomData.name.trim() === '') {
         throw new Error('Room name is required');
       }
       if (!roomData.price || roomData.price <= 0) {
@@ -89,8 +89,11 @@ export const useRoomEditForm = (
       if (!roomData.capacity || roomData.capacity <= 0) {
         throw new Error('Valid room capacity is required');
       }
+      if (!roomData.bed || roomData.bed.trim() === '') {
+        throw new Error('Bed type is required');
+      }
 
-      // Validate using the schema directly with the properly formed data
+      // Now validate with schema - all required fields are guaranteed to be defined
       const validatedData = roomFormSchema.parse(roomData);
       
       onSave(validatedData);

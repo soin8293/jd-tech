@@ -67,12 +67,12 @@ export const useRoomEditForm = (
 
       // Create properly typed data object with all required fields, ensuring all properties are defined
       const roomData: RoomFormData = {
-        name: sanitizedData.name || formData.name,
-        description: sanitizedData.description || formData.description,
+        name: (sanitizedData.name as string) || formData.name,
+        description: (sanitizedData.description as string) || formData.description,
         price: formData.price,
         capacity: formData.capacity,
         size: formData.size,
-        bed: sanitizedData.bed || formData.bed,
+        bed: (sanitizedData.bed as string) || formData.bed,
         amenities: formData.amenities,
         images: formData.images,
         availability: formData.availability

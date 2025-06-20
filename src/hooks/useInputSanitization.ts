@@ -27,14 +27,15 @@ export const useInputSanitization = () => {
     return sanitized;
   }, [logSecurityEvent]);
 
-  const sanitizeObject = useCallback((obj: Record<string, any>, sanitizationRules: Record<string, 'string' | 'html'>) => {
-    const sanitized: Record<string, any> = {};
+  const sanitizeObject = useCallback(<T extends Record<string, any>>(
+    obj: T, 
+    sanitizationRules: Record<string, 'string' | 'html'>
+  ): T => {
+    const sanitized = { ...obj };
     
     for (const [key, value] of Object.entries(obj)) {
       if (typeof value === 'string' && sanitizationRules[key]) {
-        sanitized[key] = sanitizeAndLog(value, key, sanitizationRules[key]);
-      } else {
-        sanitized[key] = value;
+        (sanitized as any)[key] = sanitizeAndLog(value, key, sanitizationRules[key]);
       }
     }
     

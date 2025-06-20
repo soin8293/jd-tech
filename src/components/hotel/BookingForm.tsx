@@ -42,7 +42,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ className, onSearch, isLoadin
         return;
       }
 
-      // Create proper BookingPeriod object
+      // Create proper BookingPeriod object with required fields
       const bookingPeriod: BookingPeriod = {
         checkIn: dateRange.from,
         checkOut: dateRange.to

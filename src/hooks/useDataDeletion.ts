@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useSecurityAuditLogger } from '@/hooks/useSecurityAuditLogger';
@@ -9,11 +9,11 @@ import { useSecurityAuditLogger } from '@/hooks/useSecurityAuditLogger';
 export const useDataDeletion = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
-  const { user, signOut } = useAuth();
+  const { currentUser, signOut } = useAuth();
   const { logSecurityEvent } = useSecurityAuditLogger();
 
   const deleteUserData = async (includeAccount: boolean = false) => {
-    if (!user) {
+    if (!currentUser) {
       toast({
         title: "Authentication Required",
         description: "Please log in to delete your data.",
@@ -31,7 +31,7 @@ export const useDataDeletion = () => {
         action: 'DATA_DELETION_REQUESTED',
         resource: 'user_data',
         details: {
-          userId: user.uid,
+          userId: currentUser.uid,
           includeAccount,
           timestamp: new Date().toISOString()
         },
@@ -41,7 +41,7 @@ export const useDataDeletion = () => {
       // Delete user's bookings
       const bookingsQuery = query(
         collection(db, 'bookings'),
-        where('userId', '==', user.uid)
+        where('userId', '==', currentUser.uid)
       );
       
       const bookingsSnapshot = await getDocs(bookingsQuery);
@@ -53,7 +53,7 @@ export const useDataDeletion = () => {
 
       // Delete user profile document if it exists
       try {
-        await deleteDoc(doc(db, 'users', user.uid));
+        await deleteDoc(doc(db, 'users', currentUser.uid));
       } catch (error) {
         // User document may not exist, that's okay
         console.log('User document not found or already deleted');
@@ -71,7 +71,7 @@ export const useDataDeletion = () => {
         action: 'DATA_DELETION_COMPLETED',
         resource: 'user_data',
         details: {
-          userId: user.uid,
+          userId: currentUser.uid,
           bookingsDeleted: bookingsSnapshot.docs.length,
           includeAccount
         },
@@ -80,7 +80,7 @@ export const useDataDeletion = () => {
 
       if (includeAccount) {
         // Delete the user account
-        await user.delete();
+        await currentUser.delete();
         
         toast({
           title: "Account Deleted",
@@ -104,7 +104,7 @@ export const useDataDeletion = () => {
         action: 'DATA_DELETION_FAILED',
         resource: 'user_data',
         details: {
-          userId: user.uid,
+          userId: currentUser.uid,
           error: error.message,
           includeAccount
         },

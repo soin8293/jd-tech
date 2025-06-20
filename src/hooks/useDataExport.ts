@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { decryptBookingPII } from '@/utils/dataEncryption';
@@ -16,10 +16,10 @@ export interface ExportableData {
 export const useDataExport = () => {
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
 
   const exportUserData = async (): Promise<ExportableData | null> => {
-    if (!user) {
+    if (!currentUser) {
       toast({
         title: "Authentication Required",
         description: "Please log in to export your data.",
@@ -34,7 +34,7 @@ export const useDataExport = () => {
       // Fetch user's bookings
       const bookingsQuery = query(
         collection(db, 'bookings'),
-        where('userId', '==', user.uid)
+        where('userId', '==', currentUser.uid)
       );
       
       const bookingsSnapshot = await getDocs(bookingsQuery);
@@ -46,13 +46,13 @@ export const useDataExport = () => {
 
       // Fetch user profile data
       const profile = {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        emailVerified: user.emailVerified,
-        createdAt: user.metadata.creationTime,
-        lastSignIn: user.metadata.lastSignInTime,
+        uid: currentUser.uid,
+        email: currentUser.email,
+        displayName: currentUser.displayName,
+        photoURL: currentUser.photoURL,
+        emailVerified: currentUser.emailVerified,
+        createdAt: currentUser.metadata.creationTime,
+        lastSignIn: currentUser.metadata.lastSignInTime,
       };
 
       // Get stored preferences

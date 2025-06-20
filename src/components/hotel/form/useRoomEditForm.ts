@@ -65,14 +65,17 @@ export const useRoomEditForm = (
         bed: 'string'
       });
 
-      // Create properly typed data object
+      // Create properly typed data object with all required fields
       const roomData: RoomFormData = {
-        ...formData,
         name: sanitizedData.name || formData.name,
         description: sanitizedData.description || formData.description,
+        price: formData.price,
+        capacity: formData.capacity,
+        size: formData.size,
         bed: sanitizedData.bed || formData.bed,
         amenities: formData.amenities, // Already sanitized in component
-        images: formData.images // Already validated in component
+        images: formData.images, // Already validated in component
+        availability: formData.availability
       };
 
       // Validate the entire form

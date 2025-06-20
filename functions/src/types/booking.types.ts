@@ -1,8 +1,14 @@
 
 export interface Room {
-  id?: string;
-  name?: string; // Adding optional name property
+  id: string;
+  name: string;
   price: number;
+  capacity?: number;
+  size?: number;
+  bed?: string;
+  amenities?: string[];
+  images?: string[];
+  availability?: boolean;
 }
 
 export interface BookingPeriod {

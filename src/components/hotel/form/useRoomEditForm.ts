@@ -77,21 +77,21 @@ export const useRoomEditForm = (
         throw new Error('Bed type is required');
       }
 
-      // Create properly typed data object with all required fields guaranteed
+      // Create properly typed data object - all required fields are guaranteed at this point
       const roomData: RoomFormData = {
         id: formData.id,
-        name: sanitizedName,
-        description: sanitizedDescription,
-        price: formData.price,
-        capacity: formData.capacity,
-        size: formData.size || 0,
-        bed: sanitizedBed,
-        amenities: formData.amenities || [],
-        images: formData.images || [],
-        availability: formData.availability ?? true
+        name: sanitizedName, // guaranteed non-empty string
+        description: sanitizedDescription, // sanitized string (can be empty)
+        price: formData.price, // guaranteed positive number
+        capacity: formData.capacity, // guaranteed positive number
+        size: formData.size ?? 0, // number with fallback
+        bed: sanitizedBed, // guaranteed non-empty string
+        amenities: formData.amenities ?? [], // array with fallback
+        images: formData.images ?? [], // array with fallback
+        availability: formData.availability ?? true // boolean with fallback
       };
 
-      // Now validate with schema - all required fields are present
+      // Now validate with schema - all required fields are present and properly typed
       const validatedData = roomFormSchema.parse(roomData);
       
       onSave(validatedData);

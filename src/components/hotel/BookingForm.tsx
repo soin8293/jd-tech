@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ const BookingForm: React.FC = () => {
 
     setIsSearching(true);
     try {
-      // Ensure we have valid dates for BookingPeriod
+      // Create proper BookingPeriod with required fields
       const bookingPeriod: BookingPeriod = {
         checkIn: checkIn,
         checkOut: checkOut
@@ -145,7 +146,11 @@ const BookingForm: React.FC = () => {
             {availableRooms.length > 0 ? (
               <div className="grid gap-4">
                 {availableRooms.map((room) => (
-                  <RoomCard key={room.id} room={room} checkIn={checkIn} checkOut={checkOut} guests={guests} />
+                  <RoomCard 
+                    key={room.id} 
+                    room={room} 
+                    guests={guests}
+                  />
                 ))}
               </div>
             ) : (

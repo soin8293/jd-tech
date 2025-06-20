@@ -65,7 +65,7 @@ export const useRoomEditForm = (
         bed: 'string'
       });
 
-      // Create properly typed data object with all required fields
+      // Create properly typed data object with all required fields guaranteed
       const roomData: RoomFormData = {
         id: formData.id,
         name: (sanitizedData.name as string) || formData.name || '',
@@ -78,6 +78,17 @@ export const useRoomEditForm = (
         images: formData.images || [],
         availability: formData.availability !== undefined ? formData.availability : true
       };
+
+      // Ensure all required fields are present
+      if (!roomData.name) {
+        throw new Error('Room name is required');
+      }
+      if (!roomData.price || roomData.price <= 0) {
+        throw new Error('Valid room price is required');
+      }
+      if (!roomData.capacity || roomData.capacity <= 0) {
+        throw new Error('Valid room capacity is required');
+      }
 
       // Validate the entire form
       const validatedData = roomFormSchema.parse(roomData);

@@ -1,7 +1,9 @@
+
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getFunctions } from 'firebase/functions';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -24,6 +26,9 @@ export const db = getFirestore(app);
 
 // Firebase Storage configuration
 export const storage = getStorage(app);
+
+// Firebase Functions
+export const functions = getFunctions(app);
 
 // Configure CORS for Firebase Storage
 const configureCORS = async () => {

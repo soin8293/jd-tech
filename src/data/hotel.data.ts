@@ -1,11 +1,12 @@
+
 import { Room } from "../types/hotel.types";
 
 export const hotelRooms: Room[] = [
   // Downstairs Rooms
   {
     id: "downstairs-1",
-    name: "The Palm Suite",
-    description: "Standard room located on the ground floor featuring a plush king-size bed and modern amenities",
+    name: "Denver Room",
+    description: "Standard room located on the ground floor featuring a plush king-size bed and modern amenities inspired by the Mile High City",
     price: 320,
     capacity: 2,
     size: 400,
@@ -22,8 +23,8 @@ export const hotelRooms: Room[] = [
   },
   {
     id: "downstairs-2",
-    name: "The Hibiscus Suite",
-    description: "Standard room located on the ground floor featuring a plush king-size bed and modern amenities",
+    name: "Colorado Springs Room",
+    description: "Standard room located on the ground floor featuring a plush king-size bed with mountain-inspired decor",
     price: 320,
     capacity: 2,
     size: 400,
@@ -40,8 +41,8 @@ export const hotelRooms: Room[] = [
   },
   {
     id: "downstairs-3",
-    name: "The Lotus Suite",
-    description: "Standard room located on the ground floor featuring a plush king-size bed and modern amenities",
+    name: "Boulder Room",
+    description: "Standard room located on the ground floor featuring a plush king-size bed with natural Boulder-inspired elements",
     price: 320,
     capacity: 2,
     size: 400,
@@ -59,8 +60,8 @@ export const hotelRooms: Room[] = [
   // Upstairs Rooms
   {
     id: "upstairs-1",
-    name: "The Jasmine Suite",
-    description: "Standard room located on the upper floor featuring a plush king-size bed and modern amenities",
+    name: "Fort Collins Room",
+    description: "Standard room located on the upper floor featuring a plush king-size bed with craft-inspired decor",
     price: 320,
     capacity: 2,
     size: 400,
@@ -77,8 +78,8 @@ export const hotelRooms: Room[] = [
   },
   {
     id: "upstairs-2",
-    name: "The Orchid Suite",
-    description: "Standard room located on the upper floor featuring a plush king-size bed and modern amenities",
+    name: "Aurora Room",
+    description: "Standard room located on the upper floor featuring a plush king-size bed with gateway-themed amenities",
     price: 320,
     capacity: 2,
     size: 400,
@@ -95,8 +96,8 @@ export const hotelRooms: Room[] = [
   },
   {
     id: "upstairs-3",
-    name: "The Rose Suite",
-    description: "Standard room located on the upper floor featuring a plush king-size bed and modern amenities",
+    name: "Pueblo Room",
+    description: "Standard room located on the upper floor featuring a plush king-size bed with historic charm",
     price: 320,
     capacity: 2,
     size: 400,
@@ -113,8 +114,8 @@ export const hotelRooms: Room[] = [
   },
   {
     id: "upstairs-4",
-    name: "The Lily Suite",
-    description: "Standard room located on the upper floor featuring a plush king-size bed and modern amenities",
+    name: "Vail Room",
+    description: "Standard room located on the upper floor featuring a plush king-size bed with alpine-inspired luxury",
     price: 320,
     capacity: 2,
     size: 400,
@@ -131,8 +132,8 @@ export const hotelRooms: Room[] = [
   },
   {
     id: "upstairs-suite",
-    name: "The Royal Garden Suite",
-    description: "Our most luxurious accommodation featuring both king and queen-size beds, expanded living space, and premium amenities",
+    name: "Aspen Room",
+    description: "Our most luxurious accommodation featuring both king and queen-size beds, expanded living space, and premium amenities inspired by Aspen's luxury lifestyle",
     price: 560,
     capacity: 4,
     size: 650,
@@ -154,12 +155,14 @@ export const hotelRooms: Room[] = [
 
 export const hotelDetails = {
   name: "JD Suites",
-  description: "Experience authentic Nigerian hospitality in the heart of luxury at Rumukparali, where traditional warmth meets modern comfort.",
+  description: "Experience authentic hospitality with a Colorado mountain spirit in the heart of Port Harcourt, where traditional warmth meets modern comfort.",
   address: "Rumukparali, Port Harcourt, Rivers State, Nigeria",
   rating: 4.9,
   amenities: [
     "Free High-Speed WiFi",
     "Nigerian & International Restaurant",
+    "Rocky Mountain Bar",
+    "The Centennial Hall",
     "24/7 Room Service",
     "Dedicated Concierge",
     "Secure Parking",
@@ -173,5 +176,7 @@ export const hotelDetails = {
     "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=2000",
     "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=2000"
   ],
-  headerImage: "https://images.unsplash.com/photo-1466442929976-97f336a657be"
+  headerImage: "https://images.unsplash.com/photo-1466442929976-97f336a657be",
+  bar: "Rocky Mountain Bar",
+  hall: "The Centennial Hall"
 };

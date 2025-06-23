@@ -1,11 +1,11 @@
+
 import { Room } from "@/types/hotel.types";
 
-// Fallback room data matching the 11 Colorado-themed rooms
 export const fallbackRooms: Room[] = [
   {
-    id: "denver_king_suite",
-    name: "Denver King Suite",
-    description: "Spacious and modern suite offering stunning city views and a luxurious king-size bed.",
+    id: "denver_room",
+    name: "Denver Room",
+    description: "Spacious and modern room offering stunning city views and a luxurious king-size bed, inspired by the Mile High City.",
     price: 220,
     capacity: 4,
     size: 550,
@@ -16,9 +16,9 @@ export const fallbackRooms: Room[] = [
     bookings: []
   },
   {
-    id: "colorado_springs_peak_view",
-    name: "Colorado Springs Peak View Room",
-    description: "Elegant room with a king-size bed and breathtaking views of the nearby mountain peaks.",
+    id: "colorado_springs_room",
+    name: "Colorado Springs Room",
+    description: "Elegant room with a king-size bed and breathtaking views, inspired by the natural beauty of Colorado Springs.",
     price: 200,
     capacity: 4,
     size: 520,
@@ -29,9 +29,9 @@ export const fallbackRooms: Room[] = [
     bookings: []
   },
   {
-    id: "boulder_flatirons_retreat",
-    name: "Boulder Flatirons Retreat",
-    description: "A comfortable queen-bed room inspired by the natural beauty of Boulder.",
+    id: "boulder_room",
+    name: "Boulder Room",
+    description: "A comfortable queen-bed room inspired by the natural beauty and outdoor spirit of Boulder.",
     price: 160,
     capacity: 2,
     size: 380,
@@ -42,9 +42,9 @@ export const fallbackRooms: Room[] = [
     bookings: []
   },
   {
-    id: "fort_collins_craft_corner",
-    name: "Fort Collins Craft Corner",
-    description: "Cozy queen-bed room with a nod to Fort Collins' vibrant craft culture.",
+    id: "fort_collins_room",
+    name: "Fort Collins Room",
+    description: "Cozy queen-bed room with a nod to Fort Collins' vibrant craft culture and university town atmosphere.",
     price: 150,
     capacity: 2,
     size: 360,
@@ -55,9 +55,9 @@ export const fallbackRooms: Room[] = [
     bookings: []
   },
   {
-    id: "aurora_gateway_room",
-    name: "Aurora Gateway Room",
-    description: "A well-appointed room with a comfortable queen bed, perfect for relaxation.",
+    id: "aurora_room",
+    name: "Aurora Room",
+    description: "A well-appointed room with a comfortable queen bed, perfect for relaxation with gateway-themed amenities.",
     price: 145,
     capacity: 2,
     size: 350,
@@ -68,9 +68,9 @@ export const fallbackRooms: Room[] = [
     bookings: []
   },
   {
-    id: "pueblo_historic_charm",
-    name: "Pueblo Historic Charm",
-    description: "Experience comfort in this queen-bed room reflecting Pueblo's rich history.",
+    id: "pueblo_room",
+    name: "Pueblo Room",
+    description: "Experience comfort in this queen-bed room reflecting Pueblo's rich history and cultural heritage.",
     price: 130,
     capacity: 2,
     size: 340,
@@ -81,9 +81,9 @@ export const fallbackRooms: Room[] = [
     bookings: []
   },
   {
-    id: "vail_alpine_escape",
-    name: "Vail Alpine Escape",
-    description: "Chic queen-bed room with alpine-inspired decor, reminiscent of Vail's slopes.",
+    id: "vail_room",
+    name: "Vail Room",
+    description: "Chic queen-bed room with alpine-inspired decor, reminiscent of Vail's world-class ski slopes.",
     price: 190,
     capacity: 2,
     size: 400,
@@ -94,9 +94,9 @@ export const fallbackRooms: Room[] = [
     bookings: []
   },
   {
-    id: "aspen_luxury_haven",
-    name: "Aspen Luxury Haven",
-    description: "An upscale queen-bed room offering a taste of Aspen's luxurious lifestyle.",
+    id: "aspen_room",
+    name: "Aspen Room",
+    description: "An upscale queen-bed room offering a taste of Aspen's luxurious lifestyle and mountain elegance.",
     price: 210,
     capacity: 2,
     size: 420,
@@ -107,9 +107,9 @@ export const fallbackRooms: Room[] = [
     bookings: []
   },
   {
-    id: "glenwood_springs_sojourn",
-    name: "Glenwood Springs Sojourn",
-    description: "Relaxing queen-bed room inspired by the soothing hot springs of Glenwood.",
+    id: "glenwood_springs_room",
+    name: "Glenwood Springs Room",
+    description: "Relaxing queen-bed room inspired by the soothing hot springs and natural beauty of Glenwood Springs.",
     price: 165,
     capacity: 2,
     size: 370,
@@ -120,9 +120,9 @@ export const fallbackRooms: Room[] = [
     bookings: []
   },
   {
-    id: "loveland_art_nook",
-    name: "Loveland Art Nook",
-    description: "A charming queen-bed room celebrating Loveland's artistic spirit.",
+    id: "loveland_room",
+    name: "Loveland Room",
+    description: "A charming queen-bed room celebrating Loveland's artistic spirit and sculptural heritage.",
     price: 140,
     capacity: 2,
     size: 355,
@@ -133,9 +133,9 @@ export const fallbackRooms: Room[] = [
     bookings: []
   },
   {
-    id: "durango_railway_rest",
-    name: "Durango Railway Rest",
-    description: "A cozy queen-bed room with decor inspired by Durango's historic railway.",
+    id: "durango_room",
+    name: "Durango Room",
+    description: "A cozy queen-bed room with decor inspired by Durango's historic railway and southwestern charm.",
     price: 155,
     capacity: 2,
     size: 365,

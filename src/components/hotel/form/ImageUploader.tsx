@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, X, FileImage, Loader2 } from 'lucide-react';
+import { Upload, X, FileImage, Loader2, Shield } from 'lucide-react';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import { useToast } from '@/hooks/use-toast';
 
 interface ImageUploaderProps {
@@ -29,12 +30,26 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [error, setError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadImage } = useImageUpload();
+  const { canUploadImages, isCheckingPermissions } = useAdminPermissions();
   const { toast } = useToast();
 
   const canUploadMore = currentImageCount < maxImages;
+  const isDisabled = disabled || !canUploadImages || isCheckingPermissions;
+
+  // Show permission denied message if user doesn't have upload rights
+  if (!isCheckingPermissions && !canUploadImages) {
+    return (
+      <Alert variant="destructive">
+        <Shield className="h-4 w-4" />
+        <AlertDescription>
+          You need administrator privileges to upload images.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   const handleFileSelect = async (files: FileList | null) => {
-    if (!files || files.length === 0 || !canUploadMore) return;
+    if (!files || files.length === 0 || !canUploadMore || isDisabled) return;
 
     const file = files[0];
     setError('');
@@ -68,7 +83,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    if (!disabled && canUploadMore) {
+    if (!isDisabled && canUploadMore) {
       setIsDragging(true);
     }
   };
@@ -82,16 +97,25 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     e.preventDefault();
     setIsDragging(false);
     
-    if (!disabled && canUploadMore) {
+    if (!isDisabled && canUploadMore) {
       handleFileSelect(e.dataTransfer.files);
     }
   };
 
   const openFileDialog = () => {
-    if (!disabled && canUploadMore) {
+    if (!isDisabled && canUploadMore) {
       fileInputRef.current?.click();
     }
   };
+
+  if (isCheckingPermissions) {
+    return (
+      <div className="border-2 border-dashed rounded-lg p-6 text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+        <p className="text-sm text-muted-foreground mt-2">Checking permissions...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -99,7 +123,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         className={`
           border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer
           ${isDragging ? 'border-primary bg-primary/5' : 'border-gray-300'}
-          ${disabled || !canUploadMore ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary hover:bg-primary/5'}
+          ${isDisabled || !canUploadMore ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary hover:bg-primary/5'}
         `}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -112,7 +136,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           accept="image/jpeg,image/jpg,image/png,image/webp"
           onChange={(e) => handleFileSelect(e.target.files)}
           className="hidden"
-          disabled={disabled || !canUploadMore}
+          disabled={isDisabled || !canUploadMore}
         />
         
         {isUploading ? (
@@ -130,7 +154,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 {canUploadMore ? 'Drop images here or click to upload' : `Maximum ${maxImages} images reached`}
               </p>
               <p className="text-xs text-muted-foreground">
-                JPEG, PNG, WebP up to 5MB
+                JPEG, PNG, WebP up to 5MB • Admin access required
               </p>
               {!canUploadMore && (
                 <p className="text-xs text-amber-600 mt-1">

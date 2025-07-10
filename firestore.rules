@@ -89,5 +89,10 @@ service cloud.firestore {
     match /maintenance/{recordId} {
       allow read, write: if isAdmin();
     }
+    
+    // Receipts - admin only
+    match /receipts/{receiptId} {
+      allow read, write: if isAdmin();
+    }
   }
 }

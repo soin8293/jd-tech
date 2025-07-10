@@ -19,6 +19,7 @@ import { getRooms } from "@/services/room/roomQueries";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { TemplateManager } from "@/components/template/TemplateManager";
 import { SystemHealthMonitor } from "@/components/monitoring/SystemHealthMonitor";
+import { BookingManagement } from "@/components/admin/BookingManagement";
 
 const RoomManagement = () => {
   const { rooms, loading, error, fetchRooms, handleSaveRooms, handleDeleteRoom } = useRoomManagement();
@@ -115,8 +116,9 @@ const RoomManagement = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="rooms" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-7">
                 <TabsTrigger value="rooms">Rooms</TabsTrigger>
+                <TabsTrigger value="bookings">Bookings</TabsTrigger>
                 <TabsTrigger value="templates">Templates</TabsTrigger>
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
                 <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
@@ -139,6 +141,10 @@ const RoomManagement = () => {
                 )}
               </TabsContent>
               
+              <TabsContent value="bookings" className="mt-6">
+                <BookingManagement />
+              </TabsContent>
+
               <TabsContent value="analytics" className="mt-6">
                 <RevenueAnalytics />
               </TabsContent>

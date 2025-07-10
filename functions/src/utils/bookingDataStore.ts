@@ -92,17 +92,25 @@ export const storeBookingData = async (
       if (bookingData.bookingDetails?.rooms && bookingData.bookingDetails.rooms.length > 0 && checkInDate && checkOutDate) {
         const bookingPeriod = {
           checkIn: checkInDate,
-          checkOut: checkOutDate
+          checkOut: checkOutDate,
+          bookingReference: bookingId,
+          guestEmail: userEmail,
+          status: 'confirmed'
         };
         
-        bookingData.bookingDetails.rooms.forEach((room: any) => {
+        for (const room of bookingData.bookingDetails.rooms) {
           if (room.id) {
             const roomRef = admin.firestore().collection('rooms').doc(room.id);
+            console.log(`Updating room ${room.id} with booking period:`, bookingPeriod);
+            
+            // Add booking to the room's bookings array
             txn.update(roomRef, {
-              bookings: admin.firestore.FieldValue.arrayUnion(bookingPeriod)
+              bookings: admin.firestore.FieldValue.arrayUnion(bookingPeriod),
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              lastBookedBy: userEmail || 'guest'
             });
           }
-        });
+        }
       }
       
       // 3. If user has an account, update their profile with the booking reference

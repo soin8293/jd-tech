@@ -11,6 +11,7 @@ import { inviteAdmin } from "./admin/inviteAdmin";
 import { acceptInvitation } from "./admin/acceptInvitation";
 import { updateRoomAvailability } from "./rooms/updateRoomAvailability";
 import { seedDatabase } from "./admin/seedDatabase";
+import { getUserBookings } from "./booking/getUserBookings";
 
 export { 
   sanityCheck,
@@ -23,5 +24,6 @@ export {
   inviteAdmin,
   acceptInvitation,
   updateRoomAvailability,
-  seedDatabase
+  seedDatabase,
+  getUserBookings
 };

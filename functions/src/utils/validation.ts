@@ -56,22 +56,30 @@ export const schemas = {
   
   processBooking: z.object({
     paymentIntentId: z.string().min(1, "Payment Intent ID is required"),
+    paymentMethodId: z.string().optional(),
+    clientSecret: z.string().optional(),
     paymentType: z.string().optional(),
     transaction_id: z.string().optional(),
     userEmail: z.string().email("Valid email is required").optional(),
-    timestamp: z.number().optional(),
+    userId: z.string().optional(),
+    timestamp: z.string().optional(),
+    serverCalculatedAmount: z.number().optional(),
     bookingDetails: z.object({
-      rooms: z.array(z.object({
-        id: z.string(),
-        name: z.string().optional(),
-        price: z.number()
-      })),
       period: z.object({
         checkIn: z.string().or(z.date()),
         checkOut: z.string().or(z.date())
       }),
-      guests: z.number().int().min(1)
-    }).optional()
+      guests: z.number().int().min(1),
+      rooms: z.array(z.object({
+        id: z.string(),
+        name: z.string().optional(),
+        price: z.number().positive()
+      })),
+      totalPrice: z.number().positive(),
+      userEmail: z.string().email().optional(),
+      contactPhone: z.string().optional(),
+      specialRequests: z.string().optional()
+    })
   }),
 
   manageAdmin: z.object({

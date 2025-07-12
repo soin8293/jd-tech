@@ -21,6 +21,7 @@ import PaymentModal from "@/components/payment/PaymentModal";
 import LocalDataBanner from "@/components/hotel/LocalDataBanner";
 import InitializeAdmin from "@/components/admin/InitializeAdmin";
 import { ReservationHoldDisplay } from "@/components/booking/ReservationHoldDisplay";
+import { SimpleBookingFlow } from "@/components/booking/SimpleBookingFlow";
 
 // Types
 import { BookingPeriod } from "@/types/hotel.types";
@@ -41,6 +42,7 @@ const HotelBooking: React.FC = () => {
   // Payment modal state
   const [isPaymentModalOpen, setPaymentModalOpen] = React.useState(false);
   const [showReservationHold, setShowReservationHold] = React.useState(false);
+  const [showSimpleBooking, setShowSimpleBooking] = React.useState(false);
 
   /**
    * Handle room search when user submits booking form
@@ -66,10 +68,8 @@ const HotelBooking: React.FC = () => {
    * Handle booking initiation
    */
   const handleBookNow = async () => {
-    const bookingDetails = await booking.createBooking(currentUser?.email);
-    
-    if (bookingDetails) {
-      setPaymentModalOpen(true);
+    if (booking.hasSelectedRooms && booking.bookingPeriod) {
+      setShowSimpleBooking(true);
     }
   };
 
@@ -147,6 +147,33 @@ const HotelBooking: React.FC = () => {
           onBookNow={handleBookNow}
           disabled={!booking.hasSelectedRooms || booking.isProcessing}
         />
+
+        {/* Simple Booking Flow */}
+        {showSimpleBooking && booking.hasSelectedRooms && booking.bookingPeriod && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="relative">
+              <button
+                onClick={() => setShowSimpleBooking(false)}
+                className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-lg z-10"
+              >
+                ✕
+              </button>
+              <SimpleBookingFlow
+                rooms={booking.selectedRooms.map(room => ({
+                  id: room.id,
+                  name: room.name,
+                  price: room.price
+                }))}
+                period={{
+                  checkIn: booking.bookingPeriod.checkIn,
+                  checkOut: booking.bookingPeriod.checkOut
+                }}
+                guests={booking.guests}
+                totalPrice={booking.selectedRooms.reduce((total, room) => total + room.price, 0)}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Payment Modal */}
         {booking.bookingDetails && (

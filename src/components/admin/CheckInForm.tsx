@@ -257,15 +257,24 @@ export const CheckInForm: React.FC<CheckInFormProps> = ({ booking, onSuccess, av
           
           {receipt && (
             <div className="space-y-4">
+              {/* Header */}
               <div className="text-center py-4 border-b">
-                <h3 className="font-bold">JD Suites</h3>
+                <h3 className="font-bold text-lg">{receipt.hotelName}</h3>
                 <p className="text-sm text-muted-foreground">Check-In Receipt</p>
+                {receipt.receiptNumber && (
+                  <p className="text-xs text-muted-foreground font-mono">{receipt.receiptNumber}</p>
+                )}
               </div>
               
+              {/* Guest & Booking Details */}
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Guest:</span>
                   <span className="font-medium">{receipt.guestName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Email:</span>
+                  <span className="text-sm">{receipt.guestEmail}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Booking ID:</span>
@@ -273,32 +282,85 @@ export const CheckInForm: React.FC<CheckInFormProps> = ({ booking, onSuccess, av
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Room:</span>
-                  <span className="font-medium">{receipt.roomId}</span>
+                  <span className="font-medium">{receipt.roomName || receipt.roomId}</span>
                 </div>
+              </div>
+
+              {/* Stay Details */}
+              <div className="border-t pt-3 space-y-3">
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Check-In:</span>
-                  <span>{receipt.checkInDate}</span>
+                  <span>{new Date(receipt.checkInDate).toLocaleDateString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Check-Out:</span>
-                  <span>{receipt.checkOutDate}</span>
+                  <span>{new Date(receipt.checkOutDate).toLocaleDateString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Payment:</span>
-                  <span className="capitalize">{receipt.paymentMethod}</span>
+                  <span className="text-sm text-muted-foreground">Checked In:</span>
+                  <span className="text-sm">{new Date(receipt.receiptTimestamp).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between font-medium border-t pt-2">
-                  <span>Total:</span>
-                  <span>${receipt.totalCost}</span>
+              </div>
+
+              {/* Payment Details */}
+              <div className="border-t pt-3 space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Payment Method:</span>
+                  <span className="capitalize font-medium">{receipt.paymentMethod}</span>
                 </div>
-                {receipt.cashAmount && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Cash Received:</span>
-                    <span>${receipt.cashAmount}</span>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Payment Status:</span>
+                  <span className="capitalize font-medium text-green-600">{receipt.paymentStatus}</span>
+                </div>
+                
+                {/* Cash Payment Details */}
+                {receipt.paymentMethod === "cash" && receipt.cashAmount && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Cash Received:</span>
+                      <span>${receipt.cashAmount.toFixed(2)}</span>
+                    </div>
+                    {receipt.change > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Change:</span>
+                        <span>${receipt.change.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Stripe Payment Details */}
+                {receipt.paymentMethod === "stripe" && receipt.paymentDetails && (
+                  <div className="text-xs text-muted-foreground">
+                    <p>Payment ID: {receipt.paymentDetails.paymentIntentId?.slice(-8)}</p>
+                    <p>Currency: {receipt.paymentDetails.currency?.toUpperCase()}</p>
                   </div>
                 )}
               </div>
+
+              {/* Total */}
+              <div className="border-t pt-3">
+                <div className="flex justify-between font-medium text-lg">
+                  <span>Total Paid:</span>
+                  <span>${receipt.totalCost.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Special Requests */}
+              {receipt.specialRequests && (
+                <div className="border-t pt-3">
+                  <span className="text-sm text-muted-foreground">Special Requests:</span>
+                  <p className="text-sm mt-1 bg-muted p-2 rounded">{receipt.specialRequests}</p>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="border-t pt-3 text-center text-xs text-muted-foreground">
+                <p>Thank you for staying with {receipt.hotelName}!</p>
+                <p>Processed by: {receipt.generatedByName}</p>
+              </div>
               
+              {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
                 <Button variant="outline" onClick={() => setShowReceipt(false)} className="flex-1">
                   Preview Only

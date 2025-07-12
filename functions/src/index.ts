@@ -13,10 +13,13 @@ import { updateRoomAvailability } from "./rooms/updateRoomAvailability";
 import { seedDatabase } from "./admin/seedDatabase";
 import { getUserBookings } from "./booking/getUserBookings";
 import { checkInBooking } from "./checkin/checkInBooking";
+import { createCheckoutSession } from "./payment/createCheckoutSession";
+import { stripeCheckoutWebhook } from "./webhooks/stripeCheckoutWebhook";
 
 export { 
   sanityCheck,
   createPaymentIntent,
+  createCheckoutSession,
   processBooking,
   sendBookingConfirmation,
   manageAdminRole,
@@ -27,5 +30,6 @@ export {
   updateRoomAvailability,
   seedDatabase,
   getUserBookings,
-  checkInBooking
+  checkInBooking,
+  stripeCheckoutWebhook
 };

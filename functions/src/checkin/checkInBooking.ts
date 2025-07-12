@@ -57,30 +57,77 @@ const checkInBookingHandler = async (request: any) => {
     throw new HttpsError("failed-precondition", "Check-in date is in the future.");
   }
 
-  // Verify payment
+  // Enhanced payment verification
   let paymentStatus = bookingData.paymentStatus || "pending";
+  let paymentDetails: any = {};
   
   if (paymentMethod === "stripe" && bookingData.stripePaymentIntentId) {
     try {
       const stripe = getStripeClient();
-      const paymentIntent = await stripe.paymentIntents.retrieve(bookingData.stripePaymentIntentId);
-      paymentStatus = paymentIntent.status;
+      const paymentIntent = await stripe.paymentIntents.retrieve(bookingData.stripePaymentIntentId, {
+        expand: ['charges']
+      });
       
-      logger.info("Stripe payment verified", { paymentIntentId: bookingData.stripePaymentIntentId, status: paymentStatus });
+      paymentStatus = paymentIntent.status;
+      paymentDetails = {
+        paymentIntentId: paymentIntent.id,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        status: paymentIntent.status,
+        created: paymentIntent.created,
+        paymentMethod: paymentIntent.payment_method,
+        lastPaymentError: paymentIntent.last_payment_error?.message || null
+      };
+      
+      logger.info("Stripe payment verified", { 
+        paymentIntentId: bookingData.stripePaymentIntentId, 
+        status: paymentStatus,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency
+      });
       
       if (paymentStatus !== "succeeded") {
-        throw new HttpsError("failed-precondition", `Payment not successful: ${paymentStatus}`);
+        const errorMessage = paymentIntent.last_payment_error?.message || `Payment not successful: ${paymentStatus}`;
+        throw new HttpsError("failed-precondition", errorMessage);
       }
+      
+      // Verify amount matches booking
+      const expectedAmount = Math.round(bookingData.totalCost * 100); // Convert to cents
+      if (paymentIntent.amount !== expectedAmount) {
+        logger.error("Payment amount mismatch", { 
+          expected: expectedAmount, 
+          actual: paymentIntent.amount 
+        });
+        throw new HttpsError("failed-precondition", "Payment amount does not match booking total");
+      }
+      
     } catch (stripeError: any) {
-      logger.error("Stripe verification failed", stripeError);
-      throw new HttpsError("internal", "Payment verification failed");
+      logger.error("Stripe verification failed", { 
+        error: stripeError.message,
+        paymentIntentId: bookingData.stripePaymentIntentId 
+      });
+      
+      if (stripeError instanceof HttpsError) {
+        throw stripeError;
+      }
+      throw new HttpsError("internal", `Payment verification failed: ${stripeError.message}`);
     }
   } else if (paymentMethod === "cash") {
     if (cashAmount == null || cashAmount < bookingData.totalCost) {
       throw new HttpsError("invalid-argument", "Invalid or insufficient cash amount.");
     }
     paymentStatus = "cash_received";
+    paymentDetails = {
+      cashAmount,
+      totalCost: bookingData.totalCost,
+      change: cashAmount - bookingData.totalCost
+    };
     logger.info("Cash payment recorded", { cashAmount, totalCost: bookingData.totalCost });
+  } else {
+    // No payment method specified, check if payment is already verified
+    if (!bookingData.paymentStatus || bookingData.paymentStatus === "pending") {
+      throw new HttpsError("failed-precondition", "Payment verification required for check-in");
+    }
   }
 
   // Assign or confirm room
@@ -126,7 +173,7 @@ const checkInBookingHandler = async (request: any) => {
     updatedAt: new Date().toISOString()
   });
 
-  // Generate and save receipt
+  // Generate enhanced receipt with payment details
   const receiptData = {
     bookingId,
     guestId: bookingData.guestId,
@@ -135,13 +182,19 @@ const checkInBookingHandler = async (request: any) => {
     checkInDate: bookingData.checkInDate,
     checkOutDate: bookingData.checkOutDate,
     roomId: finalRoomId,
+    roomName: bookingData.roomName || `Room ${finalRoomId}`,
     totalCost: bookingData.totalCost,
     paymentMethod: updateData.paymentMethod,
     paymentStatus,
+    paymentDetails,
     specialRequests: bookingData.specialRequests || "",
     cashAmount: paymentMethod === "cash" ? cashAmount : null,
+    change: paymentMethod === "cash" ? (cashAmount - bookingData.totalCost) : null,
     receiptTimestamp: new Date().toISOString(),
     generatedBy: user.uid,
+    generatedByName: user.email || "Admin",
+    hotelName: "JD Suites",
+    receiptNumber: `RCP-${Date.now()}`,
   };
 
   const receiptRef = await db.collection("receipts").add(receiptData);

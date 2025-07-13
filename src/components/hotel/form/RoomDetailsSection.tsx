@@ -1,7 +1,7 @@
 
 import React from "react";
-import { ValidatedInput } from "@/components/forms/ValidatedInput";
-import { ValidatedTextarea } from "@/components/forms/ValidatedTextarea";
+import { SimpleValidatedInput } from "@/components/forms/SimpleValidatedInput";
+import { SimpleValidatedTextarea } from "@/components/forms/SimpleValidatedTextarea";
 import { validationSchemas } from "@/utils/inputValidation";
 
 interface RoomDetailsSectionProps {
@@ -26,7 +26,7 @@ const RoomDetailsSection: React.FC<RoomDetailsSectionProps> = ({
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ValidatedInput
+        <SimpleValidatedInput
           label="Room Name"
           name="name"
           value={name}
@@ -36,7 +36,7 @@ const RoomDetailsSection: React.FC<RoomDetailsSectionProps> = ({
           required
         />
         
-        <ValidatedInput
+        <SimpleValidatedInput
           label="Price per Night (USD)"
           name="price"
           value={price}
@@ -48,7 +48,7 @@ const RoomDetailsSection: React.FC<RoomDetailsSectionProps> = ({
         />
       </div>
       
-      <ValidatedTextarea
+      <SimpleValidatedTextarea
         label="Description"
         name="description"
         value={description}
@@ -56,11 +56,10 @@ const RoomDetailsSection: React.FC<RoomDetailsSectionProps> = ({
         schema={validationSchemas.roomDescription}
         placeholder="Elegant and spacious room with premium amenities..."
         rows={3}
-        allowHtml={true}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <ValidatedInput
+        <SimpleValidatedInput
           label="Max Guests"
           name="capacity"
           value={capacity}
@@ -71,7 +70,7 @@ const RoomDetailsSection: React.FC<RoomDetailsSectionProps> = ({
           required
         />
         
-        <ValidatedInput
+        <SimpleValidatedInput
           label="Size (sq ft)"
           name="size"
           value={size}
@@ -81,7 +80,7 @@ const RoomDetailsSection: React.FC<RoomDetailsSectionProps> = ({
           placeholder="400"
         />
         
-        <ValidatedInput
+        <SimpleValidatedInput
           label="Bed Type"
           name="bed"
           value={bed}

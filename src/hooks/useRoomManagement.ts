@@ -2,15 +2,14 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { Room } from "@/types/hotel.types";
 import { fetchRoomData } from "@/utils/roomDataOperations";
-import { useRoomMutations } from "./useRoomMutations";
+import { useSimpleRoomMutations } from "./useSimpleRoomMutations";
 
 export const useRoomManagement = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  const { loading: mutationLoading, handleSaveRooms, handleDeleteRoom } = useRoomMutations(
-    rooms,
+  const { loading: mutationLoading, handleSaveRooms, handleDeleteRoom } = useSimpleRoomMutations(
     setRooms
   );
 
@@ -42,6 +41,6 @@ export const useRoomManagement = () => {
     error,
     fetchRooms,
     handleSaveRooms,
-    handleDeleteRoom
+    handleDeleteRoom: (roomId: string) => handleDeleteRoom(roomId, rooms)
   };
 };

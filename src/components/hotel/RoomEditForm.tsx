@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { RoomFormData } from "@/types/hotel.types";
 import RoomDetailsSection from "./form/RoomDetailsSection";
-import RoomAmenitiesSection from "./form/RoomAmenitiesSection";
+import SimpleRoomAmenitiesSection from "./form/SimpleRoomAmenitiesSection";
 import RoomImagesSection from "./form/RoomImagesSection";
 import RoomAvailabilityToggle from "./form/RoomAvailabilityToggle";
 import EnhancedSaveButton from "./form/EnhancedSaveButton";
@@ -57,7 +57,7 @@ const RoomEditForm: React.FC<RoomEditFormProps> = ({
           onToggle={handleSwitchChange}
         />
         
-        <RoomAmenitiesSection
+        <SimpleRoomAmenitiesSection
           amenities={formData.amenities}
           onAddAmenity={handleAddAmenity}
           onRemoveAmenity={handleRemoveAmenity}

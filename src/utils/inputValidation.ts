@@ -48,12 +48,10 @@ export const validationSchemas = {
   // Room validation
   roomName: z.string()
     .min(1, "Room name is required")
-    .max(100, "Room name must be less than 100 characters")
-    .refine(val => sanitizeString(val) === val, "Invalid characters in room name"),
+    .max(100, "Room name must be less than 100 characters"),
 
   roomDescription: z.string()
-    .max(1000, "Description must be less than 1000 characters")
-    .transform(val => sanitizeHtml(val)),
+    .max(1000, "Description must be less than 1000 characters"),
 
   price: z.number()
     .min(0, "Price must be positive")
@@ -70,8 +68,7 @@ export const validationSchemas = {
 
   bedType: z.string()
     .min(1, "Bed type is required")
-    .max(50, "Bed type must be less than 50 characters")
-    .refine(val => sanitizeString(val) === val, "Invalid characters in bed type"),
+    .max(50, "Bed type must be less than 50 characters"),
 
   // Booking validation
   guestCount: z.number()
@@ -87,13 +84,11 @@ export const validationSchemas = {
   // User input validation
   email: z.string()
     .email("Invalid email address")
-    .max(254, "Email must be less than 254 characters")
-    .transform(val => sanitizeString(val)),
+    .max(254, "Email must be less than 254 characters"),
 
   name: z.string()
     .min(1, "Name is required")
-    .max(100, "Name must be less than 100 characters")
-    .refine(val => sanitizeString(val) === val, "Invalid characters in name"),
+    .max(100, "Name must be less than 100 characters"),
 
   // File upload validation
   imageUrl: z.string()
@@ -112,7 +107,6 @@ export const validationSchemas = {
   amenity: z.string()
     .min(1, "Amenity name is required")
     .max(50, "Amenity name must be less than 50 characters")
-    .refine(val => sanitizeString(val) === val, "Invalid characters in amenity name")
 };
 
 // Combined schemas for complex forms

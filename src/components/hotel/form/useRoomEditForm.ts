@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { RoomFormData } from "@/types/hotel.types";
 import { useToast } from "@/hooks/use-toast";
-import { useInputSanitization } from "@/hooks/useInputSanitization";
 import { roomFormSchema } from "@/utils/inputValidation";
 
 export const useRoomEditForm = (
@@ -9,7 +8,6 @@ export const useRoomEditForm = (
   onSave: (room: RoomFormData) => void
 ) => {
   const { toast } = useToast();
-  const { sanitizeString } = useInputSanitization();
   const [formData, setFormData] = useState<RoomFormData>(editingRoom);
 
   const handleFormChange = (name: string, value: string | number) => {
@@ -57,47 +55,32 @@ export const useRoomEditForm = (
 
   const handleSave = () => {
     try {
-      // Sanitize string inputs individually to maintain type safety
-      const sanitizedName = sanitizeString(formData.name || '', 'name');
-      const sanitizedDescription = sanitizeString(formData.description || '', 'description');
-      const sanitizedBed = sanitizeString(formData.bed || '', 'bed');
-
-      // Validate required fields before creating the object
-      if (!sanitizedName || sanitizedName.trim() === '') {
-        throw new Error('Room name is required');
-      }
-      if (!formData.price || formData.price <= 0) {
-        throw new Error('Valid room price is required');
-      }
-      if (!formData.capacity || formData.capacity <= 0) {
-        throw new Error('Valid room capacity is required');
-      }
-      if (!sanitizedBed || sanitizedBed.trim() === '') {
-        throw new Error('Bed type is required');
-      }
-
-      // Create the validated data object with all required fields
-      const validatedData = roomFormSchema.parse({
-        id: formData.id,
-        name: sanitizedName,
-        description: sanitizedDescription,
-        price: formData.price,
-        capacity: formData.capacity,
-        size: formData.size ?? 0,
-        bed: sanitizedBed,
-        amenities: formData.amenities ?? [],
-        images: formData.images ?? [],
-        availability: formData.availability ?? true
-      });
+      // Validate the form data
+      const validatedData = roomFormSchema.parse(formData);
       
-      // Cast to RoomFormData since we know all required fields are present after validation
       onSave(validatedData as RoomFormData);
-    } catch (error: any) {
+      
       toast({
-        title: "Validation Error",
-        description: error.message || "Please check your input and try again.",
-        variant: "destructive",
+        title: "Room Saved",
+        description: "Room details have been saved successfully!",
       });
+    } catch (error: any) {
+      console.error('Room validation error:', error);
+      
+      if (error?.issues?.length > 0) {
+        const firstError = error.issues[0];
+        toast({
+          title: "Validation Error",
+          description: `${firstError.path?.join('.')} - ${firstError.message}`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to save room. Please check your input.",
+          variant: "destructive",
+        });
+      }
     }
   };
 

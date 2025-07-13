@@ -67,13 +67,13 @@ const RoomList: React.FC<RoomListProps> = ({
               key={room.id}
               room={room}
               onSelect={() => onSelectRoom(room)}
-              selectedRooms={selectedRooms}
+              isSelected={selectedRooms.some(r => r.id === room.id)}
               availability={roomAvailability[room.id]}
               bookingPeriod={bookingPeriod}
               onEdit={() => onEditRoom(room)}
               onDelete={() => onDeleteRoom(room.id)}
               context={context}
-              className="shadow-sm"
+              showEditButtons={showEditButtons}
             />
           ))}
         </div>

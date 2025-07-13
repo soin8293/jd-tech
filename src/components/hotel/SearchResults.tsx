@@ -52,10 +52,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               <RoomCard
                 key={room.id}
                 room={room}
-                onSelect={onSelectRoom}
-                selectedRooms={selectedRooms}
-                isAvailable={availability.isAvailable}
-                nextAvailableTime={availability.nextAvailableTime}
+                onSelect={() => onSelectRoom(room)}
+                isSelected={selectedRooms.some(r => r.id === room.id)}
+                availability={availability}
               />
             );
           })}

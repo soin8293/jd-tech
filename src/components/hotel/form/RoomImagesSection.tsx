@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { useImageUpload } from "@/hooks/useImageUpload";
-import ImageUploader from "./ImageUploader";
+import EnhancedImageUploader from "./EnhancedImageUploader";
 import ImageGridManager from "./image/ImageGridManager";
 import ImageUrlInput from "./image/ImageUrlInput";
 import ImageSectionInfo from "./image/ImageSectionInfo";
@@ -65,10 +65,10 @@ const RoomImagesSection: React.FC<RoomImagesSectionProps> = ({
     <div className="space-y-4">
       <Label>Room Images</Label>
       
-      {/* File Upload Section */}
+      {/* Enhanced File Upload Section */}
       <div className="space-y-2">
         <h4 className="text-sm font-medium">Upload New Images</h4>
-        <ImageUploader
+        <EnhancedImageUploader
           roomId={roomId}
           onImageUploaded={onAddImage}
           maxImages={10}

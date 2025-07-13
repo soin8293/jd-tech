@@ -1,216 +1,283 @@
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Room, BookingPeriod, RoomAvailabilityCheck } from "@/types/hotel.types";
-import { Bed, Users, Maximize, Check, Pencil, TrashIcon, Clock, Info, Flag } from "lucide-react";
+import { 
+  Edit, 
+  Trash2, 
+  Users, 
+  Bed, 
+  Wifi, 
+  Car, 
+  Coffee, 
+  Tv, 
+  Wind,
+  Star,
+  MapPin,
+  CheckCircle,
+  XCircle,
+  Clock,
+  ImageIcon,
+  Heart
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatNigerianTime } from "@/utils/availabilityUtils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface RoomCardProps {
   room: Room;
-  onSelect?: (room: Room) => void;
-  onEdit?: (room: Room) => void;
-  onDelete?: (roomId: string) => void;
   isSelected?: boolean;
-  selectedRooms?: Room[];
-  className?: string;
-  context?: 'booking' | 'room-management';
-  isAvailable?: boolean;
-  nextAvailableTime?: Date;
-  availability?: RoomAvailabilityCheck;
+  onSelect?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onBook?: () => void;
   bookingPeriod?: BookingPeriod;
-  showBookingDetails?: boolean;
+  context?: "booking" | "room-management";
+  showEditButtons?: boolean;
+  availability?: RoomAvailabilityCheck;
+  isLoading?: boolean;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 }
 
-const RoomCard: React.FC<RoomCardProps> = ({ 
-  room, 
-  onSelect = () => {}, 
-  onEdit = () => {}, 
-  onDelete = () => {},
+const RoomCard: React.FC<RoomCardProps> = ({
+  room,
   isSelected = false,
-  selectedRooms = [],
-  className,
-  context = 'booking',
-  isAvailable = true,
-  nextAvailableTime,
-  availability,
+  onSelect,
+  onEdit,
+  onDelete,
+  onBook,
   bookingPeriod,
-  showBookingDetails = false
+  context = "booking",
+  showEditButtons = false,
+  availability,
+  isLoading = false,
+  isFavorite = false,
+  onToggleFavorite,
 }) => {
-  const isRoomSelected = isSelected || selectedRooms.some(r => r.id === room.id);
-  const [showDetails, setShowDetails] = useState(false);
-  
-  const roomIsAvailable = availability ? availability.isAvailable : isAvailable;
-  const roomNextAvailableTime = availability ? availability.nextAvailableTime : nextAvailableTime;
-  
-  const hasImages = room.images && room.images.length > 0;
-  
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+
+  // Enhanced amenity icons mapping
+  const getAmenityIcon = (amenity: string) => {
+    const lowerAmenity = amenity.toLowerCase();
+    if (lowerAmenity.includes('wifi') || lowerAmenity.includes('internet')) return Wifi;
+    if (lowerAmenity.includes('parking') || lowerAmenity.includes('garage')) return Car;
+    if (lowerAmenity.includes('coffee') || lowerAmenity.includes('breakfast')) return Coffee;
+    if (lowerAmenity.includes('tv') || lowerAmenity.includes('television')) return Tv;
+    if (lowerAmenity.includes('air') || lowerAmenity.includes('conditioning')) return Wind;
+    if (lowerAmenity.includes('bed') || lowerAmenity.includes('bedroom')) return Bed;
+    return Star; // Default icon
+  };
+
+  // Enhanced availability status
+  const getAvailabilityStatus = () => {
+    if (!availability) {
+      return room.availability ? 
+        { status: 'available', color: 'text-green-600', icon: CheckCircle, label: 'Available' } :
+        { status: 'unavailable', color: 'text-red-600', icon: XCircle, label: 'Unavailable' };
+    }
+    
+    if (availability.isAvailable) {
+      return { status: 'available', color: 'text-green-600', icon: CheckCircle, label: 'Available' };
+    } else if (availability.nextAvailableTime) {
+      return { status: 'partial', color: 'text-yellow-600', icon: Clock, label: 'Partial Availability' };
+    } else {
+      return { status: 'unavailable', color: 'text-red-600', icon: XCircle, label: 'Unavailable' };
+    }
+  };
+
+  const availabilityStatus = getAvailabilityStatus();
+  const StatusIcon = availabilityStatus.icon;
+
+  // Primary image with fallback
+  const primaryImage = room.images && room.images.length > 0 ? room.images[0] : null;
+
   return (
     <Card 
       className={cn(
-        "overflow-hidden transition-all hover:shadow-lg relative", 
-        isRoomSelected && "ring-2 ring-primary",
-        !roomIsAvailable && "opacity-60 grayscale",
-        className
+        "group relative overflow-hidden transition-all duration-300",
+        "hover:shadow-lg hover:scale-105 hover-scale",
+        isSelected && "ring-2 ring-primary ring-offset-2",
+        isLoading && "opacity-50 pointer-events-none",
+        "animate-fade-in"
       )}
     >
-      {!roomIsAvailable && (
-        <div className="absolute top-2 right-2 z-10 flex gap-2">
-          <Badge variant="destructive" className="flex items-center gap-1">
-            <Flag className="w-3 h-3" />
-            Booked
-          </Badge>
-          
-          {(context === 'room-management' && showBookingDetails) && (
-            <Dialog open={showDetails} onOpenChange={setShowDetails}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="icon" className="h-6 w-6 rounded-full">
-                  <Info className="h-3 w-3" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Booking Details for {room.name}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 mt-4">
-                  {room.bookings && room.bookings.length > 0 ? (
-                    <div className="space-y-4">
-                      {room.bookings.map((booking, index) => (
-                        <div key={index} className="border p-3 rounded-md">
-                          <p><strong>Check-in:</strong> {new Date(booking.checkIn).toLocaleDateString()}</p>
-                          <p><strong>Check-out:</strong> {new Date(booking.checkOut).toLocaleDateString()}</p>
-                          {booking.bookingReference && (
-                            <p>
-                              <strong>Booking Reference:</strong> {booking.bookingReference}
-                              <Button 
-                                variant="link" 
-                                size="sm" 
-                                className="px-0 h-auto text-xs" 
-                                onClick={() => window.open(`/admin/bookings/${booking.bookingReference}`, '_blank')}
-                              >
-                                View Details
-                              </Button>
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground">No booking information available</p>
-                  )}
-                </div>
-              </DialogContent>
-            </Dialog>
+      {/* Favorite Button */}
+      {onToggleFavorite && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "absolute top-2 right-2 z-10 h-8 w-8 p-0",
+            "bg-white/80 backdrop-blur-sm hover:bg-white/90",
+            isFavorite && "text-red-500"
           )}
-        </div>
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite();
+          }}
+        >
+          <Heart className={cn("h-4 w-4", isFavorite && "fill-current")} />
+        </Button>
       )}
 
-      {hasImages && (
-        <div className="hotel-image-container h-48 relative">
-          <img
-            src={room.images[0]}
-            alt={room.name}
-            className="hotel-image w-full h-full object-cover"
-            loading="lazy"
-          />
-          <div className="image-overlay" />
-          
-          {!roomIsAvailable && (
-            <div className="absolute top-0 right-0 left-0 bg-black bg-opacity-70 text-white py-2 px-4 text-center">
-              <p className="text-sm font-medium">Unavailable</p>
-              {roomNextAvailableTime && (
-                <p className="text-xs">Available after {formatNigerianTime(roomNextAvailableTime)}</p>
+      {/* Enhanced Image Section */}
+      <div className="relative h-48 overflow-hidden">
+        {primaryImage ? (
+          <>
+            <img 
+              src={primaryImage} 
+              alt={room.name}
+              className={cn(
+                "w-full h-full object-cover transition-all duration-300",
+                "group-hover:scale-110",
+                imageLoading && "opacity-0",
+                imageError && "hidden"
               )}
-            </div>
-          )}
-        </div>
-      )}
-      
-      <CardContent className="p-6">
-        <div className="flex justify-between items-start mb-3">
-          <div>
-            <h3 className="text-xl font-medium">{room.name}</h3>
-            <p className="text-muted-foreground text-sm mt-1">{room.description}</p>
+              onLoad={() => setImageLoading(false)}
+              onError={() => {
+                setImageError(true);
+                setImageLoading(false);
+              }}
+            />
+            {imageLoading && (
+              <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
+                <ImageIcon className="h-8 w-8 text-muted-foreground" />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="w-full h-full bg-muted flex items-center justify-center">
+            <ImageIcon className="h-12 w-12 text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">No image available</span>
           </div>
-          <Badge variant={isRoomSelected ? "default" : "outline"} className="ml-2">
-            ${room.price}/night
+        )}
+        
+        {/* Image overlay with additional info */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Room status indicator */}
+        <div className="absolute top-2 left-2">
+          <Badge 
+            variant={availabilityStatus.status === 'available' ? 'default' : 'destructive'}
+            className="flex items-center gap-1"
+          >
+            <StatusIcon className="h-3 w-3" />
+            {availabilityStatus.label}
           </Badge>
         </div>
-        
-        <div className="grid grid-cols-3 gap-3 mt-4">
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Users className="w-4 h-4 mr-1.5" />
-            <span>Up to {room.capacity}</span>
+
+        {/* Additional images indicator */}
+        {room.images && room.images.length > 1 && (
+          <div className="absolute bottom-2 right-2">
+            <Badge variant="secondary" className="text-xs">
+              +{room.images.length - 1} more
+            </Badge>
           </div>
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Bed className="w-4 h-4 mr-1.5" />
-            <span>{room.bed}</span>
-          </div>
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Maximize className="w-4 h-4 mr-1.5" />
-            <span>{room.size} sq ft</span>
+        )}
+      </div>
+
+      <CardContent className="p-6">
+        {/* Room Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <h3 className="text-xl font-semibold mb-1 line-clamp-1">{room.name}</h3>
+            <p className="text-muted-foreground text-sm line-clamp-2 mb-2">{room.description}</p>
           </div>
         </div>
-        
-        <div className="mt-4">
+
+        {/* Room Details Grid */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="flex items-center gap-2 text-sm">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <span>{room.capacity} guests</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <Bed className="h-4 w-4 text-muted-foreground" />
+            <span>{room.bed}</span>
+          </div>
+          {room.size && (
+            <div className="flex items-center gap-2 text-sm">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span>{room.size} sqft</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <span className="text-2xl text-primary">${room.price}</span>
+            <span className="text-muted-foreground">/night</span>
+          </div>
+        </div>
+
+        {/* Enhanced Amenities */}
+        <div className="mb-4">
           <h4 className="text-sm font-medium mb-2">Amenities</h4>
-          <div className="flex flex-wrap gap-1.5">
-            {room.amenities.slice(0, 5).map((amenity, index) => (
-              <div 
-                key={index}
-                className="flex items-center text-xs bg-secondary px-2 py-1 rounded-full"
-              >
-                <Check className="w-3 h-3 mr-1" />
-                {amenity}
-              </div>
-            ))}
-            {room.amenities.length > 5 && (
-              <div className="text-xs bg-secondary px-2 py-1 rounded-full">
-                +{room.amenities.length - 5} more
-              </div>
+          <div className="flex flex-wrap gap-2">
+            {room.amenities.slice(0, 6).map((amenity) => {
+              const AmenityIcon = getAmenityIcon(amenity);
+              return (
+                <div 
+                  key={amenity} 
+                  className="flex items-center gap-1 px-2 py-1 bg-muted rounded-md text-xs"
+                  title={amenity}
+                >
+                  <AmenityIcon className="h-3 w-3" />
+                  <span className="truncate max-w-20">{amenity}</span>
+                </div>
+              );
+            })}
+            {room.amenities.length > 6 && (
+              <Badge variant="outline" className="text-xs">
+                +{room.amenities.length - 6} more
+              </Badge>
             )}
           </div>
         </div>
-        
-        {!roomIsAvailable && roomNextAvailableTime && (
-          <div className="mt-4 flex items-center text-sm border border-amber-300 bg-amber-50 text-amber-700 rounded p-2">
-            <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
-            <span>Available after {formatNigerianTime(roomNextAvailableTime)}</span>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 mt-4">
+          {context === "booking" && onSelect && (
+            <Button 
+              variant={isSelected ? "default" : "outline"} 
+              className="flex-1"
+              onClick={onSelect}
+              disabled={!availabilityStatus || availabilityStatus.status === 'unavailable'}
+            >
+              {isSelected ? "Selected" : "Select Room"}
+            </Button>
+          )}
+          
+          {context === "booking" && onBook && (
+            <Button 
+              onClick={onBook}
+              disabled={!availabilityStatus || availabilityStatus.status === 'unavailable'}
+              className="flex-1"
+            >
+              Book Now
+            </Button>
+          )}
+          
+          {showEditButtons && context === "room-management" && (
+            <>
+              <Button variant="outline" size="sm" onClick={onEdit}>
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button variant="destructive" size="sm" onClick={onDelete}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+        </div>
+
+        {/* Additional booking info */}
+        {bookingPeriod && context === "booking" && (
+          <div className="mt-3 p-2 bg-muted rounded-md text-xs text-muted-foreground">
+            <div className="flex justify-between">
+              <span>Check-in: {String(bookingPeriod.checkIn)}</span>
+              <span>Check-out: {String(bookingPeriod.checkOut)}</span>
+            </div>
           </div>
         )}
       </CardContent>
-      
-      <CardFooter className="px-6 py-4 bg-secondary/40 border-t">
-        {context === 'booking' ? (
-          <Button 
-            className="w-full"
-            variant={isRoomSelected ? "outline" : "default"}
-            onClick={() => onSelect(room)}
-            disabled={!roomIsAvailable}
-          >
-            {isRoomSelected ? "Remove Selection" : roomIsAvailable ? "Select Room" : "Unavailable"}
-          </Button>
-        ) : (
-          <div className="flex w-full gap-2">
-            <Button 
-              onClick={() => onEdit(room)}
-              variant="outline"
-              className="flex-1"
-            >
-              <Pencil className="mr-2 h-4 w-4" /> Edit
-            </Button>
-            <Button 
-              onClick={() => onDelete(room.id)}
-              variant="destructive"
-              className="flex-1"
-            >
-              <TrashIcon className="mr-2 h-4 w-4" /> Delete
-            </Button>
-          </div>
-        )}
-      </CardFooter>
     </Card>
   );
 };

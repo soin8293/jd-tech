@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useInputSanitization } from '@/hooks/useInputSanitization';
+// Removed useInputSanitization dependency
 import { z } from 'zod';
 
 interface ValidatedTextareaProps {
@@ -29,7 +29,7 @@ export const ValidatedTextarea: React.FC<ValidatedTextareaProps> = ({
 }) => {
   const [error, setError] = useState<string>('');
   const [touched, setTouched] = useState(false);
-  const { sanitizeString, sanitizeHtml } = useInputSanitization();
+  // Simplified validation without sanitization
 
   const validateInput = (inputValue: string) => {
     try {
@@ -47,10 +47,8 @@ export const ValidatedTextarea: React.FC<ValidatedTextareaProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     
-    // Sanitize input
-    const processedValue = allowHtml 
-      ? sanitizeHtml(newValue, name)
-      : sanitizeString(newValue, name);
+    // Basic cleaning without complex sanitization
+    const processedValue = newValue.trim();
 
     onChange(name, processedValue);
     

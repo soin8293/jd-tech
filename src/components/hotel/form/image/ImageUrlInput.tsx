@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Plus } from 'lucide-react';
 import { validationSchemas } from '@/utils/inputValidation';
-import { useInputSanitization } from '@/hooks/useInputSanitization';
+// Removed useInputSanitization dependency
 
 interface ImageUrlInputProps {
   onAddImage: (imageUrl: string) => void;
@@ -20,16 +20,16 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
 }) => {
   const [newImageUrl, setNewImageUrl] = useState('');
   const [error, setError] = useState('');
-  const { sanitizeString } = useInputSanitization();
+  // Simplified without sanitization
 
   const handleAddUrl = () => {
     if (!newImageUrl.trim()) return;
 
     try {
-      const sanitizedUrl = sanitizeString(newImageUrl.trim(), 'imageUrl');
-      validationSchemas.imageUrl.parse(sanitizedUrl);
+      const cleanUrl = newImageUrl.trim();
+      validationSchemas.imageUrl.parse(cleanUrl);
       
-      if (images.includes(sanitizedUrl)) {
+      if (images.includes(cleanUrl)) {
         setError('Image URL already exists');
         return;
       }
@@ -39,7 +39,7 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
         return;
       }
 
-      onAddImage(sanitizedUrl);
+      onAddImage(cleanUrl);
       setNewImageUrl('');
       setError('');
     } catch (err: any) {

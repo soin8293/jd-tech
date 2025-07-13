@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useInputSanitization } from '@/hooks/useInputSanitization';
+// Removed useInputSanitization dependency
 import { z } from 'zod';
 
 interface ValidatedInputProps {
@@ -31,7 +31,7 @@ export const ValidatedInput: React.FC<ValidatedInputProps> = ({
 }) => {
   const [error, setError] = useState<string>('');
   const [touched, setTouched] = useState(false);
-  const { sanitizeString } = useInputSanitization();
+  // Simplified validation without sanitization
 
   const validateInput = (inputValue: string | number) => {
     try {
@@ -49,9 +49,9 @@ export const ValidatedInput: React.FC<ValidatedInputProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value;
     
-    // Sanitize string inputs
+    // Basic cleaning without complex sanitization
     const processedValue = sanitize && typeof newValue === 'string' 
-      ? sanitizeString(newValue, name)
+      ? newValue.trim()
       : newValue;
 
     onChange(name, processedValue);

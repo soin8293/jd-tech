@@ -58,17 +58,52 @@ const getUserBookingsHandler = async (request: any) => {
     });
 
     logger.info("User bookings retrieved successfully", {
-      bookingCount: bookings.length
+      bookingCount: bookings.length,
+      isEmpty: bookings.length === 0
     });
 
     return {
       success: true,
       bookings,
-      count: bookings.length
+      count: bookings.length,
+      isEmpty: bookings.length === 0,
+      message: bookings.length === 0 ? "No bookings found for this user" : `Found ${bookings.length} bookings`
     };
 
   } catch (error: any) {
     logger.error("Error retrieving user bookings", error);
+    
+    // Categorize errors for better frontend handling
+    let errorType = 'unknown';
+    let userMessage = 'Failed to retrieve bookings';
+    
+    if (error instanceof HttpsError) {
+      errorType = error.code;
+      userMessage = error.message;
+    } else if (error.code === 'permission-denied') {
+      errorType = 'auth_error';
+      userMessage = 'Authentication failed. Please try logging in again.';
+    } else if (error.code === 'unavailable' || error.message?.includes('network')) {
+      errorType = 'network_error';
+      userMessage = 'Network error. Please check your connection and try again.';
+    } else if (error.code === 'invalid-argument') {
+      errorType = 'validation_error';
+      userMessage = 'Invalid request parameters.';
+    }
+    
+    const errorResponse = {
+      success: false,
+      error: userMessage,
+      errorType,
+      bookings: [],
+      count: 0,
+      isEmpty: true,
+      details: {
+        originalError: error.message,
+        code: error.code || 'unknown',
+        timestamp: new Date().toISOString()
+      }
+    };
     
     if (error instanceof HttpsError) {
       throw error;
@@ -76,13 +111,10 @@ const getUserBookingsHandler = async (request: any) => {
     
     throw new HttpsError(
       'internal',
-      'Failed to retrieve bookings',
+      userMessage,
       {
-        type: 'booking_retrieval_error',
-        details: {
-          message: error.message,
-          code: error.code || 'unknown'
-        }
+        type: errorType,
+        details: errorResponse.details
       }
     );
   }

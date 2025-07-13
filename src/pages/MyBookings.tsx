@@ -9,7 +9,7 @@ import { Navigate, Link } from "react-router-dom";
 import { Loader2, Calendar, Users, DollarSign, MapPin, Building2 } from "lucide-react";
 
 const MyBookings = () => {
-  const { bookings, loading, error } = useUserBookings();
+  const { bookings, loading, error, errorType, refreshBookings } = useUserBookings();
   const { currentUser } = useAuth();
 
   if (!currentUser) {
@@ -29,14 +29,40 @@ const MyBookings = () => {
         <Card>
           <CardContent className="py-8">
             <div className="text-center">
-              <p className="text-destructive text-lg mb-4">{error}</p>
-              <Button 
-                onClick={() => window.location.reload()} 
-                variant="outline"
-                className="mt-2"
-              >
-                Try Again
-              </Button>
+              <div className="mx-auto w-16 h-16 mb-6 rounded-full bg-destructive/10 flex items-center justify-center">
+                {errorType === "network_error" ? (
+                  <MapPin className="h-8 w-8 text-destructive" />
+                ) : (
+                  <Calendar className="h-8 w-8 text-destructive" />
+                )}
+              </div>
+              <h3 className="text-xl font-semibold mb-3">
+                {errorType === "network_error" 
+                  ? "Connection Problem" 
+                  : errorType === "auth_error"
+                  ? "Authentication Issue"
+                  : "Unable to Load Bookings"
+                }
+              </h3>
+              <p className="text-destructive text-base mb-6">{error}</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button 
+                  onClick={refreshBookings} 
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Try Again
+                </Button>
+                {errorType === "network_error" && (
+                  <Button 
+                    onClick={() => window.location.reload()} 
+                    variant="outline"
+                  >
+                    Reload Page
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

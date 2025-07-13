@@ -189,7 +189,7 @@ const checkInBookingHandler = async (request: any) => {
     paymentDetails,
     specialRequests: bookingData.specialRequests || "",
     cashAmount: paymentMethod === "cash" ? cashAmount : null,
-    change: paymentMethod === "cash" ? (cashAmount - bookingData.totalCost) : null,
+    change: paymentMethod === "cash" ? (cashAmount ? cashAmount - bookingData.totalCost : 0) : null,
     receiptTimestamp: new Date().toISOString(),
     generatedBy: user.uid,
     generatedByName: user.email || "Admin",

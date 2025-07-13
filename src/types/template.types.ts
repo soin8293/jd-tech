@@ -77,3 +77,6 @@ export interface BulkTemplateOperation {
   templateIds: string[];
   data: any;
 }
+
+// Alias for backward compatibility
+export type TemplateCategory = RoomCategory;

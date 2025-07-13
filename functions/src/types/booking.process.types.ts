@@ -1,5 +1,5 @@
 
-import { BookingPeriod, Room } from "../types/booking.types";
+import { Room } from "../types/booking.types";
 
 // Define our own BookingData type since it's not exported from booking.types
 export interface BookingData {

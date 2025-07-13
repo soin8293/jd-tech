@@ -1,29 +1,52 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { RoomTemplate } from '@/types/template.types';
 
-// Simple placeholder for template functionality
 export const useTemplates = () => {
-  const [templates, setTemplates] = useState([]);
+  const [templates, setTemplates] = useState<RoomTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const createTemplate = useCallback(async (templateData: any) => {
+  const fetchTemplates = useCallback(async () => {
     setIsLoading(true);
     try {
-      // TODO: Implement template creation
-      console.log('Creating template:', templateData);
-    } catch (error) {
-      console.error('Error creating template:', error);
+      // For now, return empty array - can be enhanced with Firestore later
+      setTemplates([]);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch templates');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const updateTemplate = useCallback(async (id: string, templateData: any) => {
+  const createTemplate = useCallback(async (templateData: Omit<RoomTemplate, 'id'>) => {
     setIsLoading(true);
     try {
-      // TODO: Implement template update
-      console.log('Updating template:', id, templateData);
+      const newTemplate: RoomTemplate = {
+        ...templateData,
+        id: `template-${Date.now()}`,
+      };
+      setTemplates(prev => [...prev, newTemplate]);
+      return newTemplate;
     } catch (error) {
-      console.error('Error updating template:', error);
+      setError('Failed to create template');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const updateTemplate = useCallback(async (id: string, templateData: Partial<RoomTemplate>) => {
+    setIsLoading(true);
+    try {
+      setTemplates(prev => 
+        prev.map(template => 
+          template.id === id ? { ...template, ...templateData } : template
+        )
+      );
+    } catch (error) {
+      setError('Failed to update template');
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -32,18 +55,24 @@ export const useTemplates = () => {
   const deleteTemplate = useCallback(async (id: string) => {
     setIsLoading(true);
     try {
-      // TODO: Implement template deletion
-      console.log('Deleting template:', id);
+      setTemplates(prev => prev.filter(template => template.id !== id));
     } catch (error) {
-      console.error('Error deleting template:', error);
+      setError('Failed to delete template');
+      throw error;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
+
   return {
     templates,
     isLoading,
+    error,
+    fetchTemplates,
     createTemplate,
     updateTemplate,
     deleteTemplate

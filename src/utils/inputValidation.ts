@@ -1,17 +1,46 @@
 
 import { z } from 'zod';
-import DOMPurify from 'dompurify';
+
+// Browser-safe DOMPurify handling
+const getDOMPurify = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      return require('dompurify');
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
+// Fallback sanitization function
+const fallbackSanitize = (input: string): string => {
+  return input
+    .replace(/[<>]/g, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+=/gi, '')
+    .trim();
+};
 
 // Sanitization utilities
 export const sanitizeString = (input: string): string => {
-  return DOMPurify.sanitize(input, { ALLOWED_TAGS: [] });
+  const DOMPurify = getDOMPurify();
+  if (DOMPurify) {
+    return DOMPurify.sanitize(input, { ALLOWED_TAGS: [] });
+  }
+  return fallbackSanitize(input);
 };
 
 export const sanitizeHtml = (input: string): string => {
-  return DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li'],
-    ALLOWED_ATTR: []
-  });
+  const DOMPurify = getDOMPurify();
+  if (DOMPurify) {
+    return DOMPurify.sanitize(input, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li'],
+      ALLOWED_ATTR: []
+    });
+  }
+  return fallbackSanitize(input);
 };
 
 // Common validation schemas

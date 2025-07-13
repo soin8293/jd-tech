@@ -8,6 +8,8 @@ import PaginatedRoomList from "@/components/hotel/PaginatedRoomList";
 import FloatingBookButton from "@/components/hotel/FloatingBookButton";
 import LazyPaymentModal from "@/components/lazy/LazyPaymentModal";
 import PerformanceMonitor from "@/components/performance/PerformanceMonitor";
+import FirebaseStatusBanner from "@/components/auth/FirebaseStatusBanner";
+import { auth } from "@/lib/firebase";
 
 const HotelBookingContent: React.FC = () => {
   const isMobile = useIsMobile();
@@ -35,6 +37,9 @@ const HotelBookingContent: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 md:px-6 relative z-10 mt-16 pb-20">
+      {/* Firebase Status Warning */}
+      <FirebaseStatusBanner show={!auth} />
+      
       {/* Performance Monitor - only show for admin */}
       {currentUser?.email === "amirahcolorado@gmail.com" && <PerformanceMonitor />}
       

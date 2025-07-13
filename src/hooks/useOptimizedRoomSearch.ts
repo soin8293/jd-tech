@@ -3,7 +3,17 @@ import { useToast } from "@/hooks/use-toast";
 import { BookingPeriod, Room, RoomAvailabilityCheck } from "@/types/hotel.types";
 import { checkRoomAvailability } from "@/utils/availabilityUtils";
 import { fetchRoomData } from "@/utils/roomDataOperations";
-import { debounce } from "lodash-es";
+// Native debounce implementation
+const debounce = <T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): ((...args: Parameters<T>) => void) => {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
 
 interface SearchFilters {
   minPrice?: number;

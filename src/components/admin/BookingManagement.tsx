@@ -36,7 +36,7 @@ interface Room {
   status: string;
 }
 
-export const BookingManagement: React.FC = () => {
+const BookingManagement: React.FC = () => {
   const { currentUser } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -347,3 +347,5 @@ export const BookingManagement: React.FC = () => {
     </div>
   );
 };
+
+export default BookingManagement;

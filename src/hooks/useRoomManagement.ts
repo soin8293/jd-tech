@@ -3,6 +3,7 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { Room } from "@/types/hotel.types";
 import { fetchRoomData } from "@/utils/roomDataOperations";
 import { useSimpleRoomMutations } from "./useSimpleRoomMutations";
+import { getRooms } from "@/services/room/roomQueries";
 
 export const useRoomManagement = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -16,9 +17,6 @@ export const useRoomManagement = () => {
   const fetchRooms = useCallback(async () => {
     setLoading(true);
     try {
-      // REMOVED: Local data fallback - now uses direct room fetching
-      // This will properly throw errors for permission issues
-      const { getRooms } = await import("@/services/room/roomQueries");
       const fetchedRooms = await getRooms();
       setRooms(fetchedRooms);
       setError(null);

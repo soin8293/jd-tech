@@ -19,7 +19,7 @@ import { getRooms } from "@/services/room/roomQueries";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { TemplateManager } from "@/components/template/TemplateManager";
 import { SystemHealthMonitor } from "@/components/monitoring/SystemHealthMonitor";
-import { BookingManagement } from "@/components/admin/BookingManagement";
+import BookingManagement from "@/components/admin/BookingManagement";
 
 const RoomManagement = () => {
   const { rooms, loading, error, fetchRooms, handleSaveRooms, handleDeleteRoom } = useRoomManagement();

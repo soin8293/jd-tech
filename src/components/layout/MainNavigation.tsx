@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Home, Building2, Calendar } from "lucide-react";
+import { Home, Building2 } from "lucide-react";
 import { NavigationLink, AdminNavigationLink } from "./navigation";
 
 const MainNavigation = () => {
@@ -17,11 +17,6 @@ const MainNavigation = () => {
         to="/hotel" 
         icon={Building2} 
         label="Rooms" 
-      />
-      <NavigationLink 
-        to="/booking" 
-        icon={Calendar} 
-        label="Book Now" 
       />
       <AdminNavigationLink />
     </nav>

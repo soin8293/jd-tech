@@ -1,12 +1,13 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useOptimizedHotelBooking } from "@/hooks/useOptimizedHotelBooking";
 import BookingForm from "@/components/hotel/BookingForm";
 import InitializeAdmin from "@/components/admin/InitializeAdmin";
-import RoomList from "@/components/hotel/RoomList";
+import PaginatedRoomList from "@/components/hotel/PaginatedRoomList";
 import FloatingBookButton from "@/components/hotel/FloatingBookButton";
-import PaymentModal from "@/components/payment/PaymentModal";
-import { useHotelBooking } from "@/hooks/useHotelBooking";
+import LazyPaymentModal from "@/components/lazy/LazyPaymentModal";
+import PerformanceMonitor from "@/components/performance/PerformanceMonitor";
 
 const HotelBookingContent: React.FC = () => {
   const isMobile = useIsMobile();
@@ -20,16 +21,23 @@ const HotelBookingContent: React.FC = () => {
     bookingDetails,
     isLoading,
     usingLocalData,
+    currentPage,
+    totalPages,
+    totalResults,
+    setCurrentPage,
     currentUser,
     handleSearchRooms,
     handleSelectRoom,
     handleBookNow,
     handlePaymentComplete,
     setPaymentModalOpen
-  } = useHotelBooking();
+  } = useOptimizedHotelBooking();
 
   return (
     <div className="container mx-auto px-4 md:px-6 relative z-10 mt-16 pb-20">
+      {/* Performance Monitor - only show for admin */}
+      {currentUser?.email === "amirahcolorado@gmail.com" && <PerformanceMonitor />}
+      
       <div className="flex justify-between items-center">
         <BookingForm 
           onSearch={handleSearchRooms} 
@@ -65,16 +73,17 @@ const HotelBookingContent: React.FC = () => {
       
       {hasSearched && (
         <div className="mt-6">
-          <RoomList 
+          <PaginatedRoomList 
             rooms={availableRooms}
             selectedRooms={selectedRooms}
             onSelectRoom={handleSelectRoom}
             bookingPeriod={bookingPeriod}
             roomAvailability={roomAvailability}
-            onBookNow={handleBookNow}
-            context="booking"
-            showEditButtons={false}
             isLoading={isLoading}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalResults={totalResults}
+            onPageChange={setCurrentPage}
           />
         </div>
       )}
@@ -85,7 +94,7 @@ const HotelBookingContent: React.FC = () => {
       />
 
       {bookingDetails && (
-        <PaymentModal
+        <LazyPaymentModal
           isOpen={isPaymentModalOpen}
           onClose={() => setPaymentModalOpen(false)}
           bookingDetails={bookingDetails}

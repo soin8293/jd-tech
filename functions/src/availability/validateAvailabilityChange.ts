@@ -23,7 +23,7 @@ interface ValidationResult {
 }
 
 export const validateAvailabilityChange = onCall<ValidateAvailabilityRequest, ValidationResult>(
-  async (request): Promise<ValidationResult> => {
+  async (request) => {
     logger.setContext({ function: "validateAvailabilityChange" });
     logger.info("Function validateAvailabilityChange started");
 

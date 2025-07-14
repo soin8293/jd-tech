@@ -7,6 +7,7 @@ export interface Room {
   capacity: number;
   size: number; // in sqft
   bed: string;
+  bedType?: string; // Alternative field name for compatibility
   amenities: string[];
   images: string[];
   availability: boolean;
@@ -26,6 +27,7 @@ export interface RoomFormData {
   capacity: number;
   size: number;
   bed: string;
+  bedType?: string; // Alternative field name for compatibility
   amenities: string[];
   images: string[];
   availability: boolean;

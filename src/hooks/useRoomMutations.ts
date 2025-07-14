@@ -1,178 +1,67 @@
+import { useState } from 'react';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { Room } from '@/types/hotel.types';
 
-import { useState, useCallback } from "react";
-import { Room } from "@/types/hotel.types";
-import { transactionManager } from "@/utils/transactionManager";
-import { useOptimisticUpdates } from "./useOptimisticUpdates";
-import { useOfflineQueue } from "./useOfflineQueue";
-import { toast } from "@/hooks/use-toast";
-import { logger } from "@/utils/logger";
+export const useRoomMutations = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-export const useRoomMutations = (
-  initialRooms: Room[],
-  setRooms: (rooms: Room[]) => void
-) => {
-  const [loading, setLoading] = useState(false);
-  
-  const {
-    data: optimisticRooms,
-    executeOptimistic,
-    hasPendingOperations,
-    isProcessing,
-    getOperationStatus
-  } = useOptimisticUpdates(initialRooms);
+  const updateRoomDetails = httpsCallable(functions, 'updateRoomDetails');
+  const deleteRoomSecure = httpsCallable(functions, 'deleteRoomSecure');
 
-  const {
-    isOnline,
-    queueOperation,
-    queueSize,
-    isProcessingQueue
-  } = useOfflineQueue();
-
-  // Sync optimistic data with parent state
-  const syncWithParent = useCallback(() => {
-    setRooms(optimisticRooms);
-  }, [optimisticRooms, setRooms]);
-
-  // Handle save rooms with atomic transactions and optimistic updates
-  const handleSaveRooms = useCallback(async (rooms: Room[]) => {
-    logger.info('Starting room save operation', { 
-      roomCount: rooms.length,
-      isOnline,
-      hasPendingOperations 
-    });
-
+  const updateRoom = async (roomId: string, roomData: Partial<Room>, imagesToDelete: string[] = []) => {
+    setIsLoading(true);
     try {
-      setLoading(true);
-
-      if (!isOnline) {
-        // Queue operation for offline processing
-        await queueOperation({
-          type: 'save',
-          data: rooms,
-          maxRetries: 3
-        });
-        
-        // Update local state immediately for better UX
-        setRooms(rooms);
-        return;
-      }
-
-      // Create optimistic operations for each room
-      const operations = rooms.map(room => ({
-        id: `save_${room.id}_${Date.now()}`,
-        type: 'update' as const,
-        optimisticData: { ...room, updatedAt: new Date() },
-        rollbackData: initialRooms.find(r => r.id === room.id),
-        operation: () => transactionManager.saveRoomAtomically(room)
-      }));
-
-      // Execute all optimistic operations
-      await Promise.all(operations.map(op => executeOptimistic(op)));
-
-      // Sync with parent component
-      syncWithParent();
-
+      const result = await updateRoomDetails({ roomId, roomData, imagesToDelete });
+      
       toast({
-        title: "Rooms Saved",
-        description: `Successfully saved ${rooms.length} room(s)`,
+        title: "Success",
+        description: "Room updated successfully",
       });
-
+      
+      return result.data;
     } catch (error: any) {
-      logger.error('Room save operation failed', error);
+      console.error('Failed to update room:', error);
       toast({
-        title: "Save Failed",
-        description: error.message || "Failed to save rooms",
+        title: "Error",
+        description: error.message || "Failed to update room",
         variant: "destructive",
       });
+      throw error;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  }, [
-    isOnline,
-    queueOperation,
-    executeOptimistic,
-    initialRooms,
-    setRooms,
-    syncWithParent
-  ]);
+  };
 
-  // Handle delete room with conflict checking
-  const handleDeleteRoom = useCallback(async (roomId: string) => {
-    logger.info('Starting room deletion', { roomId, isOnline });
-
+  const deleteRoom = async (roomId: string) => {
+    setIsLoading(true);
     try {
-      setLoading(true);
-      const roomToDelete = optimisticRooms.find(r => r.id === roomId);
+      const result = await deleteRoomSecure({ roomId });
       
-      if (!roomToDelete) {
-        throw new Error('Room not found');
-      }
-
-      if (!isOnline) {
-        // Queue operation for offline processing
-        await queueOperation({
-          type: 'delete',
-          data: roomId,
-          maxRetries: 3
-        });
-        
-        // Update local state immediately
-        setRooms(optimisticRooms.filter(r => r.id !== roomId));
-        return;
-      }
-
-      // Create optimistic delete operation
-      const operation = {
-        id: `delete_${roomId}_${Date.now()}`,
-        type: 'delete' as const,
-        optimisticData: roomToDelete,
-        rollbackData: roomToDelete,
-        operation: () => transactionManager.deleteRoomAtomically(roomId)
-      };
-
-      await executeOptimistic(operation);
-      syncWithParent();
-
       toast({
-        title: "Room Deleted",
-        description: `Room "${roomToDelete.name}" has been deleted`,
+        title: "Success",
+        description: "Room deleted successfully",
       });
-
+      
+      return result.data;
     } catch (error: any) {
-      logger.error('Room deletion failed', error);
+      console.error('Failed to delete room:', error);
       toast({
-        title: "Delete Failed",
+        title: "Error",
         description: error.message || "Failed to delete room",
         variant: "destructive",
       });
+      throw error;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  }, [
-    isOnline,
-    queueOperation,
-    executeOptimistic,
-    optimisticRooms,
-    setRooms,
-    syncWithParent
-  ]);
-
-  // Check if a specific room operation is pending
-  const isRoomPending = useCallback((roomId: string) => {
-    const status = getOperationStatus(roomId);
-    return !!status?.isPending;
-  }, [getOperationStatus]);
+  };
 
   return {
-    loading: loading || isProcessing || isProcessingQueue,
-    handleSaveRooms,
-    handleDeleteRoom,
-    isRoomPending,
-    connectionStatus: {
-      isOnline,
-      hasPendingOperations,
-      queueSize,
-      isProcessingQueue
-    }
+    updateRoom,
+    deleteRoom,
+    isLoading
   };
 };

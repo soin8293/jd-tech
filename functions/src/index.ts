@@ -19,6 +19,10 @@ import { updateAvailability } from "./availability/updateAvailability";
 import { getAvailabilityCalendar } from "./availability/getAvailabilityCalendar";
 import { validateAvailabilityChange } from "./availability/validateAvailabilityChange";
 import { getBulkAvailability } from "./availability/getBulkAvailability";
+import { updateRoomDetails } from "./rooms/updateRoomDetails";
+import { deleteRoomSecure } from "./rooms/deleteRoomSecure";
+import { cancelBooking } from "./booking/cancelBooking";
+import { createManualBooking } from "./booking/createManualBooking";
 
 export { 
   sanityCheck,
@@ -39,5 +43,9 @@ export {
   updateAvailability,
   getAvailabilityCalendar,
   validateAvailabilityChange,
-  getBulkAvailability
+  getBulkAvailability,
+  updateRoomDetails,
+  deleteRoomSecure,
+  cancelBooking,
+  createManualBooking
 };

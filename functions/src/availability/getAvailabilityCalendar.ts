@@ -21,7 +21,7 @@ interface AvailabilityCalendarResponse {
 }
 
 export const getAvailabilityCalendar = onCall(
-  async (request) => {
+  async (request: { auth?: any; data: GetAvailabilityRequest }) => {
     logger.setContext({ function: "getAvailabilityCalendar" });
     logger.info("Function getAvailabilityCalendar started");
 

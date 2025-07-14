@@ -23,7 +23,7 @@ interface ValidationResult {
 }
 
 export const validateAvailabilityChange = onCall(
-  async (request) => {
+  async (request: { auth?: any; data: ValidateAvailabilityRequest }) => {
     logger.setContext({ function: "validateAvailabilityChange" });
     logger.info("Function validateAvailabilityChange started");
 

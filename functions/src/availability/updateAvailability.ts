@@ -19,7 +19,7 @@ interface UpdateAvailabilityResponse {
 }
 
 export const updateAvailability = onCall(
-  async (request) => {
+  async (request: { auth?: any; data: UpdateAvailabilityRequest }) => {
     logger.setContext({ function: "updateAvailability" });
     logger.info("Function updateAvailability started");
 

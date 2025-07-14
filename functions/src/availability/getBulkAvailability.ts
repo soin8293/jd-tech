@@ -28,7 +28,7 @@ interface BulkAvailabilityResponse {
 }
 
 export const getBulkAvailability = onCall(
-  async (request: { auth?: any; data: GetBulkAvailabilityRequest }) => {
+  async (request: { auth?: any; data: GetBulkAvailabilityRequest }): Promise<BulkAvailabilityResponse> => {
     logger.setContext({ function: "getBulkAvailability" });
     logger.info("Function getBulkAvailability started");
 

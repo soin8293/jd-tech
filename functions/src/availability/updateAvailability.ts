@@ -1,7 +1,6 @@
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { logger } from "../utils/logger";
-import { asyncHandler } from "../utils/asyncHandler";
 
 interface UpdateAvailabilityRequest {
   roomId: string;
@@ -20,35 +19,38 @@ interface UpdateAvailabilityResponse {
 }
 
 export const updateAvailability = onCall<UpdateAvailabilityRequest, UpdateAvailabilityResponse>(
-  asyncHandler(async (request): Promise<UpdateAvailabilityResponse> => {
-    const { auth, data } = request;
-    
-    // Security: Verify admin status
-    if (!auth?.token?.admin) {
-      throw new Error("Unauthorized: Admin access required");
-    }
+  async (request): Promise<UpdateAvailabilityResponse> => {
+    logger.setContext({ function: "updateAvailability" });
+    logger.info("Function updateAvailability started");
 
-    const { roomId, dates, status, reason } = data;
-    
-    if (!roomId || !dates || !status) {
-      throw new Error("Missing required fields: roomId, dates, and status");
-    }
-
-    if (!Array.isArray(dates) || dates.length === 0) {
-      throw new Error("Dates must be a non-empty array");
-    }
-
-    const db = getFirestore();
-    const conflicts: Array<{ date: string; reason: string }> = [];
-    
     try {
+      const { auth, data } = request;
+      
+      // Security: Verify admin status
+      if (!auth?.token?.admin) {
+        throw new HttpsError("permission-denied", "Unauthorized: Admin access required");
+      }
+
+      const { roomId, dates, status, reason } = data;
+      
+      if (!roomId || !dates || !status) {
+        throw new HttpsError("invalid-argument", "Missing required fields: roomId, dates, and status");
+      }
+
+      if (!Array.isArray(dates) || dates.length === 0) {
+        throw new HttpsError("invalid-argument", "Dates must be a non-empty array");
+      }
+
+      const db = getFirestore();
+      const conflicts: Array<{ date: string; reason: string }> = [];
+      
       // Group dates by year for efficient processing
       const datesByYear = new Map<string, string[]>();
       
       dates.forEach(dateStr => {
         const [year, month, day] = dateStr.split('-');
         if (!year || !month || !day) {
-          throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
+          throw new HttpsError("invalid-argument", `Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
         }
         
         const yearKey = year;
@@ -94,7 +96,7 @@ export const updateAvailability = onCall<UpdateAvailabilityRequest, UpdateAvaila
           // If there are conflicts with booked dates, abort transaction
           const bookingConflicts = conflicts.filter(c => c.reason.includes('booked'));
           if (bookingConflicts.length > 0) {
-            throw new Error(`Cannot modify dates that are already booked: ${bookingConflicts.map(c => c.date).join(', ')}`);
+            throw new HttpsError("failed-precondition", `Cannot modify dates that are already booked: ${bookingConflicts.map(c => c.date).join(', ')}`);
           }
           
           // Apply updates
@@ -132,6 +134,8 @@ export const updateAvailability = onCall<UpdateAvailabilityRequest, UpdateAvaila
         conflicts: conflicts.length
       });
 
+      logger.info("Function updateAvailability completed successfully");
+
       return {
         success: true,
         conflicts: conflicts.length > 0 ? conflicts : undefined,
@@ -140,9 +144,26 @@ export const updateAvailability = onCall<UpdateAvailabilityRequest, UpdateAvaila
           : `Successfully updated ${dates.length} dates`
       };
       
-    } catch (error) {
-      logger.error(`Failed to update availability for room ${roomId}`, error);
-      throw new Error(`Failed to update availability: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: any) {
+      logger.error("Function updateAvailability failed", error);
+      
+      // If it's already an HttpsError, re-throw it
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      
+      // Convert generic errors to HttpsError
+      throw new HttpsError(
+        'internal',
+        error.message || 'updateAvailability failed',
+        { 
+          type: 'internal_error', 
+          originalError: error.message,
+          functionName: 'updateAvailability'
+        }
+      );
+    } finally {
+      logger.clearContext();
     }
-  }, "updateAvailability")
+  }
 );

@@ -1,7 +1,6 @@
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "../utils/logger";
-import { asyncHandler } from "../utils/asyncHandler";
 
 interface GetBulkAvailabilityRequest {
   roomIds: string[];
@@ -29,49 +28,52 @@ interface BulkAvailabilityResponse {
 }
 
 export const getBulkAvailability = onCall<GetBulkAvailabilityRequest, BulkAvailabilityResponse>(
-  asyncHandler(async (request): Promise<BulkAvailabilityResponse> => {
-    const { auth, data } = request;
-    
-    // Require authentication
-    if (!auth) {
-      throw new Error("Authentication required");
-    }
+  async (request): Promise<BulkAvailabilityResponse> => {
+    logger.setContext({ function: "getBulkAvailability" });
+    logger.info("Function getBulkAvailability started");
 
-    const { roomIds, startDate, endDate, includeBookings = false } = data;
-    
-    if (!roomIds || !Array.isArray(roomIds) || roomIds.length === 0) {
-      throw new Error("roomIds must be a non-empty array");
-    }
-
-    if (!startDate || !endDate) {
-      throw new Error("startDate and endDate are required");
-    }
-
-    // Validate date format and range
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      throw new Error("Invalid date format. Use YYYY-MM-DD");
-    }
-
-    if (start >= end) {
-      throw new Error("startDate must be before endDate");
-    }
-
-    // Limit to reasonable ranges (max 1 year)
-    const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysDiff > 365) {
-      throw new Error("Date range cannot exceed 365 days");
-    }
-
-    if (roomIds.length > 20) {
-      throw new Error("Cannot query more than 20 rooms at once");
-    }
-
-    const db = getFirestore();
-    
     try {
+      const { auth, data } = request;
+      
+      // Require authentication
+      if (!auth) {
+        throw new HttpsError("unauthenticated", "Authentication required");
+      }
+
+      const { roomIds, startDate, endDate, includeBookings = false } = data;
+      
+      if (!roomIds || !Array.isArray(roomIds) || roomIds.length === 0) {
+        throw new HttpsError("invalid-argument", "roomIds must be a non-empty array");
+      }
+
+      if (!startDate || !endDate) {
+        throw new HttpsError("invalid-argument", "startDate and endDate are required");
+      }
+
+      // Validate date format and range
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        throw new HttpsError("invalid-argument", "Invalid date format. Use YYYY-MM-DD");
+      }
+
+      if (start >= end) {
+        throw new HttpsError("invalid-argument", "startDate must be before endDate");
+      }
+
+      // Limit to reasonable ranges (max 1 year)
+      const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysDiff > 365) {
+        throw new HttpsError("invalid-argument", "Date range cannot exceed 365 days");
+      }
+
+      if (roomIds.length > 20) {
+        throw new HttpsError("invalid-argument", "Cannot query more than 20 rooms at once");
+      }
+
+      const db = getFirestore();
+      
       const results: BulkAvailabilityResponse['rooms'] = [];
       
       // Process each room
@@ -195,6 +197,8 @@ export const getBulkAvailability = onCall<GetBulkAvailabilityRequest, BulkAvaila
         totalDays: daysDiff
       });
 
+      logger.info("Function getBulkAvailability completed successfully");
+
       return {
         dateRange: {
           start: startDate,
@@ -203,9 +207,26 @@ export const getBulkAvailability = onCall<GetBulkAvailabilityRequest, BulkAvaila
         rooms: results
       };
       
-    } catch (error) {
-      logger.error(`Failed to get bulk availability`, error);
-      throw new Error(`Failed to retrieve bulk availability: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: any) {
+      logger.error("Function getBulkAvailability failed", error);
+      
+      // If it's already an HttpsError, re-throw it
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      
+      // Convert generic errors to HttpsError
+      throw new HttpsError(
+        'internal',
+        error.message || 'getBulkAvailability failed',
+        { 
+          type: 'internal_error', 
+          originalError: error.message,
+          functionName: 'getBulkAvailability'
+        }
+      );
+    } finally {
+      logger.clearContext();
     }
-  }, "getBulkAvailability")
+  }
 );

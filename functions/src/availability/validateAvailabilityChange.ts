@@ -1,7 +1,6 @@
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "../utils/logger";
-import { asyncHandler } from "../utils/asyncHandler";
 
 interface ValidateAvailabilityRequest {
   roomId: string;
@@ -24,36 +23,39 @@ interface ValidationResult {
 }
 
 export const validateAvailabilityChange = onCall<ValidateAvailabilityRequest, ValidationResult>(
-  asyncHandler(async (request): Promise<ValidationResult> => {
-    const { auth, data } = request;
-    
-    // Require admin authentication
-    if (!auth?.token?.admin) {
-      throw new Error("Unauthorized: Admin access required");
-    }
+  async (request): Promise<ValidationResult> => {
+    logger.setContext({ function: "validateAvailabilityChange" });
+    logger.info("Function validateAvailabilityChange started");
 
-    const { roomId, dates, operation } = data;
-    
-    if (!roomId || !dates || !operation) {
-      throw new Error("Missing required fields: roomId, dates, and operation");
-    }
-
-    if (!Array.isArray(dates) || dates.length === 0) {
-      throw new Error("Dates must be a non-empty array");
-    }
-
-    const db = getFirestore();
-    const conflicts: ValidationResult['conflicts'] = [];
-    const warnings: ValidationResult['warnings'] = [];
-    
     try {
+      const { auth, data } = request;
+      
+      // Require admin authentication
+      if (!auth?.token?.admin) {
+        throw new HttpsError("permission-denied", "Unauthorized: Admin access required");
+      }
+
+      const { roomId, dates, operation } = data;
+      
+      if (!roomId || !dates || !operation) {
+        throw new HttpsError("invalid-argument", "Missing required fields: roomId, dates, and operation");
+      }
+
+      if (!Array.isArray(dates) || dates.length === 0) {
+        throw new HttpsError("invalid-argument", "Dates must be a non-empty array");
+      }
+
+      const db = getFirestore();
+      const conflicts: ValidationResult['conflicts'] = [];
+      const warnings: ValidationResult['warnings'] = [];
+      
       // Group dates by year for efficient processing
       const datesByYear = new Map<string, string[]>();
       
       dates.forEach(dateStr => {
         const [year, month, day] = dateStr.split('-');
         if (!year || !month || !day) {
-          throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
+          throw new HttpsError("invalid-argument", `Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
         }
         
         const yearKey = year;
@@ -184,15 +186,34 @@ export const validateAvailabilityChange = onCall<ValidateAvailabilityRequest, Va
         warningsCount: warnings.length
       });
 
+      logger.info("Function validateAvailabilityChange completed successfully");
+
       return {
         valid,
         conflicts,
         warnings
       };
       
-    } catch (error) {
-      logger.error(`Failed to validate availability change for room ${roomId}`, error);
-      throw new Error(`Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: any) {
+      logger.error("Function validateAvailabilityChange failed", error);
+      
+      // If it's already an HttpsError, re-throw it
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      
+      // Convert generic errors to HttpsError
+      throw new HttpsError(
+        'internal',
+        error.message || 'validateAvailabilityChange failed',
+        { 
+          type: 'internal_error', 
+          originalError: error.message,
+          functionName: 'validateAvailabilityChange'
+        }
+      );
+    } finally {
+      logger.clearContext();
     }
-  }, "validateAvailabilityChange")
+  }
 );

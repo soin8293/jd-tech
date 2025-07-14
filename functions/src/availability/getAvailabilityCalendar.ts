@@ -1,7 +1,6 @@
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "../utils/logger";
-import { asyncHandler } from "../utils/asyncHandler";
 
 interface GetAvailabilityRequest {
   roomId: string;
@@ -22,27 +21,30 @@ interface AvailabilityCalendarResponse {
 }
 
 export const getAvailabilityCalendar = onCall<GetAvailabilityRequest, AvailabilityCalendarResponse>(
-  asyncHandler(async (request): Promise<AvailabilityCalendarResponse> => {
-    const { auth, data } = request;
-    
-    // Require authentication
-    if (!auth) {
-      throw new Error("Authentication required");
-    }
+  async (request): Promise<AvailabilityCalendarResponse> => {
+    logger.setContext({ function: "getAvailabilityCalendar" });
+    logger.info("Function getAvailabilityCalendar started");
 
-    const { roomId, year, includeBookings = false } = data;
-    
-    if (!roomId || !year) {
-      throw new Error("Missing required fields: roomId and year");
-    }
-
-    if (year < 2020 || year > 2030) {
-      throw new Error("Year must be between 2020 and 2030");
-    }
-
-    const db = getFirestore();
-    
     try {
+      const { auth, data } = request;
+      
+      // Require authentication
+      if (!auth) {
+        throw new HttpsError("unauthenticated", "Authentication required");
+      }
+
+      const { roomId, year, includeBookings = false } = data;
+      
+      if (!roomId || !year) {
+        throw new HttpsError("invalid-argument", "Missing required fields: roomId and year");
+      }
+
+      if (year < 2020 || year > 2030) {
+        throw new HttpsError("invalid-argument", "Year must be between 2020 and 2030");
+      }
+
+      const db = getFirestore();
+      
       // Get availability data
       const availabilityRef = db
         .collection('rooms')
@@ -111,6 +113,8 @@ export const getAvailabilityCalendar = onCall<GetAvailabilityRequest, Availabili
         bookingsCount: bookings?.length || 0
       });
 
+      logger.info("Function getAvailabilityCalendar completed successfully");
+      
       return {
         roomId,
         year,
@@ -118,9 +122,26 @@ export const getAvailabilityCalendar = onCall<GetAvailabilityRequest, Availabili
         bookings
       };
       
-    } catch (error) {
-      logger.error(`Failed to get availability calendar for room ${roomId}`, error);
-      throw new Error(`Failed to retrieve calendar: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error: any) {
+      logger.error("Function getAvailabilityCalendar failed", error);
+      
+      // If it's already an HttpsError, re-throw it
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      
+      // Convert generic errors to HttpsError
+      throw new HttpsError(
+        'internal',
+        error.message || 'getAvailabilityCalendar failed',
+        { 
+          type: 'internal_error', 
+          originalError: error.message,
+          functionName: 'getAvailabilityCalendar'
+        }
+      );
+    } finally {
+      logger.clearContext();
     }
-  }, "getAvailabilityCalendar")
+  }
 );

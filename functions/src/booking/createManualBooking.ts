@@ -133,12 +133,14 @@ export const createManualBooking = onCall(async (request) => {
         datesToBook.forEach(dateKey => {
           const fullDate = new Date(`${year}-${dateKey}`);
           if (fullDate >= checkIn && fullDate < checkOut) {
-            availabilityData[dateKey] = {
-              status: "booked",
-              bookingId: bookingId,
-              guestEmail: bookingData.guestEmail,
-              guestName: bookingData.guestName
-            };
+            if (availabilityData) {
+              availabilityData[dateKey] = {
+                status: "booked",
+                bookingId: bookingId,
+                guestEmail: bookingData.guestEmail,
+                guestName: bookingData.guestName
+              };
+            }
           }
         });
 

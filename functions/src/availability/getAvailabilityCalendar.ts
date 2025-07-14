@@ -22,7 +22,7 @@ interface AvailabilityCalendarResponse {
 }
 
 export const getAvailabilityCalendar = onCall<GetAvailabilityRequest, AvailabilityCalendarResponse>(
-  asyncHandler(async (request) => {
+  asyncHandler(async (request): Promise<AvailabilityCalendarResponse> => {
     const { auth, data } = request;
     
     // Require authentication
@@ -122,5 +122,5 @@ export const getAvailabilityCalendar = onCall<GetAvailabilityRequest, Availabili
       logger.error(`Failed to get availability calendar for room ${roomId}`, error);
       throw new Error(`Failed to retrieve calendar: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  })
+  }, "getAvailabilityCalendar")
 );

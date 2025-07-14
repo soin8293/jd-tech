@@ -29,7 +29,7 @@ interface BulkAvailabilityResponse {
 }
 
 export const getBulkAvailability = onCall<GetBulkAvailabilityRequest, BulkAvailabilityResponse>(
-  asyncHandler(async (request) => {
+  asyncHandler(async (request): Promise<BulkAvailabilityResponse> => {
     const { auth, data } = request;
     
     // Require authentication
@@ -207,5 +207,5 @@ export const getBulkAvailability = onCall<GetBulkAvailabilityRequest, BulkAvaila
       logger.error(`Failed to get bulk availability`, error);
       throw new Error(`Failed to retrieve bulk availability: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  })
+  }, "getBulkAvailability")
 );

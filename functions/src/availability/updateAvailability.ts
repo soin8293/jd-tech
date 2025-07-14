@@ -20,7 +20,7 @@ interface UpdateAvailabilityResponse {
 }
 
 export const updateAvailability = onCall<UpdateAvailabilityRequest, UpdateAvailabilityResponse>(
-  asyncHandler(async (request) => {
+  asyncHandler(async (request): Promise<UpdateAvailabilityResponse> => {
     const { auth, data } = request;
     
     // Security: Verify admin status
@@ -144,5 +144,5 @@ export const updateAvailability = onCall<UpdateAvailabilityRequest, UpdateAvaila
       logger.error(`Failed to update availability for room ${roomId}`, error);
       throw new Error(`Failed to update availability: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  })
+  }, "updateAvailability")
 );

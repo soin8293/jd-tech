@@ -24,7 +24,7 @@ interface ValidationResult {
 }
 
 export const validateAvailabilityChange = onCall<ValidateAvailabilityRequest, ValidationResult>(
-  asyncHandler(async (request) => {
+  asyncHandler(async (request): Promise<ValidationResult> => {
     const { auth, data } = request;
     
     // Require admin authentication
@@ -194,5 +194,5 @@ export const validateAvailabilityChange = onCall<ValidateAvailabilityRequest, Va
       logger.error(`Failed to validate availability change for room ${roomId}`, error);
       throw new Error(`Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  })
+  }, "validateAvailabilityChange")
 );

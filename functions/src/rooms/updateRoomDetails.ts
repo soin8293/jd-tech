@@ -55,7 +55,7 @@ export const updateRoomDetails = onCall(async (request) => {
       const updateData = {
         ...roomData,
         updatedAt: new Date(),
-        updatedBy: request.auth.uid
+        updatedBy: request.auth?.uid || "unknown"
       };
 
       transaction.update(roomRef, updateData);

@@ -35,7 +35,7 @@ export const cancelBooking = onCall(async (request) => {
       transaction.update(bookingRef, {
         status: "cancelled",
         cancelledAt: new Date(),
-        cancelledBy: request.auth.uid,
+        cancelledBy: request.auth?.uid || "unknown",
         cancellationReason: reason,
         updatedAt: new Date()
       });
@@ -84,9 +84,9 @@ export const cancelBooking = onCall(async (request) => {
         });
 
         if (availabilityDoc.exists) {
-          transaction.update(availabilityRef, availabilityData);
+          transaction.update(availabilityRef, availabilityData || {});
         } else {
-          transaction.set(availabilityRef, availabilityData);
+          transaction.set(availabilityRef, availabilityData || {});
         }
       }
     });

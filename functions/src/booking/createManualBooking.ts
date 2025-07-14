@@ -113,7 +113,7 @@ export const createManualBooking = onCall(async (request) => {
         status: "confirmed",
         bookingSource: "admin",
         createdAt: new Date(),
-        createdBy: request.auth.uid,
+        createdBy: request.auth?.uid || "unknown",
         updatedAt: new Date()
       };
 
@@ -143,9 +143,9 @@ export const createManualBooking = onCall(async (request) => {
         });
 
         if (availabilityDoc.exists) {
-          transaction.update(availabilityRef, availabilityData);
+          transaction.update(availabilityRef, availabilityData || {});
         } else {
-          transaction.set(availabilityRef, availabilityData);
+          transaction.set(availabilityRef, availabilityData || {});
         }
       }
 

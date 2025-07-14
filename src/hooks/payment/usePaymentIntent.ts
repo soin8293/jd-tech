@@ -30,7 +30,8 @@ export const usePaymentIntent = () => {
         roomCount: params.rooms.length,
         roomIds: params.rooms.map(r => r.id),
         period: params.period,
-        guests: params.guests
+        guests: params.guests,
+        fullParams: params
       });
 
       const createPaymentIntentFn = httpsCallable<CreatePaymentIntentParams, CreatePaymentIntentResponse>(

@@ -42,7 +42,8 @@ export const schemas = {
     rooms: z.array(z.object({
       id: z.string().min(1, "Room ID is required"),
       name: z.string().optional(),
-      price: z.number().positive("Room price must be positive")
+      price: z.number().positive("Room price must be positive"),
+      capacity: z.number().positive().optional()
     })).min(1, "At least one room is required"),
     period: z.object({
       checkIn: z.string().or(z.date()),

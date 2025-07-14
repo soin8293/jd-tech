@@ -7,7 +7,7 @@ import { logger } from "./logger";
 export const asyncHandler = <T extends any[], R>(
   fn: (...args: T) => Promise<R>,
   functionName: string
-): ((...args: T) => Promise<R>) => {
+) => {
   return async (...args: T): Promise<R> => {
     try {
       logger.setContext({ function: functionName });

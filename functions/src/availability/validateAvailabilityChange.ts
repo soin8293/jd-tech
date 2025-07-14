@@ -22,7 +22,7 @@ interface ValidationResult {
   }>;
 }
 
-export const validateAvailabilityChange = onCall<ValidateAvailabilityRequest, ValidationResult>(
+export const validateAvailabilityChange = onCall(
   async (request) => {
     logger.setContext({ function: "validateAvailabilityChange" });
     logger.info("Function validateAvailabilityChange started");

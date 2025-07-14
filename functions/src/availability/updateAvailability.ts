@@ -18,7 +18,7 @@ interface UpdateAvailabilityResponse {
   message: string;
 }
 
-export const updateAvailability = onCall<UpdateAvailabilityRequest, UpdateAvailabilityResponse>(
+export const updateAvailability = onCall(
   async (request) => {
     logger.setContext({ function: "updateAvailability" });
     logger.info("Function updateAvailability started");

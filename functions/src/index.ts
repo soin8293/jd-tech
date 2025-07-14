@@ -15,6 +15,10 @@ import { getUserBookings } from "./booking/getUserBookings";
 import { checkInBooking } from "./checkin/checkInBooking";
 import { createCheckoutSession } from "./payment/createCheckoutSession";
 import { stripeCheckoutWebhook } from "./webhooks/stripeCheckoutWebhook";
+import { updateAvailability } from "./availability/updateAvailability";
+import { getAvailabilityCalendar } from "./availability/getAvailabilityCalendar";
+import { validateAvailabilityChange } from "./availability/validateAvailabilityChange";
+import { getBulkAvailability } from "./availability/getBulkAvailability";
 
 export { 
   sanityCheck,
@@ -31,5 +35,9 @@ export {
   seedDatabase,
   getUserBookings,
   checkInBooking,
-  stripeCheckoutWebhook
+  stripeCheckoutWebhook,
+  updateAvailability,
+  getAvailabilityCalendar,
+  validateAvailabilityChange,
+  getBulkAvailability
 };

@@ -94,5 +94,13 @@ service cloud.firestore {
     match /receipts/{receiptId} {
       allow read, write: if isAdmin();
     }
+
+    // Availability management rules
+    match /rooms/{roomId}/availability/{year} {
+      // Allow any authenticated user to read availability (for booking interface)
+      allow read: if request.auth != null;
+      // Only allow authenticated admins to write/update availability
+      allow write: if isAdmin();
+    }
   }
 }

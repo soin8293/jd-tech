@@ -1,10 +1,10 @@
 
 import { useCallback } from 'react';
-import { usePaymentIntent } from './usePaymentIntent';
+import { usePaymentIntentCreator } from './usePaymentIntentCreator';
 import type { BookingDetails } from '@/types/hotel.types';
 
 export const usePaymentIntentHandler = () => {
-  const { createPaymentIntent } = usePaymentIntent();
+  const { createPaymentIntent } = usePaymentIntentCreator();
 
   const handleCreatePaymentIntent = useCallback(async (
     bookingDetails: BookingDetails,
@@ -17,24 +17,7 @@ export const usePaymentIntentHandler = () => {
       totalPrice: bookingDetails.totalPrice
     });
 
-    const paymentIntentParams = {
-      rooms: bookingDetails.rooms.map(room => ({
-        id: room.id,
-        name: room.name,
-        price: room.price,
-        capacity: room.capacity
-      })),
-      period: {
-        checkIn: bookingDetails.period.checkIn.toISOString(),
-        checkOut: bookingDetails.period.checkOut.toISOString()
-      },
-      guests: bookingDetails.guests,
-      transaction_id: transactionId,
-      booking_reference: `booking-${Date.now()}`,
-      currency: 'usd'
-    };
-
-    const response = await createPaymentIntent(paymentIntentParams);
+    const response = await createPaymentIntent(bookingDetails, transactionId);
     
     console.log("🔧 PaymentIntentHandler: Payment intent created:", response);
     

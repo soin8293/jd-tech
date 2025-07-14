@@ -1,5 +1,5 @@
 
 export * from './usePaymentProcess';
-export * from './usePaymentIntent';
+export * from './usePaymentIntentCreator';
 export * from './paymentHooks.types';
 export * from './paymentUtils';

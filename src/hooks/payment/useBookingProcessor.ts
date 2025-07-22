@@ -16,7 +16,7 @@ export const useBookingProcessor = () => {
   const confirmPayment = useCallback(async (
     paymentType: 'card' | 'google_pay',
     paymentMethodId: string,
-    paymentIntentId: string
+    clientSecret: string
   ) => {
     if (!stripe || !elements) {
       throw new Error('Stripe not ready');
@@ -32,11 +32,11 @@ export const useBookingProcessor = () => {
         throw new Error('Card element not found');
       }
       
-      confirmResult = await stripe.confirmCardPayment(paymentIntentId, {
+      confirmResult = await stripe.confirmCardPayment(clientSecret, {
         payment_method: paymentMethodId
       });
     } else {
-      confirmResult = await stripe.confirmCardPayment(paymentIntentId, {
+      confirmResult = await stripe.confirmCardPayment(clientSecret, {
         payment_method: paymentMethodId
       });
     }

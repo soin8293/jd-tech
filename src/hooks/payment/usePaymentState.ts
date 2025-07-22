@@ -19,11 +19,15 @@ export const usePaymentState = () => {
     errorDetails: null,
     clientSecret: '',
     paymentIntentId: '',
-    transactionId: '',
+    transactionId: generateTransactionId(),
     bookingId: '',
     bookingToken: '',
     calculatedAmount: null,
   });
+
+  function generateTransactionId() {
+    return `txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  }
 
   const updatePaymentStatus = (status: PaymentStatus) => {
     setState(prev => ({ ...prev, paymentStatus: status }));
@@ -67,7 +71,7 @@ export const usePaymentState = () => {
     }));
   };
 
-  const generateTransactionId = () => {
+  const generateTransactionIdNew = () => {
     const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     setState(prev => ({ ...prev, transactionId }));
     return transactionId;
@@ -79,7 +83,7 @@ export const usePaymentState = () => {
       errorDetails: null,
       clientSecret: '',
       paymentIntentId: '',
-      transactionId: '',
+      transactionId: generateTransactionId(),
       bookingId: '',
       bookingToken: '',
       calculatedAmount: null,
@@ -94,7 +98,7 @@ export const usePaymentState = () => {
     clearError,
     setPaymentIntent,
     setBookingComplete,
-    generateTransactionId,
+    generateTransactionId: generateTransactionIdNew,
     resetState,
   };
 };

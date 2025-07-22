@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback } from 'react';
 import { useStripe, useElements } from '@stripe/react-stripe-js';
 import { useToast } from '@/hooks/use-toast';
@@ -56,7 +57,7 @@ export const usePaymentProcess = (
       clearError();
 
       const response = await handleCreatePaymentIntent(bookingDetails, state.transactionId);
-      setPaymentIntent(response.paymentIntentId, response.calculatedAmount);
+      setPaymentIntent(response.paymentIntentId, response.calculatedAmount, response.clientSecret);
       
     } catch (error: any) {
       PaymentLogger.logPaymentError(error, 'payment_intent_creation');
@@ -94,11 +95,11 @@ export const usePaymentProcess = (
       updateStatus('processing');
       clearError();
 
-      // Step 1: Confirm payment with Stripe
+      // Step 1: Confirm payment with Stripe - FIXED: Use clientSecret instead of paymentIntentId
       const confirmedPaymentIntent = await confirmPayment(
         paymentType, 
         paymentMethodId, 
-        state.paymentIntentId!
+        state.clientSecret!
       );
 
       // Step 2: Process booking with backend
@@ -138,6 +139,7 @@ export const usePaymentProcess = (
     bookingDetails, 
     state.paymentIntentId, 
     state.transactionId,
+    state.clientSecret,
     confirmPayment,
     processBooking,
     onPaymentComplete,

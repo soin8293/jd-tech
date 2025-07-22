@@ -9,7 +9,7 @@ import { getStripeClient } from "../config/stripe";
  */
 export const stripeWebhook = functions.https.onRequest(async (req, res): Promise<void> => {
   try {
-    // Use modern environment variable approach for Firebase Functions v2
+    // Use modern Firebase Functions v2 environment variable approach
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     const signature = req.headers['stripe-signature'];
     

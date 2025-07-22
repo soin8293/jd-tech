@@ -20,7 +20,7 @@ export const getStripeClient = (): Stripe => {
   if (!stripeSingleton) {
     console.log("STRIPE_CONFIG: Attempting to get Stripe secret key from environment variables");
     
-    // Use the modern v2 method of accessing environment variables
+    // Use the modern Firebase Functions v2 method of accessing environment variables
     const secretKey = process.env.STRIPE_SECRET_KEY;
     
     let finalSecretKey: string;

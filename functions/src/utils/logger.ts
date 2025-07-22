@@ -64,7 +64,7 @@ class Logger {
   }
 
   debug(message: string, data?: any) {
-    // Use modern environment variable approach for Firebase Functions v2
+    // Use modern Firebase Functions v2 environment variable approach
     const debugEnabled = process.env.DEBUG === 'true';
     if (debugEnabled) {
       console.log(this.formatMessage(LogLevel.DEBUG, message, data));

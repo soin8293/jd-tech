@@ -58,20 +58,24 @@ export const createStripePaymentIntent = async (params: CreatePaymentIntentParam
     console.log("🔥 STRIPE_CREATOR: Payload:", JSON.stringify(intentPayload, null, 2));
     console.log("🔥 STRIPE_CREATOR: Amount in cents:", intentPayload.amount);
     
-    const requestOptions: any = {};
-    if (params.idempotencyKey) {
-      requestOptions.idempotencyKey = params.idempotencyKey;
-      console.log("🔥 STRIPE_CREATOR: Using idempotency key:", params.idempotencyKey);
-      logger.debug("Using idempotency key for payment intent", { idempotencyKey: params.idempotencyKey });
-    }
-    
-    console.log("🔥 STRIPE_CREATOR: Request options:", JSON.stringify(requestOptions, null, 2));
     logger.debug("Stripe payment intent payload", intentPayload);
     
     console.log("🔥 STRIPE_CREATOR: About to call stripe.paymentIntents.create...");
     console.log("🔥 STRIPE_CREATOR: Call timestamp:", new Date().toISOString());
     
-    const paymentIntent = await stripe.paymentIntents.create(intentPayload, requestOptions);
+    // Fixed: Only pass requestOptions when idempotencyKey is provided
+    let paymentIntent;
+    if (params.idempotencyKey) {
+      const requestOptions = { idempotencyKey: params.idempotencyKey };
+      console.log("🔥 STRIPE_CREATOR: Using idempotency key:", params.idempotencyKey);
+      console.log("🔥 STRIPE_CREATOR: Request options:", JSON.stringify(requestOptions, null, 2));
+      logger.debug("Using idempotency key for payment intent", { idempotencyKey: params.idempotencyKey });
+      
+      paymentIntent = await stripe.paymentIntents.create(intentPayload, requestOptions);
+    } else {
+      console.log("🔥 STRIPE_CREATOR: No idempotency key provided, calling with single argument");
+      paymentIntent = await stripe.paymentIntents.create(intentPayload);
+    }
 
     console.log("🔥 STRIPE_CREATOR: ✅ Stripe API call successful!");
     console.log("🔥 STRIPE_CREATOR: Payment intent created with ID:", paymentIntent.id);

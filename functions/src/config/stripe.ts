@@ -1,5 +1,4 @@
 
-import * as functions from "firebase-functions";
 import Stripe from "stripe";
 
 // Define a fallback secret key for development (ONLY USE TEST KEYS HERE)

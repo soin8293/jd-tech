@@ -1,5 +1,4 @@
 
-import * as functions from "firebase-functions";
 
 export enum LogLevel {
   INFO = 'info',

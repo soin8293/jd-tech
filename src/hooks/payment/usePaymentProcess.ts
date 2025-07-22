@@ -95,7 +95,7 @@ export const usePaymentProcess = (
       updateStatus('processing');
       clearError();
 
-      // Step 1: Confirm payment with Stripe - FIXED: Use clientSecret instead of paymentIntentId
+      // Step 1: Confirm payment with Stripe using client secret
       const confirmedPaymentIntent = await confirmPayment(
         paymentType, 
         paymentMethodId, 

@@ -52,10 +52,10 @@ export const usePaymentState = () => {
     setState(prev => ({ ...prev, errorDetails: null }));
   };
 
-  const setPaymentIntent = (paymentIntentId: string, calculatedAmount: number | null, clientSecret?: string) => {
+  const setPaymentIntent = (paymentIntentId: string, calculatedAmount: number | null, clientSecret: string) => {
     setState(prev => ({ 
       ...prev, 
-      clientSecret: clientSecret || '',
+      clientSecret,
       paymentIntentId,
       calculatedAmount,
       paymentStatus: 'idle'

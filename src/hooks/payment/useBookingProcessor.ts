@@ -22,7 +22,7 @@ export const useBookingProcessor = () => {
       throw new Error('Stripe not ready');
     }
 
-    console.log("🔧 BookingProcessor: Confirming payment with Stripe");
+    console.log("🔧 BookingProcessor: Confirming payment with Stripe using client secret");
 
     let confirmResult;
     

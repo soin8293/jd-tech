@@ -9,12 +9,19 @@ import { getStripeClient } from "../config/stripe";
  */
 export const stripeWebhook = functions.https.onRequest(async (req, res): Promise<void> => {
   try {
-    const webhookSecret = functions.config().stripe.webhook_secret;
+    // Use modern environment variable approach for Firebase Functions v2
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     const signature = req.headers['stripe-signature'];
     
     if (!signature) {
       console.error("Webhook Error: Missing stripe-signature header");
       res.status(400).send("Webhook Error: Missing signature");
+      return;
+    }
+    
+    if (!webhookSecret) {
+      console.error("Webhook Error: STRIPE_WEBHOOK_SECRET environment variable not set");
+      res.status(500).send("Webhook Error: Webhook secret not configured");
       return;
     }
     

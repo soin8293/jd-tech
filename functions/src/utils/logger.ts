@@ -1,3 +1,4 @@
+
 import * as functions from "firebase-functions";
 
 export enum LogLevel {
@@ -63,14 +64,9 @@ class Logger {
   }
 
   debug(message: string, data?: any) {
-    // Lazy load config to prevent global initialization issues
-    try {
-      const debugEnabled = functions.config().env?.debug === 'true';
-      if (debugEnabled) {
-        console.log(this.formatMessage(LogLevel.DEBUG, message, data));
-      }
-    } catch (error) {
-      // If config access fails, just skip debug logging
+    // Use modern environment variable approach for Firebase Functions v2
+    const debugEnabled = process.env.DEBUG === 'true';
+    if (debugEnabled) {
       console.log(this.formatMessage(LogLevel.DEBUG, message, data));
     }
   }

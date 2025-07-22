@@ -18,32 +18,27 @@ let stripeSingleton: Stripe | null = null;
 export const getStripeClient = (): Stripe => {
   // 2. If the singleton hasn't been initialized yet, create it.
   if (!stripeSingleton) {
-    try {
-      console.log("STRIPE_CONFIG: Attempting to get Stripe secret key from Firebase config");
-      const configKey = functions.config().stripe?.secret_key;
-      
-      let secretKey: string;
-      if (configKey) {
-        console.log("STRIPE_CONFIG: Found Stripe secret key in Firebase config");
-        secretKey = configKey;
-      } else {
-        console.log("STRIPE_CONFIG: Firebase config Stripe key not found, using fallback test key");
-        secretKey = STRIPE_SECRET_KEY;
-      }
-      
-      console.log(`STRIPE_CONFIG: Initializing Stripe with key prefix: ${secretKey.substring(0, 8)}...`);
-      
-      stripeSingleton = new Stripe(secretKey, {
-        apiVersion: "2024-04-10", // Updated to the supported API version
-      });
-      
-      console.log("STRIPE_CONFIG: Stripe initialized successfully with API version 2024-04-10");
-    } catch (error) {
-      console.error("STRIPE_CONFIG: Error accessing Firebase config, using fallback test key:", error);
-      stripeSingleton = new Stripe(STRIPE_SECRET_KEY, {
-        apiVersion: "2024-04-10",
-      });
+    console.log("STRIPE_CONFIG: Attempting to get Stripe secret key from environment variables");
+    
+    // Use the modern v2 method of accessing environment variables
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    
+    let finalSecretKey: string;
+    if (secretKey) {
+      console.log("STRIPE_CONFIG: Found Stripe secret key in environment variables");
+      finalSecretKey = secretKey;
+    } else {
+      console.log("STRIPE_CONFIG: Environment variable STRIPE_SECRET_KEY not found, using fallback test key");
+      finalSecretKey = STRIPE_SECRET_KEY;
     }
+    
+    console.log(`STRIPE_CONFIG: Initializing Stripe with key prefix: ${finalSecretKey.substring(0, 8)}...`);
+    
+    stripeSingleton = new Stripe(finalSecretKey, {
+      apiVersion: "2024-04-10", // Updated to the supported API version
+    });
+    
+    console.log("STRIPE_CONFIG: Stripe initialized successfully with API version 2024-04-10");
   }
   // 3. Return the instance.
   return stripeSingleton;

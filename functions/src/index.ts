@@ -1,5 +1,10 @@
 
 // Export all Firebase Functions for the hotel booking system
+import * as admin from "firebase-admin";
+
+// Initialize Firebase Admin SDK
+admin.initializeApp();
+
 import { sanityCheck } from "./debug/sanityCheck";
 import { createPaymentIntent } from "./payment/createPaymentIntent";
 import { processBooking } from "./payment/processBooking";

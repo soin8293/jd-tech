@@ -12,6 +12,7 @@ import {
   CheckCircle,
   RefreshCw 
 } from "lucide-react";
+import { useRealTimeRooms } from "@/hooks/useRealTimeRooms";
 
 interface APIEndpoint {
   name: string;
@@ -24,6 +25,8 @@ interface APIEndpoint {
 }
 
 export const APIResponseTracker: React.FC = () => {
+  const { rooms } = useRealTimeRooms();
+  
   const [endpoints, setEndpoints] = useState<APIEndpoint[]>([
     {
       name: 'Create Payment Intent',
@@ -67,15 +70,35 @@ export const APIResponseTracker: React.FC = () => {
     try {
       const startTime = performance.now();
       
-      // Simulate API call based on endpoint
+      // Test API endpoints with real room data
       let response;
-      // Skip actual API testing to avoid "Room test not found" errors
-      // Just simulate endpoint availability check
-      response = { 
-        ok: true, 
-        status: 200,
-        statusText: 'OK'
-      };
+      if (endpoint.name === 'Create Payment Intent' && rooms.length > 0) {
+        // Use first available room for testing
+        const testRoom = rooms[0];
+        response = await fetch('https://us-central1-jd-suites-backend.cloudfunctions.net/createPaymentIntent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            data: {
+              rooms: [{ id: testRoom.id, name: testRoom.name, price: testRoom.price }],
+              period: { 
+                checkIn: new Date().toISOString(), 
+                checkOut: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() 
+              },
+              guests: 1,
+              transaction_id: `health_check_${Date.now()}`,
+              currency: 'usd'
+            }
+          })
+        });
+      } else {
+        // For other endpoints or when no rooms available, simulate response
+        response = { 
+          ok: true, 
+          status: 200,
+          statusText: 'OK'
+        };
+      }
       
       const endTime = performance.now();
       const responseTime = endTime - startTime;

@@ -1,6 +1,7 @@
 
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from "firebase/functions";
 import { auth, functions } from "@/lib/firebase";
+import { roomService } from "@/services/roomService";
 
 export const debugFirebaseFunctions = async () => {
   console.log("🔧 FUNCTIONS_DEBUG: ================ FIREBASE FUNCTIONS DIAGNOSTICS ================");
@@ -69,16 +70,52 @@ export const debugFirebaseFunctions = async () => {
       headers['Authorization'] = authHeader;
     }
     
-    // Skip manual fetch test to avoid "Room test not found" errors
-    console.log("🔧 FUNCTIONS_DEBUG: Skipping manual fetch test to prevent database errors");
-    const response = { 
-      ok: true, 
-      status: 200, 
-      statusText: 'Test skipped',
-      headers: new Headers(),
-      json: async () => ({ message: 'Test skipped to prevent room lookup errors' }),
-      text: async () => 'Test skipped'
-    };
+    // Test with real room data
+    console.log("🔧 FUNCTIONS_DEBUG: Testing with real room data...");
+    let response;
+    
+    try {
+      const rooms = await roomService.getAllRooms();
+      if (rooms.length > 0) {
+        const testRoom = rooms[0];
+        response = await fetch(functionUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            data: {
+              rooms: [{ id: testRoom.id, name: testRoom.name, price: testRoom.price }],
+              period: { 
+                checkIn: new Date().toISOString(), 
+                checkOut: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() 
+              },
+              guests: 2,
+              transaction_id: "debug_test_transaction",
+              currency: "usd"
+            }
+          })
+        });
+      } else {
+        console.log("🔧 FUNCTIONS_DEBUG: No rooms available, skipping test");
+        response = { 
+          ok: true, 
+          status: 200, 
+          statusText: 'No rooms to test with',
+          headers: new Headers(),
+          json: async () => ({ message: 'No rooms available for testing' }),
+          text: async () => 'No rooms available'
+        };
+      }
+    } catch (roomError) {
+      console.error("🔧 FUNCTIONS_DEBUG: Failed to fetch rooms:", roomError);
+      response = { 
+        ok: false, 
+        status: 500, 
+        statusText: 'Room fetch failed',
+        headers: new Headers(),
+        json: async () => ({ error: 'Failed to fetch rooms' }),
+        text: async () => 'Failed to fetch rooms'
+      };
+    }
     
     console.log("🔧 FUNCTIONS_DEBUG: Manual fetch response:", {
       status: response.status,
@@ -98,9 +135,31 @@ export const debugFirebaseFunctions = async () => {
     console.error("🔧 FUNCTIONS_DEBUG: Manual fetch failed:", fetchError);
   }
   
-  // 5. Skip httpsCallable test to avoid "Room test not found" errors
-  console.log("🔧 FUNCTIONS_DEBUG: Skipping httpsCallable test to prevent database errors");
-  console.log("🔧 FUNCTIONS_DEBUG: Use actual room IDs from your database for real testing");
+  // 5. Test with httpsCallable using real room data
+  console.log("🔧 FUNCTIONS_DEBUG: Testing with httpsCallable...");
+  try {
+    const rooms = await roomService.getAllRooms();
+    if (rooms.length > 0) {
+      const testRoom = rooms[0];
+      const createPaymentIntent = httpsCallable(functions, 'createPaymentIntent');
+      const result = await createPaymentIntent({
+        rooms: [{ id: testRoom.id, name: testRoom.name, price: testRoom.price }],
+        period: { 
+          checkIn: new Date().toISOString(), 
+          checkOut: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() 
+        },
+        guests: 2,
+        transaction_id: "debug_callable_test",
+        currency: "usd"
+      });
+      
+      console.log("🔧 FUNCTIONS_DEBUG: httpsCallable success:", result);
+    } else {
+      console.log("🔧 FUNCTIONS_DEBUG: No rooms available for httpsCallable test");
+    }
+  } catch (callableError) {
+    console.error("🔧 FUNCTIONS_DEBUG: httpsCallable failed:", callableError);
+  }
   
   console.log("🔧 FUNCTIONS_DEBUG: ================ END DIAGNOSTICS ================");
 };

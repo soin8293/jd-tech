@@ -13,24 +13,43 @@ interface AuthDebugContextType {
 const AuthDebugContext = createContext<AuthDebugContextType | undefined>(undefined);
 
 export function AuthDebugProvider({ children }: { children: ReactNode }) {
+  // Ensure React is properly available before using hooks
+  if (!React || typeof React.useState !== 'function') {
+    console.error('AuthDebugProvider: React hooks are not available');
+    return <div>Error: React not properly initialized</div>;
+  }
+
   const [debugMode, setDebugMode] = useState(() => {
-    return localStorage.getItem('authDebugMode') === 'true' || 
-           process.env.NODE_ENV === 'development';
+    try {
+      return localStorage.getItem('authDebugMode') === 'true' || 
+             process.env.NODE_ENV === 'development';
+    } catch (error) {
+      console.warn('AuthDebugProvider: localStorage access failed, defaulting to false');
+      return false;
+    }
   });
   const [logs, setLogs] = useState<AuthLogEntry[]>([]);
 
   const toggleDebugMode = () => {
-    const newMode = !debugMode;
-    setDebugMode(newMode);
-    localStorage.setItem('authDebugMode', newMode.toString());
-    
-    authLogger.info('AuthDebugContext.toggleDebugMode', `Debug mode ${newMode ? 'enabled' : 'disabled'}`);
+    try {
+      const newMode = !debugMode;
+      setDebugMode(newMode);
+      localStorage.setItem('authDebugMode', newMode.toString());
+      
+      authLogger.info('AuthDebugContext.toggleDebugMode', `Debug mode ${newMode ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error('AuthDebugProvider: toggleDebugMode failed', error);
+    }
   };
 
   const clearLogs = () => {
-    authLogger.clearLogs();
-    setLogs([]);
-    authLogger.info('AuthDebugContext.clearLogs', 'Auth logs cleared');
+    try {
+      authLogger.clearLogs();
+      setLogs([]);
+      authLogger.info('AuthDebugContext.clearLogs', 'Auth logs cleared');
+    } catch (error) {
+      console.error('AuthDebugProvider: clearLogs failed', error);
+    }
   };
 
   useEffect(() => {

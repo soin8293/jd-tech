@@ -165,6 +165,11 @@ export const debugFirebaseFunctions = async () => {
 };
 
 // Auto-run diagnostics when this module is imported - but only if Firebase is configured
-if (auth && functions) {
-  debugFirebaseFunctions();
+// Disabled auto-execution to prevent React hooks conflicts
+// Call debugFirebaseFunctions() manually when needed
+if (typeof window !== 'undefined' && auth && functions) {
+  // Delay execution to ensure React has fully initialized
+  setTimeout(() => {
+    debugFirebaseFunctions().catch(console.error);
+  }, 1000);
 }

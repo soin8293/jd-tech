@@ -8,8 +8,8 @@ import { AuthDebugProvider } from "@/contexts/AuthDebugContext";
 import App from "./App.tsx";
 import "./index.css";
 
-// Import Firebase Functions debugger to run diagnostics
-import "./utils/firebaseFunctionsDebugger.ts";
+// Import Firebase Functions debugger (auto-execution is delayed to prevent React conflicts)
+// import "./utils/firebaseFunctionsDebugger.ts";
 
 // Create a client
 const queryClient = new QueryClient();

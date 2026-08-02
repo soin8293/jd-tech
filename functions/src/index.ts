@@ -54,5 +54,8 @@ export {
   updateRoomDetails,
   deleteRoomSecure,
   cancelBooking,
-  createManualBooking
+  createManualBooking,
+  mcp,
+  mcpOAuth
+
 };

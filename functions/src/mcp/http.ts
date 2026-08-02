@@ -1,4 +1,9 @@
-import type { Request, Response } from "firebase-functions/v2/https";
+import type { Request } from "firebase-functions/v2/https";
+
+/** Minimal response surface shared by the MCP HTTP handlers. */
+export interface Response {
+  set(field: string, value: string): unknown;
+}
 
 export const MCP_RESOURCE_PATH = "/mcp";
 export const CONSENT_PATH = "/oauth/consent";

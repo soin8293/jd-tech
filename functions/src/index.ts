@@ -28,6 +28,8 @@ import { updateRoomDetails } from "./rooms/updateRoomDetails";
 import { deleteRoomSecure } from "./rooms/deleteRoomSecure";
 import { cancelBooking } from "./booking/cancelBooking";
 import { createManualBooking } from "./booking/createManualBooking";
+import { mcp } from "./mcp/mcpServer";
+import { mcpOAuth } from "./mcp/oauthServer";
 
 export { 
   sanityCheck,
@@ -52,5 +54,8 @@ export {
   updateRoomDetails,
   deleteRoomSecure,
   cancelBooking,
-  createManualBooking
+  createManualBooking,
+  mcp,
+  mcpOAuth
+
 };

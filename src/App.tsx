@@ -9,6 +9,7 @@ import BookingSuccess from "@/pages/BookingSuccess";
 import BookingCancelled from "@/pages/BookingCancelled";
 import RoomManagement from "@/pages/RoomManagement";
 import MyBookings from "@/pages/MyBookings";
+import OAuthConsent from "@/pages/OAuthConsent";
 import NotFound from "@/pages/NotFound";
 import AuthDebugPanel from "@/components/auth/AuthDebugPanel";
 import "./App.css";
@@ -27,6 +28,7 @@ function App() {
         <Route path="/booking-cancelled" element={<BookingCancelled />} />
         <Route path="/room-management" element={<RoomManagement />} />
         <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/oauth/consent" element={<OAuthConsent />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />

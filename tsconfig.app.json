@@ -20,6 +20,10 @@
     "noUnusedParameters": false,
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": false,
+    "types": [
+      "node",
+      "vite/client"
+    ],
     "paths": {
       "@/*": [
         "./src/*"

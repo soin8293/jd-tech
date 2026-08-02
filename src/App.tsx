@@ -9,6 +9,7 @@ import BookingSuccess from "@/pages/BookingSuccess";
 import BookingCancelled from "@/pages/BookingCancelled";
 import RoomManagement from "@/pages/RoomManagement";
 import MyBookings from "@/pages/MyBookings";
+import OAuthConsent from "@/pages/OAuthConsent";
 import NotFound from "@/pages/NotFound";
 import AuthDebugPanel from "@/components/auth/AuthDebugPanel";
 import "./App.css";

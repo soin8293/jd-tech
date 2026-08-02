@@ -9,6 +9,46 @@
     ],
     "rewrites": [
       {
+        "source": "/.well-known/oauth-authorization-server",
+        "function": "mcpOAuth"
+      },
+      {
+        "source": "/.well-known/openid-configuration",
+        "function": "mcpOAuth"
+      },
+      {
+        "source": "/.well-known/oauth-protected-resource{,/**}",
+        "function": "mcp"
+      },
+      {
+        "source": "/oauth/authorize",
+        "function": "mcpOAuth"
+      },
+      {
+        "source": "/oauth/token",
+        "function": "mcpOAuth"
+      },
+      {
+        "source": "/oauth/register",
+        "function": "mcpOAuth"
+      },
+      {
+        "source": "/oauth/revoke",
+        "function": "mcpOAuth"
+      },
+      {
+        "source": "/oauth/authorization",
+        "function": "mcpOAuth"
+      },
+      {
+        "source": "/oauth/decision",
+        "function": "mcpOAuth"
+      },
+      {
+        "source": "/mcp{,/**}",
+        "function": "mcp"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
